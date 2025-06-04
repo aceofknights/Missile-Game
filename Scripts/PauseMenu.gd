@@ -24,7 +24,7 @@ func _on_resume_pressed():
 func _on_main_menu_pressed():
 	print("Trying fallback load...")
 	get_tree().paused = false
-	get_tree().change_scene_to_file("res://MainMenu.tscn")
+	get_tree().change_scene_to_file("res://Scene/MainMenu.tscn")
 
 func _on_quit_pressed():
 	print("Quitting game")

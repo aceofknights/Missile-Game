@@ -16,7 +16,7 @@ func _process(delta):
 	var buildings = get_tree().get_nodes_in_group("building")
 	if buildings.size() == 0:
 		print("🏚️ All buildings destroyed — returning to main menu")
-		get_tree().change_scene_to_file("res://MainMenu.tscn")  # or load_upgrade_screen() later
+		get_tree().change_scene_to_file("res://Scene/MainMenu.tscn")  # or load_upgrade_screen() later
 		
 func _unhandled_input(event):
 	if event.is_action_pressed("ui_cancel"):
