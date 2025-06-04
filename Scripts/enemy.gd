@@ -7,7 +7,7 @@ func _ready():
 	rotation = velocity.angle()
 	connect("area_entered", Callable(self, "_on_area_entered"))
 	add_to_group("enemy")
-	
+	# this is a test comment
 func _process(delta):
 	position += velocity * speed * delta
 	

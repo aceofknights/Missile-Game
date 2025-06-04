@@ -1,14 +1,14 @@
 [gd_scene load_steps=5 format=3 uid="uid://vt8afrux1ojd"]
 
-[ext_resource type="Script" path="res://Cannon.gd" id="1_7yyqv"]
+[ext_resource type="Script" path="res://Scripts/Cannon.gd" id="1_riktf"]
 [ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="2_sbulk"]
-[ext_resource type="PackedScene" uid="uid://d3kinnbojuaxp" path="res://projectile.tscn" id="2_w50be"]
+[ext_resource type="PackedScene" uid="uid://d3kinnbojuaxp" path="res://Scene/projectile.tscn" id="2_w50be"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_w28l3"]
 size = Vector2(127, 126)
 
 [node name="Cannon" type="Area2D"]
-script = ExtResource("1_7yyqv")
+script = ExtResource("1_riktf")
 projectile_scene = ExtResource("2_w50be")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

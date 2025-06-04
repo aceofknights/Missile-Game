@@ -11,12 +11,12 @@ config_version=5
 [application]
 
 config/name="MissileCommandClone"
-run/main_scene="res://MainMenu.tscn"
+run/main_scene="res://Scene/MainMenu.tscn"
 config/features=PackedStringArray("4.2")
 
 [autoload]
 
-GameManager="*res://GameManager.gd"
+GameManager="*res://Scripts/GameManager.gd"
 
 [dotnet]
 

@@ -1,21 +1,21 @@
 [gd_scene load_steps=7 format=3 uid="uid://ctxqd2rutxxdu"]
 
-[ext_resource type="Script" path="res://Main.gd" id="1_k0mke"]
-[ext_resource type="Script" path="res://Spawner.gd" id="1_r6u30"]
-[ext_resource type="PackedScene" uid="uid://vt8afrux1ojd" path="res://cannon.tscn" id="2_oj5qe"]
-[ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://enemy.tscn" id="4_mjkuo"]
-[ext_resource type="PackedScene" uid="uid://vug46xq86s6a" path="res://building.tscn" id="6_ldoyd"]
+[ext_resource type="Script" path="res://Scripts/Main.gd" id="1_7l10b"]
+[ext_resource type="PackedScene" uid="uid://vt8afrux1ojd" path="res://Scene/cannon.tscn" id="2_oj5qe"]
+[ext_resource type="Script" path="res://Scripts/Spawner.gd" id="3_k5sqb"]
+[ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="4_mjkuo"]
+[ext_resource type="PackedScene" uid="uid://dfts4hlsrshmv" path="res://Scene/PauseMenu.tscn" id="5_u4f7x"]
+[ext_resource type="PackedScene" uid="uid://vug46xq86s6a" path="res://Scene/building.tscn" id="6_ldoyd"]
 
 [node name="Main" type="Node2D"]
-script = ExtResource("1_k0mke")
+script = ExtResource("1_7l10b")
 
 [node name="Cannon" parent="." instance=ExtResource("2_oj5qe")]
 position = Vector2(608, 586)
 
-
 [node name="Spawner" type="Node2D" parent="."]
 position = Vector2(0, -50)
-script = ExtResource("1_r6u30")
+script = ExtResource("3_k5sqb")
 enemy_scene = ExtResource("4_mjkuo")
 
 [node name="UI" type="CanvasLayer" parent="."]
@@ -44,3 +44,5 @@ position = Vector2(826, 608)
 
 [node name="Building4" parent="." instance=ExtResource("6_ldoyd")]
 position = Vector2(1023, 610)
+
+[node name="PauseMenu" parent="." instance=ExtResource("5_u4f7x")]

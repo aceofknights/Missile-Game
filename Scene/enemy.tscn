@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://evjxma2qlnwx"]
 
-[ext_resource type="Script" path="res://enemy.gd" id="1_u4tr4"]
-[ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://explosion.tscn" id="2_g3wjo"]
+[ext_resource type="Script" path="res://Scripts/enemy.gd" id="1_mkcnt"]
+[ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2_jdirn"]
 [ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="2_x0dry"]
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_j05of"]
@@ -10,8 +10,8 @@
 radius = 23.0217
 
 [node name="Enemy" type="Area2D"]
-script = ExtResource("1_u4tr4")
-explosion_scene = ExtResource("2_g3wjo")
+script = ExtResource("1_mkcnt")
+explosion_scene = ExtResource("2_jdirn")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 material = SubResource("CanvasItemMaterial_j05of")
