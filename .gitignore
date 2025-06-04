@@ -1,0 +1,12 @@
+# Godot-specific
+.import/
+.export/
+.godot/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor backups
+*.tmp
+*.backup

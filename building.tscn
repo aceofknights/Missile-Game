@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3 uid="uid://vug46xq86s6a"]
+
+[ext_resource type="Script" path="res://building.gd" id="1_nf6k5"]
+[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="1_tn12e"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ot00v"]
+size = Vector2(68, 68)
+
+[node name="Building" type="Area2D"]
+script = ExtResource("1_nf6k5")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.0823529, 0.0784314, 0.960784, 1)
+scale = Vector2(0.53125, 0.53125)
+texture = ExtResource("1_tn12e")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_ot00v")

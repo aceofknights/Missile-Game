@@ -1,0 +1,29 @@
+[gd_scene load_steps=5 format=3 uid="uid://g0r4peps31qo"]
+
+[ext_resource type="Texture2D" uid="uid://5senxme5ud0g" path="res://circle.png" id="1_k0cll"]
+[ext_resource type="Script" path="res://explosion.gd" id="1_o6ems"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ouckh"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_bxo0u"]
+radius = 25.1794
+
+[node name="Explosion" type="Area2D"]
+script = ExtResource("1_o6ems")
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 0.504
+one_shot = true
+autostart = true
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+material = SubResource("ShaderMaterial_ouckh")
+position = Vector2(7.62939e-06, -7.62939e-06)
+scale = Vector2(0.0085, 0.0085)
+texture = ExtResource("1_k0cll")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_bxo0u")
+debug_color = Color(0.981321, 0.10201, 0.228716, 0.42)
+
+[connection signal="timeout" from="Timer" to="." method="_on_timer_timeout"]

@@ -1,0 +1,23 @@
+[gd_scene load_steps=6 format=3 uid="uid://evjxma2qlnwx"]
+
+[ext_resource type="Script" path="res://enemy.gd" id="1_u4tr4"]
+[ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://explosion.tscn" id="2_g3wjo"]
+[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="2_x0dry"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_j05of"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_jj52t"]
+radius = 23.0217
+
+[node name="Enemy" type="Area2D"]
+script = ExtResource("1_u4tr4")
+explosion_scene = ExtResource("2_g3wjo")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+material = SubResource("CanvasItemMaterial_j05of")
+rotation = -3.05258
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("2_x0dry")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_jj52t")
