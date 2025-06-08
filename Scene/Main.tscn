@@ -48,6 +48,12 @@ offset_right = 592.0
 offset_bottom = 158.0
 theme_override_font_sizes/font_size = 20
 
+[node name="ResourceLabel" type="Label" parent="UI"]
+offset_top = 30.0
+offset_right = 40.0
+offset_bottom = 53.0
+text = "ResourceLabel"
+
 [node name="Building" parent="." instance=ExtResource("6_ldoyd")]
 position = Vector2(155, 612)
 

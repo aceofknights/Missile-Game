@@ -39,12 +39,19 @@ text = "UPGRADES"
 
 [node name="UpgradeButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "upgrade ammo +1"
+text = "Max ammo +2 Cost: 1"
 
 [node name="UpgradeButton2" type="Button" parent="VBoxContainer"]
 layout_mode = 2
-text = "Reload Speed +"
+text = "Ammo Factory Cost: 10"
 
 [node name="ContinueButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "Continue"
+
+[node name="ResourceLabel" type="Label" parent="."]
+offset_left = -548.0
+offset_top = -272.0
+offset_right = -435.0
+offset_bottom = -249.0
+text = "ResourceLabel"
