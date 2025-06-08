@@ -4,20 +4,20 @@
 [ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="2_nbhe5"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2_y2y6o"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_b1hq2"]
-radius = 19.105
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_h4p2n"]
+size = Vector2(32, 32)
 
-[node name="Projectile" type="Area2D"]
+[node name="Projectile" type="Area2D" groups=["projectile"]]
 position = Vector2(36, 13)
+collision_layer = 2
 script = ExtResource("1_2oxmq")
 explosion_scene = ExtResource("2_y2y6o")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, 1)
-shape = SubResource("CircleShape2D_b1hq2")
+shape = SubResource("RectangleShape2D_h4p2n")
 disabled = true
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-rotation = -0.837758
+modulate = Color(1, 1, 0, 1)
 scale = Vector2(0.25, 0.25)
 texture = ExtResource("2_nbhe5")

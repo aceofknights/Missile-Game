@@ -6,6 +6,7 @@ extends Node2D
 @onready var destroy_all_button = $UI/DestroyAllButton
 @onready var wave_label = $UI/WaveLabel
 @onready var announcement_label = $UI/AnnouncementLabel
+@onready var ResourceLabel = $UI/ResourceLabel
 
 func _ready():
 	get_tree().paused = false
@@ -14,6 +15,7 @@ func _ready():
 	destroy_all_button.pressed.connect(_on_destroy_all_pressed)
 	GameManager.connect("announce_wave", Callable(self, "_on_announce_wave"))
 	GameManager.start_wave()
+
 	
 func announce(text: String, duration: float = 2.0):
 	announcement_label.text = text
@@ -37,6 +39,8 @@ func _on_destroy_all_pressed():
 func _process(delta):
 	AmmoLabel.text = "Ammo: %d / %d" % [cannon.current_ammo, cannon.max_ammo]
 	wave_label.text = "🌊 Wave %d / 🌍 World %d" % [GameManager.current_wave, GameManager.current_world]
+	ResourceLabel.text = "Resources: %d" % GameManager.player_resources
+	
 		# Check if all buildings are destroyed
 	var buildings = get_tree().get_nodes_in_group("building")
 	if buildings.size() == 0:

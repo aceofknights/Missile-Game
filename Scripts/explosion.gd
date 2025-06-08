@@ -1,6 +1,8 @@
 extends Area2D
 
 @onready var shape = $CollisionShape2D.shape
+@export var gives_reward = true
+
 
 func _ready():
 	scale = Vector2(0, 0)
@@ -22,8 +24,15 @@ func _ready():
 
 func _on_area_entered(area):
 	if area.is_in_group("enemy"):
-		area.die()
+		if area.has_method("die"):
+			area.die(not gives_reward)  # true if no reward, false if reward
+
  
+func damage_enemy(enemy):
+	if gives_reward:
+		enemy.die(true)
+	else:
+		enemy.die(false)
 
 func _on_timer_timeout():
 	pass # Replace with function body.

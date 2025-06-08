@@ -6,9 +6,9 @@ func _ready():
 
 func _on_area_entered(area):
 	if area.is_in_group("enemy"):
-		die()
-		area.queue_free()
 		print("Building destroyed by Enemy")
+		area.call_deferred("die", false)  # Ask the enemy to kill itself
+		die()
 
 func die():
 	print("building destroyed")

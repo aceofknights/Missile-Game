@@ -15,6 +15,10 @@ var spawner: Node = null
 signal announce_wave(message: String, duration: float)
 
 
+func add_resources(amount: int):
+	player_resources += amount
+	print("💰 Gained %d resource(s). Total: %d" % [amount, player_resources])
+
 func get_max_ammo():
 	return 10 + (ammo_level * 2)
 
