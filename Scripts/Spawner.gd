@@ -8,13 +8,29 @@ var screen_size
 
 func _ready():
 	screen_size = get_viewport_rect().size
+	GameManager.spawner = self
+	
+#func _process(delta):
+	#spawn_timer += delta
+	#if spawn_timer >= spawn_interval:
+		#spawn_timer = 0
+		#spawn_enemy()
 
-func _process(delta):
-	spawn_timer += delta
-	if spawn_timer >= spawn_interval:
-		spawn_timer = 0
-		spawn_enemy()
+@export var boss_scene: PackedScene
 
+func spawn_boss():
+	if not boss_scene:
+		print("❌ No boss scene assigned!")
+		return
+
+	var boss = boss_scene.instantiate()
+	boss.connect("enemy_died", Callable(GameManager, "_on_enemy_died"))
+	GameManager.enemies_alive += 1
+
+	boss.position = Vector2(screen_size.x / 2, -100)  # Drop from center top
+	boss.velocity = Vector2(0, 1)  # Slow descent
+
+	get_tree().current_scene.add_child(boss)
 
 func spawn_enemy():
 	if not enemy_scene:
@@ -22,6 +38,11 @@ func spawn_enemy():
 		return
 		
 	var enemy = enemy_scene.instantiate()
+	GameManager.enemies_alive += 1
+	print("📦 Spawning enemy. Total alive: %d" % GameManager.enemies_alive)
+
+	enemy.connect("enemy_died", Callable(GameManager, "_on_enemy_died"))
+
 	
 	# Random X along top
 	var x_pos = randf_range(0, screen_size.x)
