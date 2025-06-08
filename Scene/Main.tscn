@@ -33,6 +33,21 @@ offset_top = -23.0
 offset_right = 50.0
 grow_vertical = 0
 
+[node name="DestroyAllButton" type="Button" parent="UI"]
+offset_left = 879.0
+offset_top = 19.0
+offset_right = 1128.0
+offset_bottom = 50.0
+text = "destroy all buildings"
+
+[node name="AnnouncementLabel" type="Label" parent="UI"]
+visible = false
+offset_left = 552.0
+offset_top = 135.0
+offset_right = 592.0
+offset_bottom = 158.0
+theme_override_font_sizes/font_size = 20
+
 [node name="Building" parent="." instance=ExtResource("6_ldoyd")]
 position = Vector2(155, 612)
 

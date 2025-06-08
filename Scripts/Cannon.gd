@@ -2,11 +2,11 @@ extends Area2D
 
 @export var projectile_scene: PackedScene
 @export var fire_rate = 0.5
-@export var max_ammo = 10
-@export var reload_time = 2.0
+@onready var reload_time = GameManager.get_reload_speed()
+@onready var max_ammo = GameManager.get_max_ammo()
 
 var cooldown = 0.0
-var current_ammo = 10
+var current_ammo = GameManager.get_max_ammo()
 var reloading = false
 
 func _process(delta):
@@ -18,7 +18,11 @@ func _process(delta):
 		cooldown -= delta
 
 	if current_ammo < max_ammo and not reloading:
-		start_reload()
+		if reload_time != null:
+			if reload_time > 0 :
+				start_reload()
+		return
+		#start_reload()
 
 func _input(event):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
