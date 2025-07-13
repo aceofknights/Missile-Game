@@ -1,13 +1,13 @@
 extends Control
 
 @export var game_scene: PackedScene
-@onready var upgrade_btn_2 = $VBoxContainer/UpgradeButton2
+@onready var AmmoFactory = $VBoxContainer/AmmoFactoryButton
 @onready var ResourceLabel = $ResourceLabel
 
 func _ready():
 	update_resource_display()
-	$VBoxContainer/UpgradeButton.pressed.connect(upgrade_ammo)
-	upgrade_btn_2.pressed.connect(upgrade_reload)
+	$VBoxContainer/MaxAmmoButton.pressed.connect(upgrade_ammo)
+	AmmoFactory.pressed.connect(upgrade_reload)
 	$VBoxContainer/ContinueButton.pressed.connect(continue_game)
 	print("Upgrade screen opened")
 	print("Resources: %d" % GameManager.player_resources)

@@ -37,11 +37,11 @@ grow_vertical = 2
 layout_mode = 2
 text = "UPGRADES"
 
-[node name="UpgradeButton" type="Button" parent="VBoxContainer"]
+[node name="MaxAmmoButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "Max ammo +2 Cost: 1"
 
-[node name="UpgradeButton2" type="Button" parent="VBoxContainer"]
+[node name="AmmoFactoryButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "Ammo Factory Cost: 10"
 

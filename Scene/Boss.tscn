@@ -6,19 +6,17 @@
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_j05of"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_jj52t"]
-radius = 66.6108
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_y5k8t"]
+size = Vector2(202, 196)
 
-[node name="Enemy" type="Area2D"]
+[node name="Boss" type="Area2D"]
 script = ExtResource("1_m61ud")
 explosion_scene = ExtResource("2_sk56w")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 material = SubResource("CanvasItemMaterial_j05of")
-position = Vector2(3.8147e-06, 0)
-rotation = -3.05258
-scale = Vector2(0.795181, 0.741507)
+scale = Vector2(1.58509, 1.527)
 texture = ExtResource("3_i0gvw")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_jj52t")
+shape = SubResource("RectangleShape2D_y5k8t")
