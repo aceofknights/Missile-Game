@@ -1,16 +1,31 @@
-[gd_scene load_steps=2 format=3 uid="uid://imc4shtg5sg6"]
+[gd_scene load_steps=7 format=3 uid="uid://imc4shtg5sg6"]
 
-[ext_resource type="Script" path="res://Scripts/BossUfo.gd" id="1_x2gyb"]
+[ext_resource type="Script" path="res://Scripts/BossUfo.gd" id="1_p9a8k"]
+[ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2_7m3fu"]
+[ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="3_4pr0n"]
+[ext_resource type="PackedScene" path="res://Scene/scatter_missile.tscn" id="4_gub2l"]
+[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="5_t6f8r"]
 
-[node name="BossUfo" type="Node2D"]
-script = ExtResource("1_x2gyb")
+[sub_resource type="CircleShape2D" id="CircleShape2D_9w6av"]
+radius = 42.0
+
+[node name="BossUfo" type="Area2D"]
+script = ExtResource("1_p9a8k")
+explosion_scene = ExtResource("2_7m3fu")
+missile_scene = ExtResource("3_4pr0n")
+scatter_missile_scene = ExtResource("4_gub2l")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.490196, 0.847059, 1, 1)
+scale = Vector2(0.55, 0.35)
+texture = ExtResource("5_t6f8r")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_9w6av")
 
-[node name="TeleportTimer" type="Timer" parent="."]
+[node name="ShieldTimer" type="Timer" parent="."]
+one_shot = true
+autostart = true
 
 [node name="MissileTimer" type="Timer" parent="."]
-
-[node name="EnemyRainTimer" type="Timer" parent="."]
+autostart = true

@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://ctxqd2rutxxdu"]
+[gd_scene load_steps=8 format=3 uid="uid://ctxqd2rutxxdu"]
 
 [ext_resource type="Script" path="res://Scripts/Main.gd" id="1_7l10b"]
 [ext_resource type="PackedScene" uid="uid://vt8afrux1ojd" path="res://Scene/cannon.tscn" id="2_oj5qe"]
 [ext_resource type="Script" path="res://Scripts/Spawner.gd" id="3_k5sqb"]
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="4_mjkuo"]
+[ext_resource type="PackedScene" uid="uid://imc4shtg5sg6" path="res://Scene/boss_ufo.tscn" id="5_pxfj6"]
 [ext_resource type="PackedScene" uid="uid://dfts4hlsrshmv" path="res://Scene/PauseMenu.tscn" id="5_u4f7x"]
 [ext_resource type="PackedScene" uid="uid://vug46xq86s6a" path="res://Scene/building.tscn" id="6_ldoyd"]
 
@@ -17,6 +18,7 @@ position = Vector2(608, 586)
 position = Vector2(0, -50)
 script = ExtResource("3_k5sqb")
 enemy_scene = ExtResource("4_mjkuo")
+boss_scene = ExtResource("5_pxfj6")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
@@ -39,6 +41,13 @@ offset_top = 19.0
 offset_right = 1128.0
 offset_bottom = 50.0
 text = "destroy all buildings"
+
+[node name="SkipToBoss" type="Button" parent="UI"]
+offset_left = 601.0
+offset_top = 20.0
+offset_right = 850.0
+offset_bottom = 51.0
+text = "Skip To Boss"
 
 [node name="AnnouncementLabel" type="Label" parent="UI"]
 visible = false
