@@ -90,7 +90,7 @@ func next_wave_or_boss():
 		print("👹 Boss defeated! Proceeding to next world...")
 		current_wave = 1
 		current_world += 1
-		get_tree().change_scene_to_file("res://scenes/UpgradeScreen.tscn")
+		get_tree().change_scene_to_file("res://Scene/UpgradeScreen.tscn")
 	else:
 		current_wave += 1
 		await get_tree().create_timer(1.0).timeout
@@ -99,7 +99,7 @@ func next_wave_or_boss():
 		start_wave()
 	
 func load_boss_fight():
-	get_tree().change_scene_to_file("res://BossFight.tscn")
+	get_tree().change_scene_to_file("res://Scene/Boss.tscn")
 
 func boss_defeated():
 	advance_to_next_world()
@@ -110,5 +110,5 @@ func load_upgrade_screen():
 func advance_to_next_world():
 	current_world += 1
 	current_wave = 1
-	get_tree().change_scene_to_file("res://MainGame.tscn")
+	get_tree().change_scene_to_file("res://Scene/Main.tscn")
 
