@@ -18,6 +18,17 @@ func get_building_count() :
 
 
 func _ready():
+	NodeContracts.require_nodes_with_types(self, {
+		"Cannon": "Area2D",
+		"Spawner": "Node2D",
+		"UI": "CanvasLayer",
+		"UI/AmmoLabel": "Label",
+		"UI/ResourceLabel": "Label",
+		"UI/WaveLabel": "Label",
+		"UI/DestroyAllButton": "Button",
+		"PauseMenu": "CanvasLayer"
+	})
+
 	get_tree().paused = false
 	pause_menu.hide()
 	print("Main game started: Wave %d, World %d" % [GameManager.current_wave, GameManager.current_world])
