@@ -9,6 +9,7 @@ var screen_size
 func _ready():
 	screen_size = get_viewport_rect().size
 	GameManager.spawner = self
+	_ensure_boss_scene()
 	
 #func _process(delta):
 	#spawn_timer += delta
@@ -17,19 +18,28 @@ func _ready():
 		#spawn_enemy()
 
 @export var boss_scene: PackedScene
+const DEFAULT_BOSS_SCENE_PATH := "res://Scene/boss_ufo.tscn"
+
+func _ensure_boss_scene() -> void:
+	if boss_scene != null:
+		return
+
+	var loaded = load(DEFAULT_BOSS_SCENE_PATH)
+	if loaded is PackedScene:
+		boss_scene = loaded
+		print("ℹ️ Boss scene fallback loaded from %s" % DEFAULT_BOSS_SCENE_PATH)
 
 func spawn_boss():
+	_ensure_boss_scene()
 	if not boss_scene:
-		print("❌ No boss scene assigned!")
+		push_error("❌ No boss scene assigned on Spawner and fallback failed: %s" % DEFAULT_BOSS_SCENE_PATH)
 		return
 
 	var boss = boss_scene.instantiate()
 	boss.connect("enemy_died", Callable(GameManager, "_on_enemy_died"))
 	GameManager.enemies_alive += 1
 
-	boss.position = Vector2(screen_size.x / 2, -100)  # Drop from center top
-	boss.velocity = Vector2(0, 1)  # Slow descent
-
+	boss.position = Vector2(screen_size.x / 2, 120)
 	get_tree().current_scene.add_child(boss)
 
 func spawn_enemy():

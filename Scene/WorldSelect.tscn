@@ -1,0 +1,79 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://Scripts/WorldSelect.gd" id="1_gv2n6"]
+[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="2_mdfnd"]
+
+[node name="WorldSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gv2n6")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.0470588, 0.054902, 0.121569, 1)
+
+[node name="HomeBaseTitle" type="Label" parent="."]
+layout_mode = 0
+offset_left = 399.0
+offset_top = 24.0
+offset_right = 807.0
+offset_bottom = 69.0
+text = "Home Base - World Select"
+theme_override_font_sizes/font_size = 30
+
+[node name="Ship" type="Sprite2D" parent="."]
+position = Vector2(607, 155)
+scale = Vector2(0.6, 0.6)
+texture = ExtResource("2_mdfnd")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -80.0
+offset_right = 150.0
+offset_bottom = 120.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+
+[node name="World1Button" type="Button" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "World 1"
+
+[node name="World2Button" type="Button" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "World 2"
+
+[node name="World3Button" type="Button" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "World 3"
+
+[node name="World4Button" type="Button" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "World 4"
+
+[node name="World5Button" type="Button" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+text = "World 5"
+
+[node name="StatusLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 379.0
+offset_top = 560.0
+offset_right = 874.0
+offset_bottom = 583.0
+text = "Status"
+horizontal_alignment = 1
