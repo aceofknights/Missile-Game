@@ -44,8 +44,8 @@ func _skip_to_boss():
 	GameManager.current_wave = 10
 
 func _apply_building_unlocks():
-	_set_building_active(building5, GameManager.extra_buildings >= 1)
-	_set_building_active(building6, GameManager.extra_buildings >= 2)
+	_set_building_active(building5, GameManager.get_extra_buildings() >= 1)
+	_set_building_active(building6, GameManager.get_extra_buildings() >= 2)
 
 func _set_building_active(b: Node, active: bool):
 	if b == null:
@@ -114,3 +114,7 @@ func _on_wave_cleared():
 
 func _on_player_died():
 	GameManager.player_died()
+
+
+func _on_announce_wave(message: String, duration: float):
+	announce(message, duration)

@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://Scripts/BossUfo.gd" id="1_p9a8k"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2_7m3fu"]
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="3_4pr0n"]
-[ext_resource type="PackedScene" path="res://Scene/scatter_missile.tscn" id="4_gub2l"]
+[ext_resource type="PackedScene" uid="uid://cvsqtfppxjfw0" path="res://Scene/scatter_missile.tscn" id="4_gub2l"]
 [ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="5_t6f8r"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_9w6av"]

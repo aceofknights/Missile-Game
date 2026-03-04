@@ -7,10 +7,7 @@ func _ready():
 	$VBoxContainer/Quit.pressed.connect(quit_game)
 
 func start_game():
-	if game_scene:
-		get_tree().change_scene_to_packed(game_scene)
-	else:
-		print("❌ game_scene not assigned!")
+	GameManager.start_new_game()
 
 func quit_game():
 	get_tree().quit()
