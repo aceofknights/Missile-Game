@@ -176,6 +176,19 @@ func spawn_enemies_gradually(count):
 		await get_tree().create_timer(delay).timeout
 
 
+
+
+func _clear_active_enemies() -> void:
+	var enemies = get_tree().get_nodes_in_group("enemy")
+	for e in enemies:
+		if is_instance_valid(e):
+			e.queue_free()
+
+
+func _go_to_world_select_deferred() -> void:
+	get_tree().change_scene_to_file("res://Scene/WorldSelect.tscn")
+	transitioning_world = false
+
 func _on_enemy_died():
 	enemies_alive -= 1
 	print("Enemies remaining: %d" % enemies_alive)
@@ -183,6 +196,14 @@ func _on_enemy_died():
 	if enemies_alive <= 0 and wave_active:
 		wave_active = false
 		next_wave_or_boss()
+
+
+func on_boss_defeated() -> void:
+	if transitioning_world:
+		return
+	if not is_boss_wave:
+		return
+	_on_world_defeated()
 
 
 func next_wave_or_boss():

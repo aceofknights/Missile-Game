@@ -37,6 +37,8 @@ func spawn_boss():
 
 	var boss = boss_scene.instantiate()
 	boss.connect("enemy_died", Callable(GameManager, "_on_enemy_died"))
+	if boss.has_signal("boss_defeated"):
+		boss.connect("boss_defeated", Callable(GameManager, "on_boss_defeated"))
 	GameManager.enemies_alive += 1
 
 	boss.position = Vector2(screen_size.x / 2, 120)
