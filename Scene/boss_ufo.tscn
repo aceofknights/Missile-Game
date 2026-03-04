@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3 uid="uid://imc4shtg5sg6"]
+
+[ext_resource type="Script" path="res://Scripts/BossUfo.gd" id="1_x2gyb"]
+
+[node name="BossUfo" type="Node2D"]
+script = ExtResource("1_x2gyb")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+
+[node name="TeleportTimer" type="Timer" parent="."]
+
+[node name="MissileTimer" type="Timer" parent="."]
+
+[node name="EnemyRainTimer" type="Timer" parent="."]

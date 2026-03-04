@@ -3,7 +3,7 @@ extends Node
 var current_wave = 1
 var current_world = 1
 var player_upgrades = {}
-var player_resources = 0
+var player_resources = 100
 var ammo_level = 0
 var reload_speed_level = -1
 var reload_upgrade_bought = false
@@ -12,6 +12,7 @@ var enemies_alive = 0
 var is_boss_wave = false
 var wave_active = false
 var spawner: Node = null
+var extra_buildings := 0  # 0, 1, or 2
 signal announce_wave(message: String, duration: float)
 
 

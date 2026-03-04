@@ -7,6 +7,15 @@ extends Node2D
 @onready var wave_label = $UI/WaveLabel
 @onready var announcement_label = $UI/AnnouncementLabel
 @onready var ResourceLabel = $UI/ResourceLabel
+@onready var building5 = $Building5
+@onready var building6 = $Building6
+
+var base_buildings = 4
+var extra_buildings =0
+
+func get_building_count() :
+	return base_buildings + extra_buildings
+
 
 func _ready():
 	get_tree().paused = false
@@ -15,8 +24,36 @@ func _ready():
 	destroy_all_button.pressed.connect(_on_destroy_all_pressed)
 	GameManager.connect("announce_wave", Callable(self, "_on_announce_wave"))
 	GameManager.start_wave()
+	_apply_building_unlocks()
 
-	
+func _apply_building_unlocks():
+	_set_building_active(building5, GameManager.extra_buildings >= 1)
+	_set_building_active(building6, GameManager.extra_buildings >= 2)
+
+func _set_building_active(b: Node, active: bool):
+	if b == null:
+		return
+
+	# show/hide
+	if b is CanvasItem:
+		b.visible = active
+
+	# enable/disable collision if it's an Area2D with CollisionShape2D
+	if b is Area2D:
+		b.monitoring = active
+		b.monitorable = active
+		var cs = b.get_node_or_null("CollisionShape2D")
+		if cs:
+			cs.disabled = not active
+
+	# group membership controls whether it counts for your "player died" check
+	if active:
+		if not b.is_in_group("building"):
+			b.add_to_group("building")
+	else:
+		if b.is_in_group("building"):
+			b.remove_from_group("building")
+
 func announce(text: String, duration: float = 2.0):
 	announcement_label.text = text
 	announcement_label.visible = true
