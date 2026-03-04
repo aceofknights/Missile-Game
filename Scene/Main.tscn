@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://ctxqd2rutxxdu"]
+[gd_scene load_steps=8 format=3 uid="uid://ctxqd2rutxxdu"]
 
 [ext_resource type="Script" path="res://Scripts/Main.gd" id="1_7l10b"]
 [ext_resource type="PackedScene" uid="uid://vt8afrux1ojd" path="res://Scene/cannon.tscn" id="2_oj5qe"]
@@ -41,6 +41,13 @@ offset_top = 19.0
 offset_right = 1128.0
 offset_bottom = 50.0
 text = "destroy all buildings"
+
+[node name="SkipToBoss" type="Button" parent="UI"]
+offset_left = 601.0
+offset_top = 20.0
+offset_right = 850.0
+offset_bottom = 51.0
+text = "Skip To Boss"
 
 [node name="AnnouncementLabel" type="Label" parent="UI"]
 visible = false
