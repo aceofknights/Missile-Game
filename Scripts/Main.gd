@@ -9,6 +9,8 @@ extends Node2D
 @onready var ResourceLabel = $UI/ResourceLabel
 @onready var building5 = $Building5
 @onready var building6 = $Building6
+@onready var skip_to_boss = $UI/SkipToBoss
+
 
 var base_buildings = 4
 var extra_buildings =0
@@ -33,9 +35,13 @@ func _ready():
 	pause_menu.hide()
 	print("Main game started: Wave %d, World %d" % [GameManager.current_wave, GameManager.current_world])
 	destroy_all_button.pressed.connect(_on_destroy_all_pressed)
+	skip_to_boss.pressed.connect(_skip_to_boss)
 	GameManager.connect("announce_wave", Callable(self, "_on_announce_wave"))
 	GameManager.start_wave()
 	_apply_building_unlocks()
+
+func _skip_to_boss():
+	GameManager.current_wave = 10
 
 func _apply_building_unlocks():
 	_set_building_active(building5, GameManager.extra_buildings >= 1)
