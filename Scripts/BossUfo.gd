@@ -10,14 +10,10 @@ signal enemy_died
 @export var shield_up_duration := 3.5
 @export var shield_down_duration := 2.0
 @export var missile_drop_interval := 1.0
-@export var scatter_min_interval := 5.0
-@export var scatter_max_interval := 8.0
 
 @onready var shield_timer: Timer = $ShieldTimer
 @onready var missile_timer: Timer = $MissileTimer
-@onready var scatter_timer: Timer = $ScatterTimer
 @onready var sprite: Sprite2D = $Sprite2D
-@onready var boss_health = $boss_health
 
 var health := 3
 var shield_active := true
@@ -38,42 +34,22 @@ func _ready():
 	missile_timer.timeout.connect(_on_missile_timer_timeout)
 	missile_timer.start()
 
-	scatter_timer.one_shot = true
-	scatter_timer.timeout.connect(_on_scatter_timer_timeout)
-
 	_update_visuals()
 
 
 func _process(delta):
 	if is_dead:
 		return
-	boss_health.text = "Health %d" % health
+
 	var viewport = get_viewport_rect().size
 	global_position.x += move_direction * move_speed * delta
 
-	var boss_speed
-
-	if health == 3:
-		boss_speed = 1
-	elif health == 2:
-		boss_speed = 2
-		if move_direction == 1:
-			move_direction = boss_speed
-		elif move_direction == -1:
-			move_direction = boss_speed * -1
-	else:
-		boss_speed = 5
-		if move_direction == 2:
-			move_direction = boss_speed
-		elif move_direction == -2:
-			move_direction = boss_speed * -1
-
 	if global_position.x < 120:
 		global_position.x = 120
-		move_direction = boss_speed
+		move_direction = 1.0
 	elif global_position.x > viewport.x - 120:
 		global_position.x = viewport.x - 120
-		move_direction = boss_speed * -1
+		move_direction = -1.0
 
 
 func die(no_reward := false):
@@ -94,29 +70,9 @@ func die(no_reward := false):
 		_die_for_real(no_reward)
 		return
 
-	if health == 1:
-		var viewport = get_viewport_rect().size
-		if global_position.x < 120:
-			global_position.x = 120
-			move_direction = 5.0
-		elif global_position.x > viewport.x - 120:
-			global_position.x = viewport.x - 120
-			move_direction = -5.0
-
-	# 🔧 PATCH: start repeating scatter when entering phase (HP == 1)
 	if health == 1 and not scatter_released:
 		scatter_released = true
-		spawn_scatter_missile()          # fire one immediately (optional)
-		_schedule_next_scatter()         # then keep firing every 5–8 seconds
-
-	if health == 2:
-		var viewport = get_viewport_rect().size
-		if global_position.x < 120:
-			global_position.x = 120
-			move_direction = 2.0
-		elif global_position.x > viewport.x - 120:
-			global_position.x = viewport.x - 120
-			move_direction = -2.0
+		spawn_scatter_missile()
 
 	_update_visuals()
 
@@ -125,7 +81,6 @@ func _die_for_real(no_reward := false):
 	is_dead = true
 	missile_timer.stop()
 	shield_timer.stop()
-	scatter_timer.stop() # 🔧 PATCH: stop scatter timer too
 
 	if not no_reward:
 		GameManager.add_resources(10)
@@ -160,23 +115,6 @@ func _on_missile_timer_timeout():
 	if is_dead:
 		return
 	spawn_normal_missile()
-
-
-# 🔧 PATCH: scatter timer callback + scheduler
-func _on_scatter_timer_timeout():
-	if is_dead:
-		return
-	if health == 1:
-		spawn_scatter_missile()
-		_schedule_next_scatter()
-
-func _schedule_next_scatter():
-	if is_dead:
-		return
-	if health != 1:
-		return
-	scatter_timer.wait_time = randf_range(scatter_min_interval, scatter_max_interval)
-	scatter_timer.start()
 
 
 func spawn_normal_missile():

@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://cvsqtfppxjfw0"]
+[gd_scene load_steps=6 format=3 uid="uid://bbf50xk2y1x7"]
 
 [ext_resource type="Script" path="res://Scripts/scatter_missile.gd" id="1_w11d7"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2_wm8xk"]
