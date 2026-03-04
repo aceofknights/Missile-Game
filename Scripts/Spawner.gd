@@ -27,9 +27,7 @@ func spawn_boss():
 	boss.connect("enemy_died", Callable(GameManager, "_on_enemy_died"))
 	GameManager.enemies_alive += 1
 
-	boss.position = Vector2(screen_size.x / 2, -100)  # Drop from center top
-	boss.velocity = Vector2(0, 1)  # Slow descent
-
+	boss.position = Vector2(screen_size.x / 2, 120)
 	get_tree().current_scene.add_child(boss)
 
 func spawn_enemy():
