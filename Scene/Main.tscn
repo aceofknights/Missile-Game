@@ -49,6 +49,13 @@ offset_right = 850.0
 offset_bottom = 51.0
 text = "Skip To Boss"
 
+[node name="GiveResources" type="Button" parent="UI"]
+offset_left = 319.0
+offset_top = 20.0
+offset_right = 568.0
+offset_bottom = 51.0
+text = "Give 100 Resources"
+
 [node name="AnnouncementLabel" type="Label" parent="UI"]
 visible = false
 offset_left = 552.0
