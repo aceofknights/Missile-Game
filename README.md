@@ -181,3 +181,32 @@ Implement **World Transition MVP**:
   - load next world scene/theme
 
 This will establish the core "planet hopping" identity and make future bosses/upgrades easier to design.
+
+
+## Node + Script Workflow (How I can help you in Godot)
+
+To keep scene setup and scripts in sync while we build, we now have a reusable node contract helper: `Scripts/NodeContracts.gd`.
+
+How we should use it every time we add a system:
+
+1. I define the script API and required scene nodes up front (exact node paths + expected types).
+2. We add those nodes in the scene tree (or I tell you exactly where to create them).
+3. In `_ready()`, we call `NodeContracts.require_nodes_with_types(...)` so missing/wrong nodes are reported immediately.
+4. You run the scene once and get clear console errors if anything is miswired.
+
+Example (already added to `Main.gd`):
+
+- Validates that `Cannon`, `Spawner`, key `UI` labels/buttons, and `PauseMenu` exist with expected Godot classes.
+
+This lets us move faster without guessing whether a bug is logic vs scene wiring.
+
+### What I’ll do for you going forward
+
+For each new feature (boss UI, world transition screen, new weapons, etc.), I can provide:
+
+- A **Node Checklist** (what to add in the scene tree)
+- A **Signal Checklist** (what to connect)
+- A **Script Contract** (expected exported vars, methods, and node paths)
+- A **quick validation snippet** using `NodeContracts`
+
+That gives you a repeatable “build + learn” loop in Godot instead of trial-and-error.
