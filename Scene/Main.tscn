@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://vt8afrux1ojd" path="res://Scene/cannon.tscn" id="2_oj5qe"]
 [ext_resource type="Script" path="res://Scripts/Spawner.gd" id="3_k5sqb"]
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="4_mjkuo"]
-[ext_resource type="PackedScene" uid="uid://imc4shtg5sg6" path="res://Scene/boss_ufo.tscn" id="7_x7n2f"]
+[ext_resource type="PackedScene" uid="uid://imc4shtg5sg6" path="res://Scene/boss_ufo.tscn" id="5_pxfj6"]
 [ext_resource type="PackedScene" uid="uid://dfts4hlsrshmv" path="res://Scene/PauseMenu.tscn" id="5_u4f7x"]
 [ext_resource type="PackedScene" uid="uid://vug46xq86s6a" path="res://Scene/building.tscn" id="6_ldoyd"]
 
@@ -18,7 +18,7 @@ position = Vector2(608, 586)
 position = Vector2(0, -50)
 script = ExtResource("3_k5sqb")
 enemy_scene = ExtResource("4_mjkuo")
-boss_scene = ExtResource("7_x7n2f")
+boss_scene = ExtResource("5_pxfj6")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
