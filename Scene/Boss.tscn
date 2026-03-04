@@ -1,10 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://d2ekj58yuhcvd"]
+[gd_scene load_steps=5 format=3 uid="uid://d2ekj58yuhcvd"]
 
 [ext_resource type="Script" path="res://Scripts/enemy.gd" id="1_m61ud"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2_sk56w"]
 [ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="3_i0gvw"]
-
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_j05of"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_y5k8t"]
 size = Vector2(202, 196)
@@ -14,7 +12,7 @@ script = ExtResource("1_m61ud")
 explosion_scene = ExtResource("2_sk56w")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-material = SubResource("CanvasItemMaterial_j05of")
+modulate = Color(7.21961e-07, 0.449338, 4.81307e-07, 1)
 scale = Vector2(1.58509, 1.527)
 texture = ExtResource("3_i0gvw")
 

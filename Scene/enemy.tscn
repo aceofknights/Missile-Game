@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2_jdirn"]
 [ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="2_x0dry"]
 
-[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_j05of"]
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_givr7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_gk6nl"]
 size = Vector2(26, 28)
@@ -16,7 +16,7 @@ explosion_scene = ExtResource("2_jdirn")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(1, 0.0117647, 0.0117647, 1)
-material = SubResource("CanvasItemMaterial_j05of")
+material = SubResource("CanvasItemMaterial_givr7")
 rotation = -3.14159
 scale = Vector2(0.205822, 0.210673)
 texture = ExtResource("2_x0dry")

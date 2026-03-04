@@ -26,7 +26,6 @@ var enemies_alive := 0
 var is_boss_wave := false
 var wave_active := false
 var spawner: Node = null
-var transitioning_world := false
 
 signal announce_wave(message: String, duration: float)
 
@@ -191,9 +190,6 @@ func _go_to_world_select_deferred() -> void:
 	transitioning_world = false
 
 func _on_enemy_died():
-	if transitioning_world:
-		return
-
 	enemies_alive -= 1
 	print("Enemies remaining: %d" % enemies_alive)
 
@@ -222,10 +218,6 @@ func next_wave_or_boss():
 
 
 func _on_world_defeated() -> void:
-	if transitioning_world:
-		return
-	transitioning_world = true
-
 	print("👹 World %d boss defeated!" % current_world)
 	var next_world = current_world + 1
 	if next_world <= WORLD_COUNT:
@@ -233,11 +225,8 @@ func _on_world_defeated() -> void:
 		_ensure_world_upgrade_data(next_world)
 
 	# Return to home base / world select after clearing a world.
-	wave_active = false
-	enemies_alive = 0
 	current_wave = 1
-	_clear_active_enemies()
-	call_deferred("_go_to_world_select_deferred")
+	get_tree().change_scene_to_file("res://Scene/WorldSelect.tscn")
 
 
 func load_upgrade_screen():
