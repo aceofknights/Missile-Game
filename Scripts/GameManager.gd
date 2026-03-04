@@ -4,9 +4,9 @@ const WORLD_COUNT := 5
 
 var current_wave := 1
 var current_world := 1
-
+var transitioning_world := false
 # Currency can stay global for now; "planet upgrades" are per-world below.
-var player_resources := 100
+var player_resources := 0
 
 # Highest world index the player can select in World Select.
 var highest_world_unlocked := 1
@@ -154,10 +154,11 @@ func start_wave():
 	print("🌊 Starting Wave %d (World %d)" % [current_wave, current_world])
 	is_boss_wave = (current_wave % 10 == 0)
 
-	enemies_alive = 0
 	wave_active = true
+	enemies_alive = 0
 
 	if is_boss_wave:
+		enemies_alive = 1 # boss itself
 		spawner.spawn_boss()
 	else:
 		enemies_to_spawn = current_wave * 2
@@ -172,9 +173,24 @@ func spawn_enemies_gradually(count):
 		if not wave_active or spawner == null or !is_instance_valid(spawner):
 			print("⛔️ Spawning cancelled: wave is no longer active or spawner is invalid")
 			return
+
+		enemies_alive += 1  # ✅ count this enemy
 		spawner.spawn_enemy()
+
 		await get_tree().create_timer(delay).timeout
 
+
+
+func _clear_active_enemies() -> void:
+	var enemies = get_tree().get_nodes_in_group("enemy")
+	for e in enemies:
+		if is_instance_valid(e):
+			e.queue_free()
+
+
+func _go_to_world_select_deferred() -> void:
+	get_tree().change_scene_to_file("res://Scene/WorldSelect.tscn")
+	transitioning_world = false
 
 func _on_enemy_died():
 	enemies_alive -= 1
@@ -183,6 +199,14 @@ func _on_enemy_died():
 	if enemies_alive <= 0 and wave_active:
 		wave_active = false
 		next_wave_or_boss()
+
+
+func on_boss_defeated() -> void:
+	if transitioning_world:
+		return
+	if not is_boss_wave:
+		return
+	_on_world_defeated()
 
 
 func next_wave_or_boss():

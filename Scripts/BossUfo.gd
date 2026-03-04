@@ -1,12 +1,13 @@
 extends Area2D
 
 signal enemy_died
+signal boss_defeated
 
 @export var explosion_scene: PackedScene
 @export var missile_scene: PackedScene
 @export var scatter_missile_scene: PackedScene
 @export var move_speed := 120.0
-@export var max_health := 3
+@export var max_health := 1
 @export var shield_up_duration := 3.5
 @export var shield_down_duration := 2.0
 @export var missile_drop_interval := 1.0
@@ -27,9 +28,20 @@ var move_direction := 1.0
 var is_dead := false
 
 
+# ✅ Safe add_child helper (prevents current_scene null crash during scene transitions)
+func _add_to_scene(node: Node) -> void:
+	var parent := get_parent()
+	if is_instance_valid(parent):
+		parent.add_child(node)
+	else:
+		# Fallback if we're somehow not parented (rare)
+		get_tree().root.add_child(node)
+
+
 func _ready():
 	health = max_health
 	add_to_group("enemy")
+
 	shield_timer.wait_time = shield_up_duration
 	shield_timer.timeout.connect(_on_shield_timer_timeout)
 	shield_timer.start()
@@ -47,7 +59,9 @@ func _ready():
 func _process(delta):
 	if is_dead:
 		return
+
 	boss_health.text = "Health %d" % health
+
 	var viewport = get_viewport_rect().size
 	global_position.x += move_direction * move_speed * delta
 
@@ -130,13 +144,14 @@ func _die_for_real(no_reward := false):
 	if not no_reward:
 		GameManager.add_resources(10)
 
+	emit_signal("boss_defeated")
 	emit_signal("enemy_died")
 
 	if explosion_scene:
 		var explosion = explosion_scene.instantiate()
 		explosion.global_position = global_position
 		explosion.gives_reward = false
-		get_tree().current_scene.add_child(explosion)
+		_add_to_scene(explosion)
 
 	queue_free()
 
@@ -170,6 +185,7 @@ func _on_scatter_timer_timeout():
 		spawn_scatter_missile()
 		_schedule_next_scatter()
 
+
 func _schedule_next_scatter():
 	if is_dead:
 		return
@@ -180,6 +196,8 @@ func _schedule_next_scatter():
 
 
 func spawn_normal_missile():
+	if is_dead:
+		return
 	if missile_scene == null:
 		return
 
@@ -193,10 +211,13 @@ func spawn_normal_missile():
 
 	missile.global_position = global_position + Vector2(0, 30)
 	missile.velocity = direction
-	get_tree().current_scene.add_child(missile)
+
+	_add_to_scene(missile)
 
 
 func spawn_scatter_missile():
+	if is_dead:
+		return
 	if scatter_missile_scene == null:
 		return
 
@@ -210,7 +231,8 @@ func spawn_scatter_missile():
 
 	missile.global_position = global_position + Vector2(0, 35)
 	missile.velocity = direction
-	get_tree().current_scene.add_child(missile)
+
+	_add_to_scene(missile)
 	print("☄️ Scatter missile launched")
 
 

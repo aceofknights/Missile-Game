@@ -10,7 +10,7 @@ extends Node2D
 @onready var building5 = $Building5
 @onready var building6 = $Building6
 @onready var skip_to_boss = $UI/SkipToBoss
-
+@onready var give_resources = $UI/GiveResources
 
 var base_buildings = 4
 var extra_buildings =0
@@ -39,6 +39,10 @@ func _ready():
 	GameManager.connect("announce_wave", Callable(self, "_on_announce_wave"))
 	GameManager.start_wave()
 	_apply_building_unlocks()
+	give_resources.pressed.connect(_give_resource)
+
+func _give_resource():
+	GameManager.player_resources += 100
 
 func _skip_to_boss():
 	GameManager.current_wave = 10
