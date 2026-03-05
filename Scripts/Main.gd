@@ -35,6 +35,7 @@ func _ready():
 		"UI/AmmoLabel": "Label",
 		"UI/ResourceLabel": "Label",
 		"UI/WaveLabel": "Label",
+		"UI/RepairHintLabel": "Label",
 		"UI/DestroyAllButton": "Button",
 		"PauseMenu": "CanvasLayer"
 	})
