@@ -13,10 +13,11 @@ extends Node2D
 @onready var building6 = $Building6
 @onready var skip_to_boss = $UI/SkipToBoss
 @onready var give_resources = $UI/GiveResources
-@onready var repair_button = $UI/RepairButton
 
 var base_buildings = 4
 var extra_buildings = 0
+var next_cannon_index := 0
+
 
 func get_building_count():
 	return base_buildings + GameManager.get_extra_buildings()
@@ -33,7 +34,6 @@ func _ready():
 		"UI/ResourceLabel": "Label",
 		"UI/WaveLabel": "Label",
 		"UI/DestroyAllButton": "Button",
-		"UI/RepairButton": "Button",
 		"PauseMenu": "CanvasLayer"
 	})
 
@@ -46,42 +46,30 @@ func _ready():
 	GameManager.start_wave()
 	_apply_building_unlocks()
 	give_resources.pressed.connect(_give_resource)
-	repair_button.pressed.connect(_repair_destroyed_defense)
-	_update_repair_button()
 
 
 func _give_resource():
 	GameManager.player_resources += 100
 
 
-func _update_repair_button() -> void:
-	if not GameManager.can_use_repair_shop():
-		repair_button.visible = false
-		return
-	repair_button.visible = true
-	repair_button.text = "Repair Destroyed (%d)" % GameManager.get_repair_shop_cost()
+func _get_ordered_cannons() -> Array:
+	return [middle_cannon, left_cannon, right_cannon]
 
 
-func _repair_destroyed_defense() -> void:
-	if not GameManager.can_use_repair_shop():
+func _fire_alternating_cannon(target_position: Vector2) -> void:
+	var cannons = _get_ordered_cannons()
+	var cannon_count = cannons.size()
+	if cannon_count == 0:
 		return
-	var cost = GameManager.get_repair_shop_cost()
-	if GameManager.player_resources < cost:
-		return
-	var repaired = false
-	for cannon_id in GameManager.CANNON_IDS:
-		if GameManager.is_cannon_unlocked(cannon_id) and GameManager.is_cannon_destroyed(cannon_id):
-			GameManager.player_resources -= cost
-			GameManager.set_cannon_unlocked(cannon_id, true)
-			GameManager.set_cannon_current_ammo(cannon_id, GameManager.get_cannon_starting_ammo(cannon_id))
-			repaired = true
-			break
-	if repaired:
-		return
-	var buildings = get_tree().get_nodes_in_group("building")
-	if buildings.size() < get_building_count():
-		GameManager.player_resources -= cost
-		get_tree().reload_current_scene()
+
+	for offset in range(cannon_count):
+		var idx = (next_cannon_index + offset) % cannon_count
+		var cannon = cannons[idx]
+		if cannon == null:
+			continue
+		if cannon.try_fire_at(target_position):
+			next_cannon_index = (idx + 1) % cannon_count
+			return
 
 
 func _skip_to_boss():
@@ -129,8 +117,8 @@ func _on_destroy_all_pressed():
 
 	var buildings = get_tree().get_nodes_in_group("building")
 	for b in buildings:
-		if b:
-			b.queue_free()
+		if b and b.has_method("die"):
+			b.die()
 	print("🔧 All buildings destroyed (debug)")
 
 
@@ -139,12 +127,46 @@ func _process(delta):
 	AmmoLabel.text = "Ammo: %s" % GameManager.get_total_ammo_status()
 	wave_label.text = "🌊 Wave %d / 🌍 World %d" % [GameManager.current_wave, GameManager.current_world]
 	ResourceLabel.text = "Resources: %d" % GameManager.player_resources
-	_update_repair_button()
 
-	var buildings = get_tree().get_nodes_in_group("building")
-	if buildings.size() == 0:
+	if _count_surviving_buildings() == 0:
 		print("🏚️ All buildings destroyed — returning to upgrade screen")
 		GameManager.player_died()
+
+
+func _count_surviving_buildings() -> int:
+	var total := 0
+	for b in get_tree().get_nodes_in_group("building"):
+		if b and b.has_method("is_destroyed") and not b.is_destroyed():
+			total += 1
+	return total
+
+
+func _find_hovered_destroyed_defense() -> Node:
+	var mouse_pos = get_global_mouse_position()
+
+	for cannon in _get_ordered_cannons():
+		if cannon and cannon.has_method("is_hovered") and cannon.is_hovered(mouse_pos):
+			return cannon
+
+	for b in get_tree().get_nodes_in_group("building"):
+		if b and b.has_method("is_hovered") and b.is_hovered(mouse_pos):
+			return b
+
+	return null
+
+
+func _attempt_repair_hovered_defense() -> void:
+	if not GameManager.can_use_repair_shop():
+		return
+	var target = _find_hovered_destroyed_defense()
+	if target == null:
+		return
+	var cost = GameManager.get_repair_shop_cost()
+	if GameManager.player_resources < cost:
+		return
+	if target.has_method("repair"):
+		GameManager.player_resources -= cost
+		target.repair()
 
 
 func _unhandled_input(event):
@@ -153,6 +175,14 @@ func _unhandled_input(event):
 			pause_menu.hide_pause_menu()
 		else:
 			pause_menu.show_pause_menu()
+		return
+
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		_fire_alternating_cannon(get_global_mouse_position())
+		return
+
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_R:
+		_attempt_repair_hovered_defense()
 
 
 func _on_wave_cleared():
