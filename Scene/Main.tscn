@@ -12,15 +12,14 @@
 script = ExtResource("1_7l10b")
 
 [node name="Cannon" parent="." instance=ExtResource("2_oj5qe")]
-position = Vector2(608, 586)
-cannon_id = "middle"
+position = Vector2(608, 607)
 
 [node name="LeftCannon" parent="." instance=ExtResource("2_oj5qe")]
-position = Vector2(72, 586)
+position = Vector2(64, 607)
 cannon_id = "left"
 
 [node name="RightCannon" parent="." instance=ExtResource("2_oj5qe")]
-position = Vector2(1144, 586)
+position = Vector2(1107.03, 607)
 cannon_id = "right"
 
 [node name="Spawner" type="Node2D" parent="."]
@@ -87,21 +86,21 @@ offset_bottom = 53.0
 text = "ResourceLabel"
 
 [node name="Building" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(250, 610)
+position = Vector2(222, 610)
 
 [node name="Building2" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(430, 610)
+position = Vector2(427, 610)
 
 [node name="Building3" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(790, 610)
+position = Vector2(782, 610)
 
 [node name="Building4" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(970, 610)
+position = Vector2(979, 610)
 
 [node name="Building5" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(160, 610)
+position = Vector2(884, 610)
 
 [node name="Building6" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(1060, 610)
+position = Vector2(324.67, 610)
 
 [node name="PauseMenu" parent="." instance=ExtResource("5_u4f7x")]

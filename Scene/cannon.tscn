@@ -12,25 +12,27 @@ script = ExtResource("1_riktf")
 projectile_scene = ExtResource("2_w50be")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.5, 0.5)
 texture = ExtResource("2_sbulk")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0.5, 0)
+scale = Vector2(0.5, 0.5)
 shape = SubResource("RectangleShape2D_w28l3")
 
 [node name="AmmoLabel" type="Label" parent="."]
 offset_left = -45.0
-offset_top = 58.0
+offset_top = 30.0
 offset_right = 45.0
-offset_bottom = 81.0
-horizontal_alignment = 1
+offset_bottom = 53.0
 text = "0/0"
+horizontal_alignment = 1
 
 [node name="FireRateBar" type="ProgressBar" parent="."]
 offset_left = -45.0
-offset_top = 82.0
+offset_top = 54.0
 offset_right = 45.0
-offset_bottom = 98.0
+offset_bottom = 70.0
 max_value = 1.0
 value = 1.0
 show_percentage = false
