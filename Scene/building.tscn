@@ -18,12 +18,3 @@ texture = ExtResource("1_tn12e")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_ot00v")
-
-[node name="RepairLabel" type="Label" parent="."]
-visible = false
-offset_left = -70.0
-offset_top = -71.0
-offset_right = 70.0
-offset_bottom = -48.0
-text = "[R] Repair"
-horizontal_alignment = 1
