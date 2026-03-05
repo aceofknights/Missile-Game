@@ -64,13 +64,6 @@ offset_right = 568.0
 offset_bottom = 51.0
 text = "Give 100 Resources"
 
-[node name="RepairButton" type="Button" parent="UI"]
-offset_left = 319.0
-offset_top = 57.0
-offset_right = 568.0
-offset_bottom = 88.0
-text = "Repair Destroyed"
-
 [node name="AnnouncementLabel" type="Label" parent="UI"]
 visible = false
 offset_left = 552.0

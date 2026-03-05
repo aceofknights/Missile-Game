@@ -55,6 +55,10 @@ func is_hovered(global_mouse_position: Vector2) -> bool:
 	return global_position.distance_to(global_mouse_position) <= 52.0
 
 
+func is_hovered_any_state(global_mouse_position: Vector2) -> bool:
+	return global_position.distance_to(global_mouse_position) <= 52.0
+
+
 func repair() -> void:
 	destroyed = false
 	monitoring = true

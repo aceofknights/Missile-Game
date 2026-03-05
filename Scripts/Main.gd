@@ -145,15 +145,22 @@ func _update_repair_hint(delta: float) -> void:
 	if repair_hint_label == null:
 		return
 
-	if not GameManager.can_use_repair_shop():
-		repair_hint_label.visible = false
-		_repair_hint_linger_remaining = 0.0
-		return
-
-	var hovered_target = _find_hovered_destroyed_defense()
-	if hovered_target != null:
+	var hovered_destroyed_target = _find_hovered_destroyed_defense()
+	var hovered_defense = _find_hovered_defense_any_state()
+	if hovered_destroyed_target != null:
 		_repair_hint_linger_remaining = REPAIR_HINT_LINGER_SECONDS
-		repair_hint_label.text = "Hit R to repair (%d)" % GameManager.get_repair_shop_cost()
+		if GameManager.can_use_repair_shop():
+			repair_hint_label.text = "Hit R to repair (%d)" % GameManager.get_repair_shop_cost()
+		else:
+			repair_hint_label.text = "Buy Repair Shop upgrade to unlock repairs"
+		repair_hint_label.visible = true
+		return
+	elif hovered_defense != null:
+		_repair_hint_linger_remaining = REPAIR_HINT_LINGER_SECONDS
+		if GameManager.can_use_repair_shop():
+			repair_hint_label.text = "Destroyed defenses can be repaired with R (%d)" % GameManager.get_repair_shop_cost()
+		else:
+			repair_hint_label.text = "Destroyed defenses can be repaired after buying Repair Shop"
 		repair_hint_label.visible = true
 		return
 
@@ -182,6 +189,20 @@ func _find_hovered_destroyed_defense() -> Node:
 
 	for b in get_tree().get_nodes_in_group("building"):
 		if b and b.has_method("is_hovered") and b.is_hovered(mouse_pos):
+			return b
+
+	return null
+
+
+func _find_hovered_defense_any_state() -> Node:
+	var mouse_pos = get_global_mouse_position()
+
+	for cannon in _get_ordered_cannons():
+		if cannon and cannon.has_method("is_hovered_any_state") and cannon.is_hovered_any_state(mouse_pos):
+			return cannon
+
+	for b in get_tree().get_nodes_in_group("building"):
+		if b and b.has_method("is_hovered_any_state") and b.is_hovered_any_state(mouse_pos):
 			return b
 
 	return null

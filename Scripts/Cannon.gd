@@ -127,6 +127,12 @@ func is_hovered(global_mouse_position: Vector2) -> bool:
 	return global_position.distance_to(global_mouse_position) <= 70.0
 
 
+func is_hovered_any_state(global_mouse_position: Vector2) -> bool:
+	if not GameManager.is_cannon_unlocked(cannon_id):
+		return false
+	return global_position.distance_to(global_mouse_position) <= 70.0
+
+
 func repair() -> void:
 	GameManager.set_cannon_unlocked(cannon_id, true)
 	GameManager.set_cannon_current_ammo(cannon_id, GameManager.get_cannon_starting_ammo(cannon_id))
