@@ -146,9 +146,12 @@ func _update_repair_hint(delta: float) -> void:
 		return
 
 	var hovered_destroyed_target = _find_hovered_destroyed_defense()
-	if hovered_destroyed_target != null and GameManager.can_use_repair_shop():
+	if hovered_destroyed_target != null:
 		_repair_hint_linger_remaining = REPAIR_HINT_LINGER_SECONDS
-		repair_hint_label.text = "Hit R to repair Cost: %d" % GameManager.get_repair_shop_cost()
+		if GameManager.can_use_repair_shop():
+			repair_hint_label.text = "Hit R to repair Cost: %d" % GameManager.get_repair_shop_cost()
+		else:
+			repair_hint_label.text = "Repair Shop required to repair"
 		repair_hint_label.visible = true
 		return
 
