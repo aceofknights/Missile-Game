@@ -18,9 +18,7 @@ func _process(_delta: float) -> void:
 	if not repair_label:
 		return
 	repair_label.global_position = global_position + Vector2(-70, -64)
-	repair_label.visible = destroyed and GameManager.can_use_repair_shop()
-	if repair_label.visible:
-		repair_label.text = "[R] Repair (%d)" % GameManager.get_repair_shop_cost()
+	repair_label.visible = false
 
 
 func _on_area_entered(area):

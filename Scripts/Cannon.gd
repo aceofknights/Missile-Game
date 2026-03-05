@@ -56,8 +56,7 @@ func _refresh_visibility_state() -> void:
 	if fire_rate_bar:
 		fire_rate_bar.visible = active
 	if repair_label:
-		repair_label.visible = unlocked and destroyed and GameManager.can_use_repair_shop()
-		repair_label.text = "[R] Repair (%d)" % GameManager.get_repair_shop_cost()
+		repair_label.visible = false
 	if sprite:
 		sprite.modulate = Color(0.35, 0.35, 0.35, 1.0) if destroyed else Color(1, 1, 1, 1)
 

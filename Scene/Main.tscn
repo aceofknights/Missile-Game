@@ -79,6 +79,16 @@ offset_right = 592.0
 offset_bottom = 158.0
 theme_override_font_sizes/font_size = 20
 
+[node name="RepairHintLabel" type="Label" parent="UI"]
+visible = false
+offset_left = 398.0
+offset_top = 72.0
+offset_right = 820.0
+offset_bottom = 100.0
+theme_override_font_sizes/font_size = 22
+text = "Hit R to repair"
+horizontal_alignment = 1
+
 [node name="ResourceLabel" type="Label" parent="UI"]
 offset_top = 30.0
 offset_right = 40.0
