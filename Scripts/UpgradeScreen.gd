@@ -1,84 +1,93 @@
 extends Control
 
 @export var game_scene: PackedScene
-@onready var ammo_button = $VBoxContainer/MaxAmmoButton
-@onready var ammo_factory_button = $VBoxContainer/AmmoFactoryButton
-@onready var ResourceLabel = $ResourceLabel
-@onready var b5_btn = $VBoxContainer/UnlockBuilding5Button
-@onready var b6_btn = $VBoxContainer/UnlockBuilding6Button
+@onready var resource_label: Label = $MarginContainer/VBoxContainer/ResourceLabel
+@onready var tree_vbox: VBoxContainer = $MarginContainer/VBoxContainer/ScrollContainer/TreeVBox
+
+var _upgrade_buttons: Dictionary = {}
+
+const TREE_ORDER := [
+	{"label": "First Upgrade", "indent": 0},
+	{"key": "starting_ammo_middle_1", "indent": 1},
+	{"label": "Offensive > Ammo", "indent": 0},
+	{"key": "ammo_factory_1", "indent": 1},
+	{"key": "ammo_factory_2", "indent": 2},
+	{"key": "max_ammo_middle_2", "indent": 1},
+	{"key": "max_ammo_middle_3", "indent": 2},
+	{"key": "starting_ammo_middle_2", "indent": 1},
+	{"key": "starting_ammo_middle_3", "indent": 2},
+	{"key": "starting_ammo_left_2", "indent": 2},
+	{"key": "starting_ammo_left_3", "indent": 3},
+	{"key": "starting_ammo_right_2", "indent": 2},
+	{"key": "starting_ammo_right_3", "indent": 3},
+	{"label": "Offensive > Cannon", "indent": 0},
+	{"key": "double_turret_middle", "indent": 1},
+	{"key": "fire_rate_middle", "indent": 1},
+	{"key": "unlock_left_cannon", "indent": 1},
+	{"key": "double_turret_left", "indent": 2},
+	{"key": "fire_rate_left", "indent": 2},
+	{"key": "unlock_right_cannon", "indent": 1},
+	{"key": "double_turret_right", "indent": 2},
+	{"key": "fire_rate_right", "indent": 2},
+	{"label": "Offensive > Missile", "indent": 0},
+	{"key": "explosion_size", "indent": 1},
+	{"key": "explosion_duration", "indent": 1},
+	{"key": "missile_speed", "indent": 1},
+	{"label": "Defensive", "indent": 0},
+	{"key": "building_5", "indent": 1},
+	{"key": "building_6", "indent": 2},
+	{"key": "repair_shop", "indent": 1},
+	{"label": "Economy", "indent": 0},
+	{"key": "resource_gain", "indent": 1}
+]
 
 
 func _ready():
-	update_resource_display()
-	ammo_button.pressed.connect(_buy_starting_ammo_middle)
-	ammo_factory_button.pressed.connect(_buy_ammo_factory_1)
-	$VBoxContainer/ContinueButton.pressed.connect(continue_game)
-	b5_btn.pressed.connect(_buy_building5)
-	b6_btn.pressed.connect(_buy_building6)
-	_update_upgrade_button_labels()
-	update_building_buttons()
+	$MarginContainer/VBoxContainer/ContinueButton.pressed.connect(continue_game)
+	_build_tree()
+	_refresh_view()
 
 
-func update_building_buttons():
-	b5_btn.disabled = GameManager.get_extra_buildings() >= 1
-	b6_btn.disabled = GameManager.get_extra_buildings() >= 2 or GameManager.get_extra_buildings() < 1
+func _build_tree() -> void:
+	for child in tree_vbox.get_children():
+		child.queue_free()
+	_upgrade_buttons.clear()
+
+	var defs = GameManager.get_upgrade_definitions_world_1()
+	for item in TREE_ORDER:
+		if item.has("label"):
+			var section := Label.new()
+			section.text = "%s%s" % ["  ".repeat(int(item.get("indent", 0))), String(item["label"])]
+			tree_vbox.add_child(section)
+			continue
+		var key = String(item.get("key", ""))
+		if not defs.has(key):
+			continue
+		var btn := Button.new()
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn.pressed.connect(func(): _buy_upgrade(key))
+		_upgrade_buttons[key] = {"button": btn, "indent": int(item.get("indent", 0))}
+		tree_vbox.add_child(btn)
 
 
-func _buy_building5():
-	_buy_extra_building(1, 25)
+func _buy_upgrade(upgrade_key: String) -> void:
+	GameManager.try_buy_upgrade(upgrade_key)
+	_refresh_view()
 
 
-func _buy_building6():
-	_buy_extra_building(2, 75)
-
-
-func _buy_extra_building(target_level: int, cost: int):
-	if GameManager.get_extra_buildings() >= target_level:
-		return
-	if GameManager.player_resources < cost:
-		print("❌ Not enough resources")
-		return
-
-	GameManager.player_resources -= cost
-	GameManager.set_extra_buildings(target_level)
-
-	update_resource_display()
-	update_building_buttons()
-	print("✅ Extra buildings level now: %d" % GameManager.get_extra_buildings())
-
-
-func update_resource_display():
-	ResourceLabel.text = "Resources: %d" % GameManager.player_resources
-
-
-func _update_upgrade_button_labels() -> void:
-	var starting_level = GameManager.get_upgrade_level("starting_ammo_middle_1")
-	var starting_cost = GameManager.get_upgrade_cost(2, starting_level, GameManager.PATH_CHEAP)
-	ammo_button.text = "Starting Ammo/Max Ammo (Middle) L%d - Cost %d" % [starting_level + 1, starting_cost]
-	ammo_button.disabled = not GameManager.can_buy_upgrade("starting_ammo_middle_1")
-
-	var factory_level = GameManager.get_upgrade_level("ammo_factory_1")
-	var factory_cost = GameManager.get_upgrade_cost(10, factory_level, GameManager.PATH_MEDIUM)
-	ammo_factory_button.text = "Ammo Factory 1 L%d - Cost %d" % [factory_level + 1, factory_cost]
-	ammo_factory_button.disabled = not GameManager.can_buy_upgrade("ammo_factory_1")
-
-
-func _buy_starting_ammo_middle() -> void:
-	if GameManager.try_buy_upgrade("starting_ammo_middle_1"):
-		print("✅ Purchased starting_ammo_middle_1")
-	else:
-		print("❌ Could not purchase starting_ammo_middle_1")
-	update_resource_display()
-	_update_upgrade_button_labels()
-
-
-func _buy_ammo_factory_1() -> void:
-	if GameManager.try_buy_upgrade("ammo_factory_1"):
-		print("✅ Purchased ammo_factory_1")
-	else:
-		print("❌ Could not purchase ammo_factory_1")
-	update_resource_display()
-	_update_upgrade_button_labels()
+func _refresh_view() -> void:
+	resource_label.text = "Resources: %d" % GameManager.player_resources
+	var defs = GameManager.get_upgrade_definitions_world_1()
+	for key in _upgrade_buttons.keys():
+		var meta: Dictionary = _upgrade_buttons[key]
+		var btn: Button = meta["button"]
+		var indent: int = meta["indent"]
+		var def: Dictionary = defs[key]
+		var level = GameManager.get_upgrade_level(key)
+		var max_level = int(def.get("max_level", 1))
+		var cost = GameManager.get_upgrade_cost(int(def.get("base_cost", 1)), level, String(def.get("path_rate", GameManager.PATH_MEDIUM)))
+		btn.text = "%s%s L%d/%d - Cost %d" % ["  ".repeat(indent), String(def.get("display_name", key)), level, max_level, cost]
+		btn.disabled = not GameManager.can_buy_upgrade(key)
 
 
 func continue_game():

@@ -25,6 +25,8 @@ var _t: float = 0.0     # 0..1 single source of truth
 var _hit := {}
 
 func _ready():
+	max_radius += GameManager.get_explosion_radius_bonus()
+	hold_time += GameManager.get_explosion_duration_bonus()
 	monitoring = true
 	monitorable = true
 

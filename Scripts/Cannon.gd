@@ -5,6 +5,7 @@ extends Area2D
 @export var fire_rate := 0.5
 
 var cooldown := 0.0
+var shots_in_cycle := 0
 
 
 func _ready() -> void:
@@ -31,9 +32,11 @@ func _input(event):
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		if cooldown <= 0.0:
-			if fire():
-				cooldown = fire_rate
+		if cooldown <= 0.0 and fire():
+			shots_in_cycle += 1
+			if shots_in_cycle >= GameManager.get_cannon_shots_per_cycle(cannon_id):
+				shots_in_cycle = 0
+				cooldown = GameManager.get_cannon_fire_rate(cannon_id, fire_rate)
 
 
 func _can_operate() -> bool:
