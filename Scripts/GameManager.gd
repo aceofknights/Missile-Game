@@ -95,14 +95,9 @@ func _sync_cannon_ammo_caps_with_state(cannon_id: String, state: Dictionary) -> 
 	if not bool(cannon_state["unlocked"]):
 		return
 
-	# IMPORTANT: use state-based max ammo (no _world_state / get_upgrade_level)
-	var max_ammo := _get_cannon_max_ammo_from_state(state, cannon_id)
+	# Keep ammo bounded below zero only. Do not auto-refill here.
 	var current_ammo := int(cannon_state["current_ammo"])
-
-	if current_ammo <= 0:
-		cannon_state["current_ammo"] = _get_cannon_starting_ammo_from_state(state, cannon_id)
-	else:
-		cannon_state["current_ammo"] = clamp(current_ammo, 0, max_ammo)
+	cannon_state["current_ammo"] = max(0, current_ammo)
 
 # Keep your existing _sync_cannon_ammo_caps, but rewrite it as a wrapper:
 func _sync_cannon_ammo_caps(cannon_id: String) -> void:
@@ -268,9 +263,12 @@ func set_cannon_unlocked(cannon_id: String, unlocked: bool) -> void:
 	if not cannons.has(cannon_id):
 		return
 	var cannon_state: Dictionary = cannons[cannon_id]
+	var was_unlocked := bool(cannon_state["unlocked"])
 	cannon_state["unlocked"] = unlocked
 	if unlocked:
 		cannon_state["destroyed"] = false
+		if not was_unlocked:
+			cannon_state["current_ammo"] = get_cannon_starting_ammo(cannon_id)
 		_sync_cannon_ammo_caps(cannon_id)
 
 
@@ -336,8 +334,7 @@ func _get_cannon_starting_ammo_from_state(state: Dictionary, cannon_id: String) 
 			bonus = (_get_upgrade_level_from_state(state, "starting_ammo_left_2") * 2) + (_get_upgrade_level_from_state(state, "starting_ammo_left_3") * 2)
 		CANNON_RIGHT:
 			bonus = (_get_upgrade_level_from_state(state, "starting_ammo_right_2") * 2) + (_get_upgrade_level_from_state(state, "starting_ammo_right_3") * 2)
-	var max_ammo := _get_cannon_max_ammo_from_state(state, cannon_id)
-	return clamp(10 + bonus, 0, max_ammo)
+	return max(0, 10 + bonus)
 
 func get_cannon_starting_ammo(cannon_id: String) -> int:
 	return _get_cannon_starting_ammo_from_state(_world_state(), cannon_id)
@@ -357,8 +354,7 @@ func set_cannon_current_ammo(cannon_id: String, value: int) -> void:
 	if not cannons.has(cannon_id):
 		return
 	var cannon_state: Dictionary = cannons[cannon_id]
-	var max_ammo = get_cannon_max_ammo(cannon_id)
-	cannon_state["current_ammo"] = clamp(value, 0, max_ammo)
+	cannon_state["current_ammo"] = max(0, value)
 
 
 func spend_cannon_ammo(cannon_id: String, amount := 1) -> bool:
@@ -537,8 +533,22 @@ func player_died():
 	load_upgrade_screen()
 
 
+
+
+func reset_cannons_for_new_run() -> void:
+	var state := _world_state()
+	var cannons: Dictionary = state["cannons"]
+	for cannon_id in CANNON_IDS:
+		if not bool(cannons[cannon_id]["unlocked"]):
+			continue
+		cannons[cannon_id]["destroyed"] = false
+		cannons[cannon_id]["current_ammo"] = _get_cannon_starting_ammo_from_state(state, cannon_id)
+	state["ammo_factory_distribution_index"] = 0
+	cannons[CANNON_MIDDLE]["ammo_factory_progress"] = 0.0
+
 func continue_from_upgrades():
 	current_wave = 1
+	reset_cannons_for_new_run()
 	get_tree().change_scene_to_file("res://Scene/Main.tscn")
 
 
@@ -552,6 +562,7 @@ func select_world(world: int) -> void:
 	current_world = world
 	current_wave = 1
 	_ensure_world_upgrade_data(current_world)
+	reset_cannons_for_new_run()
 	get_tree().change_scene_to_file("res://Scene/Main.tscn")
 
 
