@@ -21,3 +21,7 @@ GameManager="*res://Scripts/GameManager.gd"
 [dotnet]
 
 project/assembly_name="MissileCommandClone"
+
+[rendering]
+
+textures/vram_compression/import_etc2_astc=true
