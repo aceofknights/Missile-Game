@@ -8,7 +8,7 @@ var cooldown := 0.0
 var shots_in_cycle := 0
 @onready var ammo_label: Label = $AmmoLabel
 @onready var fire_rate_bar: ProgressBar = $FireRateBar
-@onready var repair_label: Label = $RepairLabel
+@onready var repair_label: Label = get_node_or_null("RepairLabel") as Label
 @onready var sprite: Sprite2D = $Sprite2D
 
 
@@ -20,7 +20,8 @@ func _ready() -> void:
 	connect("area_entered", Callable(self, "_on_area_entered"))
 	ammo_label.top_level = true
 	fire_rate_bar.top_level = true
-	repair_label.top_level = true
+	if repair_label:
+		repair_label.top_level = true
 	_refresh_visibility_state()
 	_update_overlay_positions()
 	_update_ui()
@@ -73,7 +74,8 @@ func _update_ui() -> void:
 func _update_overlay_positions() -> void:
 	ammo_label.global_position = global_position + Vector2(-45, 32)
 	fire_rate_bar.global_position = global_position + Vector2(-45, 56)
-	repair_label.global_position = global_position + Vector2(-70, -68)
+	if repair_label:
+		repair_label.global_position = global_position + Vector2(-70, -68)
 
 
 func can_fire() -> bool:

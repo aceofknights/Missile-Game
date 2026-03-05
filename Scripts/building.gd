@@ -2,18 +2,21 @@ extends Area2D
 
 var destroyed := false
 @onready var sprite: Sprite2D = $Sprite2D
-@onready var repair_label: Label = $RepairLabel
+@onready var repair_label: Label = get_node_or_null("RepairLabel") as Label
 
 
 func _ready():
 	connect("area_entered", Callable(self, "_on_area_entered"))
 	add_to_group("building")
 	add_to_group("defense_target")
-	repair_label.top_level = true
+	if repair_label:
+		repair_label.top_level = true
 	_update_visual_state()
 
 
 func _process(_delta: float) -> void:
+	if not repair_label:
+		return
 	repair_label.global_position = global_position + Vector2(-70, -64)
 	repair_label.visible = destroyed and GameManager.can_use_repair_shop()
 	if repair_label.visible:
