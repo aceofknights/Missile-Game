@@ -8,7 +8,7 @@ extends Node2D
 @onready var destroy_all_button = $UI/DestroyAllButton
 @onready var wave_label = $UI/WaveLabel
 @onready var announcement_label = $UI/AnnouncementLabel
-@onready var repair_hint_label = $UI/RepairHintLabel
+@onready var repair_hint_label: Label = get_node_or_null("UI/RepairHintLabel") as Label
 @onready var ResourceLabel = $UI/ResourceLabel
 @onready var building5 = $Building5
 @onready var building6 = $Building6
@@ -42,7 +42,8 @@ func _ready():
 
 	get_tree().paused = false
 	pause_menu.hide()
-	repair_hint_label.visible = false
+	if repair_hint_label:
+		repair_hint_label.visible = false
 	print("Main game started: Wave %d, World %d" % [GameManager.current_wave, GameManager.current_world])
 	destroy_all_button.pressed.connect(_on_destroy_all_pressed)
 	skip_to_boss.pressed.connect(_skip_to_boss)
@@ -74,7 +75,7 @@ func _fire_closest_cannon(target_position: Vector2) -> void:
 			best_distance_sq = distance_sq
 			best_cannon = cannon
 
-	if best_cannon and best_cannon.has_method("try_fire_at"):
+	if best_cannon != null and best_cannon.has_method("try_fire_at"):
 		best_cannon.try_fire_at(target_position)
 
 
@@ -141,6 +142,9 @@ func _process(delta):
 
 
 func _update_repair_hint(delta: float) -> void:
+	if repair_hint_label == null:
+		return
+
 	if not GameManager.can_use_repair_shop():
 		repair_hint_label.visible = false
 		_repair_hint_linger_remaining = 0.0
