@@ -2,22 +2,37 @@ extends Node
 
 const WORLD_COUNT := 5
 
+const CANNON_MIDDLE := "middle"
+const CANNON_LEFT := "left"
+const CANNON_RIGHT := "right"
+const CANNON_IDS := [CANNON_MIDDLE, CANNON_LEFT, CANNON_RIGHT]
+
+const PATH_CHEAP := "cheap"
+const PATH_MEDIUM := "medium"
+const PATH_EXPENSIVE := "expensive"
+
+const COST_MULTIPLIER := {
+	PATH_CHEAP: 1.5,
+	PATH_MEDIUM: 2.0,
+	PATH_EXPENSIVE: 3.0
+}
+
 var current_wave := 1
 var current_world := 1
 var transitioning_world := false
-# Currency can stay global for now; "planet upgrades" are per-world below.
 var player_resources := 0
 
-# Highest world index the player can select in World Select.
 var highest_world_unlocked := 1
 
-# Per-world upgrade storage.
 # world_upgrades[world] = {
-#   "ammo_level": int,
-#   "reload_upgrade_bought": bool,
-#   "reload_speed_level": int,
 #   "extra_buildings": int,
-#   "player_upgrades": Dictionary
+#   "upgrade_levels": Dictionary,
+#   "cannons": {
+#      "middle": {"unlocked": bool, "destroyed": bool, "current_ammo": int, "ammo_factory_progress": float},
+#      "left": {...},
+#      "right": {...}
+#   },
+#   "ammo_factory_distribution_index": int
 # }
 var world_upgrades: Dictionary = {}
 
@@ -34,19 +49,37 @@ func _ready():
 	_ensure_world_upgrade_data(current_world)
 
 
+func _default_cannon_state(cannon_id: String) -> Dictionary:
+	return {
+		"unlocked": cannon_id == CANNON_MIDDLE,
+		"destroyed": false,
+		"current_ammo": 0,
+		"ammo_factory_progress": 0.0
+	}
+
+
 func _default_upgrade_state() -> Dictionary:
 	return {
-		"ammo_level": 0,
-		"reload_upgrade_bought": false,
-		"reload_speed_level": -1,
 		"extra_buildings": 0,
-		"player_upgrades": {}
+		"upgrade_levels": {},
+		"cannons": {
+			CANNON_MIDDLE: _default_cannon_state(CANNON_MIDDLE),
+			CANNON_LEFT: _default_cannon_state(CANNON_LEFT),
+			CANNON_RIGHT: _default_cannon_state(CANNON_RIGHT)
+		},
+		"ammo_factory_distribution_index": 0
 	}
 
 
 func _ensure_world_upgrade_data(world: int) -> void:
 	if not world_upgrades.has(world):
 		world_upgrades[world] = _default_upgrade_state()
+	if world == current_world:
+		var state: Dictionary = world_upgrades[world]
+		var cannons: Dictionary = state["cannons"]
+		for cannon_id in CANNON_IDS:
+			if bool(cannons[cannon_id]["unlocked"]):
+				_sync_cannon_ammo_caps(cannon_id)
 
 
 func _world_state() -> Dictionary:
@@ -54,53 +87,277 @@ func _world_state() -> Dictionary:
 	return world_upgrades[current_world]
 
 
+func get_upgrade_level(upgrade_key: String) -> int:
+	var levels: Dictionary = _world_state()["upgrade_levels"]
+	return int(levels.get(upgrade_key, 0))
+
+
+func add_upgrade_level(upgrade_key: String, amount := 1) -> int:
+	var state = _world_state()
+	var levels: Dictionary = state["upgrade_levels"]
+	levels[upgrade_key] = int(levels.get(upgrade_key, 0)) + amount
+
+	# Keep unlock upgrades in sync with cannon availability.
+	if upgrade_key == "unlock_left_cannon" and int(levels[upgrade_key]) > 0:
+		set_cannon_unlocked(CANNON_LEFT, true)
+	elif upgrade_key == "unlock_right_cannon" and int(levels[upgrade_key]) > 0:
+		set_cannon_unlocked(CANNON_RIGHT, true)
+
+	return int(levels[upgrade_key])
+
+
+func get_upgrade_cost(base_cost: int, level: int, path_rate: String) -> int:
+	var multiplier = float(COST_MULTIPLIER.get(path_rate, COST_MULTIPLIER[PATH_MEDIUM]))
+	return int(round(base_cost * pow(multiplier, level)))
+
+
+func get_upgrade_definitions_world_1() -> Dictionary:
+	# This structure is intentionally data-first so future worlds can extend it
+	# while reusing the same key names and dependency checks.
+	return {
+		"starting_ammo_middle_1": {
+			"display_name": "Starting Ammo/Max Ammo (Middle)",
+			"max_level": 10,
+			"base_cost": 2,
+			"path_rate": PATH_CHEAP,
+			"requires": []
+		},
+		"ammo_factory_1": {
+			"display_name": "Ammo Factory 1",
+			"max_level": 10,
+			"base_cost": 10,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+			]
+		},
+		"unlock_left_cannon": {
+			"display_name": "Unlock Left Cannon",
+			"max_level": 1,
+			"base_cost": 50,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+			]
+		},
+		"unlock_right_cannon": {
+			"display_name": "Unlock Right Cannon",
+			"max_level": 1,
+			"base_cost": 50,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+			]
+		}
+	}
+
+
+func can_buy_upgrade(upgrade_key: String) -> bool:
+	var defs = get_upgrade_definitions_world_1()
+	if not defs.has(upgrade_key):
+		return false
+
+	var def: Dictionary = defs[upgrade_key]
+	var level = get_upgrade_level(upgrade_key)
+	if level >= int(def.get("max_level", 1)):
+		return false
+
+	for requirement in def.get("requires", []):
+		var req_upgrade: String = requirement.get("upgrade", "")
+		var req_level: int = int(requirement.get("min_level", 1))
+		if get_upgrade_level(req_upgrade) < req_level:
+			return false
+
+	return true
+
+
+func try_buy_upgrade(upgrade_key: String) -> bool:
+	if not can_buy_upgrade(upgrade_key):
+		return false
+
+	var defs = get_upgrade_definitions_world_1()
+	var def: Dictionary = defs[upgrade_key]
+	var level = get_upgrade_level(upgrade_key)
+	var cost = get_upgrade_cost(int(def.get("base_cost", 1)), level, String(def.get("path_rate", PATH_MEDIUM)))
+	if player_resources < cost:
+		return false
+
+	player_resources -= cost
+	add_upgrade_level(upgrade_key)
+
+	if upgrade_key == "starting_ammo_middle_1":
+		_sync_cannon_ammo_caps(CANNON_MIDDLE)
+	elif upgrade_key == "unlock_left_cannon":
+		_sync_cannon_ammo_caps(CANNON_LEFT)
+	elif upgrade_key == "unlock_right_cannon":
+		_sync_cannon_ammo_caps(CANNON_RIGHT)
+
+	return true
+
+
 func add_resources(amount: int):
 	player_resources += amount
 	print("💰 Gained %d resource(s). Total: %d" % [amount, player_resources])
 
 
-func get_max_ammo() -> int:
-	return 10 + (get_ammo_level() * 2)
+func set_cannon_unlocked(cannon_id: String, unlocked: bool) -> void:
+	var cannons: Dictionary = _world_state()["cannons"]
+	if not cannons.has(cannon_id):
+		return
+	var cannon_state: Dictionary = cannons[cannon_id]
+	cannon_state["unlocked"] = unlocked
+	if unlocked:
+		cannon_state["destroyed"] = false
+		_sync_cannon_ammo_caps(cannon_id)
 
 
-func get_reload_speed():
-	if has_reload_upgrade():
-		return 5 - (get_reload_speed_level() * 0.1)
-	return null
+func is_cannon_unlocked(cannon_id: String) -> bool:
+	var cannons: Dictionary = _world_state()["cannons"]
+	if not cannons.has(cannon_id):
+		return false
+	return bool(cannons[cannon_id]["unlocked"])
 
 
-func has_reload_upgrade() -> bool:
-	return bool(_world_state()["reload_upgrade_bought"])
+func is_cannon_destroyed(cannon_id: String) -> bool:
+	var cannons: Dictionary = _world_state()["cannons"]
+	if not cannons.has(cannon_id):
+		return true
+	return bool(cannons[cannon_id]["destroyed"])
 
 
-func get_reload_speed_level() -> int:
-	return int(_world_state()["reload_speed_level"])
+func destroy_cannon(cannon_id: String) -> void:
+	var cannons: Dictionary = _world_state()["cannons"]
+	if not cannons.has(cannon_id):
+		return
+	var cannon_state: Dictionary = cannons[cannon_id]
+	if not bool(cannon_state["unlocked"]):
+		return
+	cannon_state["destroyed"] = true
+	print("💥 Cannon destroyed: %s" % cannon_id)
 
 
-func get_ammo_level() -> int:
-	return int(_world_state()["ammo_level"])
+func get_cannon_max_ammo(cannon_id: String) -> int:
+	match cannon_id:
+		CANNON_MIDDLE:
+			return 10 + (get_upgrade_level("starting_ammo_middle_1") * 2)
+		CANNON_LEFT:
+			# Placeholder world-1 tree values; these become upgrade-driven later.
+			return 10
+		CANNON_RIGHT:
+			return 10
+		_:
+			return 0
+
+
+func get_cannon_starting_ammo(cannon_id: String) -> int:
+	# For now, world-1 starts from full for unlocked cannons.
+	return get_cannon_max_ammo(cannon_id)
+
+
+func _sync_cannon_ammo_caps(cannon_id: String) -> void:
+	var cannons: Dictionary = _world_state()["cannons"]
+	if not cannons.has(cannon_id):
+		return
+	var cannon_state: Dictionary = cannons[cannon_id]
+	if not bool(cannon_state["unlocked"]):
+		return
+	var max_ammo = get_cannon_max_ammo(cannon_id)
+	var current_ammo = int(cannon_state["current_ammo"])
+	if current_ammo <= 0:
+		cannon_state["current_ammo"] = get_cannon_starting_ammo(cannon_id)
+	else:
+		cannon_state["current_ammo"] = clamp(current_ammo, 0, max_ammo)
+
+
+func get_cannon_current_ammo(cannon_id: String) -> int:
+	var cannons: Dictionary = _world_state()["cannons"]
+	if not cannons.has(cannon_id):
+		return 0
+	return int(cannons[cannon_id]["current_ammo"])
+
+
+func set_cannon_current_ammo(cannon_id: String, value: int) -> void:
+	var cannons: Dictionary = _world_state()["cannons"]
+	if not cannons.has(cannon_id):
+		return
+	var cannon_state: Dictionary = cannons[cannon_id]
+	var max_ammo = get_cannon_max_ammo(cannon_id)
+	cannon_state["current_ammo"] = clamp(value, 0, max_ammo)
+
+
+func spend_cannon_ammo(cannon_id: String, amount := 1) -> bool:
+	if not is_cannon_unlocked(cannon_id) or is_cannon_destroyed(cannon_id):
+		return false
+	var current = get_cannon_current_ammo(cannon_id)
+	if current < amount:
+		return false
+	set_cannon_current_ammo(cannon_id, current - amount)
+	return true
+
+
+func _get_ammo_factory_interval() -> float:
+	var level = get_upgrade_level("ammo_factory_1")
+	if level <= 0:
+		return -1.0
+	return max(3.0, 5.0 - (0.2 * (level - 1)))
+
+
+func _give_factory_ammo_tick() -> bool:
+	var state = _world_state()
+	var cannons: Dictionary = state["cannons"]
+	var start_index = int(state["ammo_factory_distribution_index"])
+
+	for offset in range(CANNON_IDS.size()):
+		var idx = (start_index + offset) % CANNON_IDS.size()
+		var cannon_id = CANNON_IDS[idx]
+		var cannon_state: Dictionary = cannons[cannon_id]
+		if not bool(cannon_state["unlocked"]) or bool(cannon_state["destroyed"]):
+			continue
+
+		var max_ammo = get_cannon_max_ammo(cannon_id)
+		var current_ammo = int(cannon_state["current_ammo"])
+		if current_ammo >= max_ammo:
+			continue
+
+		cannon_state["current_ammo"] = current_ammo + 1
+		state["ammo_factory_distribution_index"] = (idx + 1) % CANNON_IDS.size()
+		return true
+
+	return false
+
+
+func update_ammo_factory(delta: float) -> void:
+	var interval = _get_ammo_factory_interval()
+	if interval <= 0.0:
+		return
+
+	var state = _world_state()
+	var middle_state: Dictionary = state["cannons"][CANNON_MIDDLE]
+	middle_state["ammo_factory_progress"] = float(middle_state["ammo_factory_progress"]) + delta
+
+	while float(middle_state["ammo_factory_progress"]) >= interval:
+		middle_state["ammo_factory_progress"] = float(middle_state["ammo_factory_progress"]) - interval
+		if not _give_factory_ammo_tick():
+			middle_state["ammo_factory_progress"] = 0.0
+			break
+
+
+func get_total_ammo_status() -> String:
+	var parts: Array[String] = []
+	for cannon_id in CANNON_IDS:
+		if not is_cannon_unlocked(cannon_id):
+			continue
+		var current = get_cannon_current_ammo(cannon_id)
+		var max_ammo = get_cannon_max_ammo(cannon_id)
+		var destroyed_suffix = ""
+		if is_cannon_destroyed(cannon_id):
+			destroyed_suffix = " (destroyed)"
+		parts.append("%s: %d/%d%s" % [cannon_id, current, max_ammo, destroyed_suffix])
+	return " | ".join(parts)
 
 
 func get_extra_buildings() -> int:
 	return int(_world_state()["extra_buildings"])
-
-
-func get_player_upgrades() -> Dictionary:
-	return _world_state()["player_upgrades"]
-
-
-func add_ammo_upgrade(levels := 1) -> void:
-	var state = _world_state()
-	state["ammo_level"] = int(state["ammo_level"]) + levels
-
-
-func buy_reload_upgrade_once() -> bool:
-	var state = _world_state()
-	if bool(state["reload_upgrade_bought"]):
-		return false
-	state["reload_upgrade_bought"] = true
-	state["reload_speed_level"] = int(state["reload_speed_level"]) + 1
-	return true
 
 
 func set_extra_buildings(level: int) -> void:
@@ -108,14 +365,44 @@ func set_extra_buildings(level: int) -> void:
 	state["extra_buildings"] = clamp(level, 0, 2)
 
 
+func get_player_upgrades() -> Dictionary:
+	# Compatibility with existing UI callers.
+	return _world_state()["upgrade_levels"]
+
+
 func add_upgrade_stat(upgrade_key: String, amount := 1) -> void:
-	var state = _world_state()
-	var upgrades: Dictionary = state["player_upgrades"]
-	upgrades[upgrade_key] = int(upgrades.get(upgrade_key, 0)) + amount
+	add_upgrade_level(upgrade_key, amount)
+
+
+func get_max_ammo() -> int:
+	return get_cannon_max_ammo(CANNON_MIDDLE)
+
+
+func get_reload_speed():
+	# Deprecated by ammo factory but still used in older scenes.
+	return null
+
+
+func has_reload_upgrade() -> bool:
+	return get_upgrade_level("ammo_factory_1") > 0
+
+
+func get_reload_speed_level() -> int:
+	return get_upgrade_level("ammo_factory_1")
+
+
+func get_ammo_level() -> int:
+	return get_upgrade_level("starting_ammo_middle_1")
+
+
+func buy_reload_upgrade_once() -> bool:
+	if get_upgrade_level("ammo_factory_1") > 0:
+		return false
+	add_upgrade_level("ammo_factory_1")
+	return true
 
 
 func start_new_game():
-	# New campaign run starts from World 1; only World 1 unlocked.
 	current_world = 1
 	current_wave = 1
 	player_resources = 0
@@ -158,7 +445,7 @@ func start_wave():
 	enemies_alive = 0
 
 	if is_boss_wave:
-		enemies_alive = 1 # boss itself
+		enemies_alive = 1
 		spawner.spawn_boss()
 	else:
 		enemies_to_spawn = current_wave * 2
@@ -169,16 +456,15 @@ func spawn_enemies_gradually(count):
 	var delay = max(0.3, 1.5 - (current_world * 0.2) - (current_wave * 0.05))
 	print("⏱ Spawning enemies with delay of %.2f" % delay)
 
-	for i in range(count):
+	for _i in range(count):
 		if not wave_active or spawner == null or !is_instance_valid(spawner):
 			print("⛔️ Spawning cancelled: wave is no longer active or spawner is invalid")
 			return
 
-		enemies_alive += 1  # ✅ count this enemy
+		enemies_alive += 1
 		spawner.spawn_enemy()
 
 		await get_tree().create_timer(delay).timeout
-
 
 
 func _clear_active_enemies() -> void:
@@ -191,6 +477,7 @@ func _clear_active_enemies() -> void:
 func _go_to_world_select_deferred() -> void:
 	get_tree().change_scene_to_file("res://Scene/WorldSelect.tscn")
 	transitioning_world = false
+
 
 func _on_enemy_died():
 	enemies_alive -= 1
@@ -227,7 +514,6 @@ func _on_world_defeated() -> void:
 		highest_world_unlocked = max(highest_world_unlocked, next_world)
 		_ensure_world_upgrade_data(next_world)
 
-	# Return to home base / world select after clearing a world.
 	current_wave = 1
 	get_tree().change_scene_to_file("res://Scene/WorldSelect.tscn")
 
@@ -237,5 +523,4 @@ func load_upgrade_screen():
 
 
 func advance_to_next_world():
-	# Legacy compatibility helper.
 	_on_world_defeated()
