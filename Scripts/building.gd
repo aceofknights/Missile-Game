@@ -52,10 +52,18 @@ func is_destroyed() -> bool:
 func is_hovered(global_mouse_position: Vector2) -> bool:
 	if not destroyed:
 		return false
-	return global_position.distance_to(global_mouse_position) <= 52.0
+	return _is_mouse_over_defense(global_mouse_position)
 
 
 func is_hovered_any_state(global_mouse_position: Vector2) -> bool:
+	return _is_mouse_over_defense(global_mouse_position)
+
+
+func _is_mouse_over_defense(global_mouse_position: Vector2) -> bool:
+	if sprite and sprite.texture:
+		var local_mouse = sprite.to_local(global_mouse_position)
+		if sprite.get_rect().has_point(local_mouse):
+			return true
 	return global_position.distance_to(global_mouse_position) <= 52.0
 
 
