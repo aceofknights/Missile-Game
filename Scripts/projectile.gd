@@ -5,6 +5,7 @@ extends Area2D
 var target: Vector2  # This stores where the projectile is going
 
 func _ready():
+	speed *= GameManager.get_missile_speed_multiplier()
 	look_at(target)
 	connect("area_entered", Callable(self, "_on_area_entered"))
 

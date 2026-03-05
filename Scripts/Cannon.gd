@@ -5,6 +5,9 @@ extends Area2D
 @export var fire_rate := 0.5
 
 var cooldown := 0.0
+var shots_in_cycle := 0
+@onready var ammo_label: Label = $AmmoLabel
+@onready var fire_rate_bar: ProgressBar = $FireRateBar
 
 
 func _ready() -> void:
@@ -14,6 +17,7 @@ func _ready() -> void:
 	monitorable = true
 	connect("area_entered", Callable(self, "_on_area_entered"))
 	_refresh_visibility_state()
+	_update_ui()
 
 
 func _process(delta: float) -> void:
@@ -23,7 +27,8 @@ func _process(delta: float) -> void:
 	look_at(get_global_mouse_position())
 
 	if cooldown > 0.0:
-		cooldown -= delta
+		cooldown = max(0.0, cooldown - delta)
+	_update_ui()
 
 
 func _input(event):
@@ -31,9 +36,12 @@ func _input(event):
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		if cooldown <= 0.0:
-			if fire():
-				cooldown = fire_rate
+		if cooldown <= 0.0 and fire():
+			shots_in_cycle += 1
+			if shots_in_cycle >= GameManager.get_cannon_shots_per_cycle(cannon_id):
+				shots_in_cycle = 0
+				cooldown = GameManager.get_cannon_fire_rate(cannon_id, fire_rate)
+			_update_ui()
 
 
 func _can_operate() -> bool:
@@ -49,7 +57,21 @@ func _refresh_visibility_state() -> void:
 	var cs = get_node_or_null("CollisionShape2D")
 	if cs:
 		cs.disabled = not active
+	if ammo_label:
+		ammo_label.visible = active
+	if fire_rate_bar:
+		fire_rate_bar.visible = active
 
+
+
+
+func _update_ui() -> void:
+	if ammo_label:
+		ammo_label.text = "%d/%d" % [GameManager.get_cannon_current_ammo(cannon_id), GameManager.get_cannon_max_ammo(cannon_id)]
+	if fire_rate_bar:
+		var delay = max(0.001, GameManager.get_cannon_fire_rate(cannon_id, fire_rate))
+		fire_rate_bar.max_value = delay
+		fire_rate_bar.value = delay - min(delay, cooldown)
 
 func fire() -> bool:
 	if not GameManager.spend_cannon_ammo(cannon_id, 1):
@@ -59,6 +81,7 @@ func fire() -> bool:
 	projectile.global_position = global_position
 	projectile.target = get_global_mouse_position()
 	get_tree().current_scene.add_child(projectile)
+	_update_ui()
 	return true
 
 

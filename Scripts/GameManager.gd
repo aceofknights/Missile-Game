@@ -95,14 +95,9 @@ func _sync_cannon_ammo_caps_with_state(cannon_id: String, state: Dictionary) -> 
 	if not bool(cannon_state["unlocked"]):
 		return
 
-	# IMPORTANT: use state-based max ammo (no _world_state / get_upgrade_level)
-	var max_ammo := _get_cannon_max_ammo_from_state(state, cannon_id)
+	# Keep ammo bounded below zero only. Do not auto-refill here.
 	var current_ammo := int(cannon_state["current_ammo"])
-
-	if current_ammo <= 0:
-		cannon_state["current_ammo"] = _get_cannon_starting_ammo_from_state(state, cannon_id)
-	else:
-		cannon_state["current_ammo"] = clamp(current_ammo, 0, max_ammo)
+	cannon_state["current_ammo"] = max(0, current_ammo)
 
 # Keep your existing _sync_cannon_ammo_caps, but rewrite it as a wrapper:
 func _sync_cannon_ammo_caps(cannon_id: String) -> void:
@@ -139,8 +134,7 @@ func get_upgrade_cost(base_cost: int, level: int, path_rate: String) -> int:
 
 
 func get_upgrade_definitions_world_1() -> Dictionary:
-	# This structure is intentionally data-first so future worlds can extend it
-	# while reusing the same key names and dependency checks.
+	# World 1 base tree. Later worlds can extend this while preserving the keys.
 	return {
 		"starting_ammo_middle_1": {
 			"display_name": "Starting Ammo/Max Ammo (Middle)",
@@ -158,6 +152,17 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
 			]
 		},
+		"ammo_factory_2": {
+			"display_name": "Ammo Factory 2",
+			"max_level": 10,
+			"base_cost": 20,
+			"path_rate": PATH_MEDIUM,
+			"requires": [{"upgrade": "ammo_factory_1", "min_level": 10}]
+		},
+		"max_ammo_middle_2": {"display_name": "Max Ammo 2 (Middle)", "max_level": 10, "base_cost": 3, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"max_ammo_middle_3": {"display_name": "Max Ammo 3 (Middle)", "max_level": 10, "base_cost": 5, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "max_ammo_middle_2", "min_level": 10}]},
+		"starting_ammo_middle_2": {"display_name": "Starting Ammo 2 (Middle)", "max_level": 10, "base_cost": 3, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"starting_ammo_middle_3": {"display_name": "Starting Ammo 3 (Middle)", "max_level": 10, "base_cost": 5, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_middle_2", "min_level": 10}]},
 		"unlock_left_cannon": {
 			"display_name": "Unlock Left Cannon",
 			"max_level": 1,
@@ -175,7 +180,24 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"requires": [
 				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
 			]
-		}
+		},
+		"starting_ammo_left_2": {"display_name": "Starting Ammo 2 (Left)", "max_level": 10, "base_cost": 3, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "unlock_left_cannon", "min_level": 1}]},
+		"starting_ammo_left_3": {"display_name": "Starting Ammo 3 (Left)", "max_level": 10, "base_cost": 5, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_left_2", "min_level": 10}]},
+		"starting_ammo_right_2": {"display_name": "Starting Ammo 2 (Right)", "max_level": 10, "base_cost": 3, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "unlock_right_cannon", "min_level": 1}]},
+		"starting_ammo_right_3": {"display_name": "Starting Ammo 3 (Right)", "max_level": 10, "base_cost": 5, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_right_2", "min_level": 10}]},
+		"double_turret_middle": {"display_name": "Double Turret (Middle)", "max_level": 1, "base_cost": 50, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"double_turret_left": {"display_name": "Double Turret (Left)", "max_level": 1, "base_cost": 80, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "unlock_left_cannon", "min_level": 1}]},
+		"double_turret_right": {"display_name": "Double Turret (Right)", "max_level": 1, "base_cost": 80, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "unlock_right_cannon", "min_level": 1}]},
+		"fire_rate_middle": {"display_name": "Fire Rate (Middle)", "max_level": 5, "base_cost": 10, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"fire_rate_left": {"display_name": "Fire Rate (Left)", "max_level": 5, "base_cost": 10, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "unlock_left_cannon", "min_level": 1}]},
+		"fire_rate_right": {"display_name": "Fire Rate (Right)", "max_level": 5, "base_cost": 10, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "unlock_right_cannon", "min_level": 1}]},
+		"explosion_size": {"display_name": "Explosion Size", "max_level": 10, "base_cost": 10, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"explosion_duration": {"display_name": "Explosion Duration", "max_level": 10, "base_cost": 12, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"missile_speed": {"display_name": "Missile Speed", "max_level": 10, "base_cost": 15, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"building_5": {"display_name": "Building 5", "max_level": 1, "base_cost": 25, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"building_6": {"display_name": "Building 6", "max_level": 1, "base_cost": 75, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "building_5", "min_level": 1}]},
+		"repair_shop": {"display_name": "Repair Shop", "max_level": 10, "base_cost": 20, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"resource_gain": {"display_name": "Resource Gain", "max_level": 10, "base_cost": 20, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]}
 	}
 
 
@@ -212,18 +234,27 @@ func try_buy_upgrade(upgrade_key: String) -> bool:
 	player_resources -= cost
 	add_upgrade_level(upgrade_key)
 
-	if upgrade_key == "starting_ammo_middle_1":
+	if upgrade_key in ["starting_ammo_middle_1", "starting_ammo_middle_2", "starting_ammo_middle_3", "max_ammo_middle_2", "max_ammo_middle_3"]:
 		_sync_cannon_ammo_caps(CANNON_MIDDLE)
 	elif upgrade_key == "unlock_left_cannon":
 		_sync_cannon_ammo_caps(CANNON_LEFT)
+	elif upgrade_key in ["starting_ammo_left_2", "starting_ammo_left_3"]:
+		_sync_cannon_ammo_caps(CANNON_LEFT)
 	elif upgrade_key == "unlock_right_cannon":
 		_sync_cannon_ammo_caps(CANNON_RIGHT)
+	elif upgrade_key in ["starting_ammo_right_2", "starting_ammo_right_3"]:
+		_sync_cannon_ammo_caps(CANNON_RIGHT)
+	elif upgrade_key == "building_5":
+		set_extra_buildings(1)
+	elif upgrade_key == "building_6":
+		set_extra_buildings(2)
 
 	return true
 
 
 func add_resources(amount: int):
-	player_resources += amount
+	var scaled_amount = amount * (1.0 + (0.2 * get_upgrade_level("resource_gain")))
+	player_resources += int(round(scaled_amount))
 	print("💰 Gained %d resource(s). Total: %d" % [amount, player_resources])
 
 
@@ -232,9 +263,12 @@ func set_cannon_unlocked(cannon_id: String, unlocked: bool) -> void:
 	if not cannons.has(cannon_id):
 		return
 	var cannon_state: Dictionary = cannons[cannon_id]
+	var was_unlocked := bool(cannon_state["unlocked"])
 	cannon_state["unlocked"] = unlocked
 	if unlocked:
 		cannon_state["destroyed"] = false
+		if not was_unlocked:
+			cannon_state["current_ammo"] = get_cannon_starting_ammo(cannon_id)
 		_sync_cannon_ammo_caps(cannon_id)
 
 
@@ -266,9 +300,8 @@ func destroy_cannon(cannon_id: String) -> void:
 func get_cannon_max_ammo(cannon_id: String) -> int:
 	match cannon_id:
 		CANNON_MIDDLE:
-			return 10 + (get_upgrade_level("starting_ammo_middle_1") * 2)
+			return 10 + (get_upgrade_level("starting_ammo_middle_1") * 2) + (get_upgrade_level("max_ammo_middle_2") * 2) + (get_upgrade_level("max_ammo_middle_3") * 2)
 		CANNON_LEFT:
-			# Placeholder world-1 tree values; these become upgrade-driven later.
 			return 10
 		CANNON_RIGHT:
 			return 10
@@ -283,7 +316,7 @@ func _get_upgrade_level_from_state(state: Dictionary, upgrade_key: String) -> in
 func _get_cannon_max_ammo_from_state(state: Dictionary, cannon_id: String) -> int:
 	match cannon_id:
 		CANNON_MIDDLE:
-			return 10 + (_get_upgrade_level_from_state(state, "starting_ammo_middle_1") * 2)
+			return 10 + (_get_upgrade_level_from_state(state, "starting_ammo_middle_1") * 2) + (_get_upgrade_level_from_state(state, "max_ammo_middle_2") * 2) + (_get_upgrade_level_from_state(state, "max_ammo_middle_3") * 2)
 		CANNON_LEFT:
 			return 10
 		CANNON_RIGHT:
@@ -293,11 +326,18 @@ func _get_cannon_max_ammo_from_state(state: Dictionary, cannon_id: String) -> in
 
 
 func _get_cannon_starting_ammo_from_state(state: Dictionary, cannon_id: String) -> int:
-	return _get_cannon_max_ammo_from_state(state, cannon_id)
-	
+	var bonus := 0
+	match cannon_id:
+		CANNON_MIDDLE:
+			bonus = (_get_upgrade_level_from_state(state, "starting_ammo_middle_1") * 2) + (_get_upgrade_level_from_state(state, "starting_ammo_middle_2") * 2) + (_get_upgrade_level_from_state(state, "starting_ammo_middle_3") * 2)
+		CANNON_LEFT:
+			bonus = (_get_upgrade_level_from_state(state, "starting_ammo_left_2") * 2) + (_get_upgrade_level_from_state(state, "starting_ammo_left_3") * 2)
+		CANNON_RIGHT:
+			bonus = (_get_upgrade_level_from_state(state, "starting_ammo_right_2") * 2) + (_get_upgrade_level_from_state(state, "starting_ammo_right_3") * 2)
+	return max(0, 10 + bonus)
+
 func get_cannon_starting_ammo(cannon_id: String) -> int:
-	# For now, world-1 starts from full for unlocked cannons.
-	return get_cannon_max_ammo(cannon_id)
+	return _get_cannon_starting_ammo_from_state(_world_state(), cannon_id)
 
 
 
@@ -314,8 +354,7 @@ func set_cannon_current_ammo(cannon_id: String, value: int) -> void:
 	if not cannons.has(cannon_id):
 		return
 	var cannon_state: Dictionary = cannons[cannon_id]
-	var max_ammo = get_cannon_max_ammo(cannon_id)
-	cannon_state["current_ammo"] = clamp(value, 0, max_ammo)
+	cannon_state["current_ammo"] = max(0, value)
 
 
 func spend_cannon_ammo(cannon_id: String, amount := 1) -> bool:
@@ -329,10 +368,13 @@ func spend_cannon_ammo(cannon_id: String, amount := 1) -> bool:
 
 
 func _get_ammo_factory_interval() -> float:
-	var level = get_upgrade_level("ammo_factory_1")
-	if level <= 0:
+	var l1 = get_upgrade_level("ammo_factory_1")
+	var l2 = get_upgrade_level("ammo_factory_2")
+	if l1 <= 0 and l2 <= 0:
 		return -1.0
-	return max(3.0, 5.0 - (0.2 * (level - 1)))
+	if l2 > 0:
+		return max(1.5, 3.0 - (0.1666667 * l2))
+	return max(3.0, 5.0 - (0.2222222 * (l1 - 1)))
 
 
 func _give_factory_ammo_tick() -> bool:
@@ -374,6 +416,48 @@ func update_ammo_factory(delta: float) -> void:
 			middle_state["ammo_factory_progress"] = 0.0
 			break
 
+
+
+
+func get_cannon_shots_per_cycle(cannon_id: String) -> int:
+	if cannon_id == CANNON_MIDDLE and get_upgrade_level("double_turret_middle") > 0:
+		return 2
+	if cannon_id == CANNON_LEFT and get_upgrade_level("double_turret_left") > 0:
+		return 2
+	if cannon_id == CANNON_RIGHT and get_upgrade_level("double_turret_right") > 0:
+		return 2
+	return 1
+
+
+func get_cannon_fire_rate(cannon_id: String, base_rate: float) -> float:
+	var level := 0
+	if cannon_id == CANNON_MIDDLE:
+		level = get_upgrade_level("fire_rate_middle")
+	elif cannon_id == CANNON_LEFT:
+		level = get_upgrade_level("fire_rate_left")
+	elif cannon_id == CANNON_RIGHT:
+		level = get_upgrade_level("fire_rate_right")
+	return max(0.05, base_rate * pow(0.95, level))
+
+
+func get_missile_speed_multiplier() -> float:
+	return 1.0 + (0.2 * get_upgrade_level("missile_speed"))
+
+
+func get_explosion_radius_bonus() -> float:
+	return float(get_upgrade_level("explosion_size"))
+
+
+func get_explosion_duration_bonus() -> float:
+	return 0.2 * float(get_upgrade_level("explosion_duration"))
+
+
+func can_use_repair_shop() -> bool:
+	return get_upgrade_level("repair_shop") > 0
+
+
+func get_repair_shop_cost() -> int:
+	return max(10, 20 - get_upgrade_level("repair_shop"))
 
 func get_total_ammo_status() -> String:
 	var parts: Array[String] = []
@@ -449,8 +533,22 @@ func player_died():
 	load_upgrade_screen()
 
 
+
+
+func reset_cannons_for_new_run() -> void:
+	var state := _world_state()
+	var cannons: Dictionary = state["cannons"]
+	for cannon_id in CANNON_IDS:
+		if not bool(cannons[cannon_id]["unlocked"]):
+			continue
+		cannons[cannon_id]["destroyed"] = false
+		cannons[cannon_id]["current_ammo"] = _get_cannon_starting_ammo_from_state(state, cannon_id)
+	state["ammo_factory_distribution_index"] = 0
+	cannons[CANNON_MIDDLE]["ammo_factory_progress"] = 0.0
+
 func continue_from_upgrades():
 	current_wave = 1
+	reset_cannons_for_new_run()
 	get_tree().change_scene_to_file("res://Scene/Main.tscn")
 
 
@@ -464,6 +562,7 @@ func select_world(world: int) -> void:
 	current_world = world
 	current_wave = 1
 	_ensure_world_upgrade_data(current_world)
+	reset_cannons_for_new_run()
 	get_tree().change_scene_to_file("res://Scene/Main.tscn")
 
 
