@@ -86,7 +86,10 @@ func _refresh_view() -> void:
 		var level = GameManager.get_upgrade_level(key)
 		var max_level = int(def.get("max_level", 1))
 		var cost = GameManager.get_upgrade_cost(int(def.get("base_cost", 1)), level, String(def.get("path_rate", GameManager.PATH_MEDIUM)))
+		var description := String(def.get("description", ""))
 		btn.text = "%s%s L%d/%d - Cost %d" % ["  ".repeat(indent), String(def.get("display_name", key)), level, max_level, cost]
+		if description != "":
+			btn.text += "\n%s%s" % ["  ".repeat(indent + 1), description]
 		btn.disabled = not GameManager.can_buy_upgrade(key)
 
 
