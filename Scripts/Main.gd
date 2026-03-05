@@ -44,6 +44,7 @@ func _ready():
 	pause_menu.hide()
 	if repair_hint_label:
 		repair_hint_label.visible = false
+		repair_hint_label.modulate.a = 1.0
 	print("Main game started: Wave %d, World %d" % [GameManager.current_wave, GameManager.current_world])
 	destroy_all_button.pressed.connect(_on_destroy_all_pressed)
 	skip_to_boss.pressed.connect(_skip_to_boss)
@@ -144,22 +145,26 @@ func _process(delta):
 func _update_repair_hint(delta: float) -> void:
 	if repair_hint_label == null:
 		return
+	if not GameManager.can_use_repair_shop():
+		repair_hint_label.visible = false
+		_repair_hint_linger_remaining = 0.0
+		return
 
 	var hovered_destroyed_target = _find_hovered_destroyed_defense()
 	if hovered_destroyed_target != null:
 		_repair_hint_linger_remaining = REPAIR_HINT_LINGER_SECONDS
-		if GameManager.can_use_repair_shop():
-			repair_hint_label.text = "Hit R to repair Cost: %d" % GameManager.get_repair_shop_cost()
-		else:
-			repair_hint_label.text = "Repair Shop required to repair"
+		repair_hint_label.modulate.a = 1.0
+		repair_hint_label.text = "Hit R to repair for cost: %d" % GameManager.get_repair_shop_cost()
 		repair_hint_label.visible = true
 		return
 
 	if _repair_hint_linger_remaining > 0.0:
 		_repair_hint_linger_remaining = max(0.0, _repair_hint_linger_remaining - delta)
+		repair_hint_label.modulate.a = _repair_hint_linger_remaining / REPAIR_HINT_LINGER_SECONDS
 		repair_hint_label.visible = true
 		return
 
+	repair_hint_label.modulate.a = 1.0
 	repair_hint_label.visible = false
 
 
@@ -197,6 +202,8 @@ func _attempt_repair_hovered_defense() -> void:
 	if target.has_method("repair"):
 		GameManager.player_resources -= cost
 		target.repair()
+		if repair_hint_label:
+			_repair_hint_linger_remaining = REPAIR_HINT_LINGER_SECONDS
 
 
 func _unhandled_input(event):
