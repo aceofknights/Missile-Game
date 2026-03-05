@@ -13,6 +13,15 @@ script = ExtResource("1_7l10b")
 
 [node name="Cannon" parent="." instance=ExtResource("2_oj5qe")]
 position = Vector2(608, 586)
+cannon_id = "middle"
+
+[node name="LeftCannon" parent="." instance=ExtResource("2_oj5qe")]
+position = Vector2(444, 607)
+cannon_id = "left"
+
+[node name="RightCannon" parent="." instance=ExtResource("2_oj5qe")]
+position = Vector2(774, 607)
+cannon_id = "right"
 
 [node name="Spawner" type="Node2D" parent="."]
 position = Vector2(0, -50)
@@ -55,6 +64,13 @@ offset_top = 20.0
 offset_right = 568.0
 offset_bottom = 51.0
 text = "Give 100 Resources"
+
+[node name="RepairButton" type="Button" parent="UI"]
+offset_left = 319.0
+offset_top = 57.0
+offset_right = 568.0
+offset_bottom = 88.0
+text = "Repair Destroyed"
 
 [node name="AnnouncementLabel" type="Label" parent="UI"]
 visible = false
