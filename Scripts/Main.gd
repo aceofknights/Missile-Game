@@ -8,6 +8,7 @@ extends Node2D
 @onready var destroy_all_button = $UI/DestroyAllButton
 @onready var wave_label = $UI/WaveLabel
 @onready var announcement_label = $UI/AnnouncementLabel
+@onready var repair_hint_label: Label = get_node_or_null("UI/RepairHintLabel") as Label
 @onready var ResourceLabel = $UI/ResourceLabel
 @onready var building5 = $Building5
 @onready var building6 = $Building6
@@ -16,7 +17,8 @@ extends Node2D
 
 var base_buildings = 4
 var extra_buildings = 0
-var next_cannon_index := 0
+const REPAIR_HINT_LINGER_SECONDS := 1.0
+var _repair_hint_linger_remaining := 0.0
 
 
 func get_building_count():
@@ -39,6 +41,8 @@ func _ready():
 
 	get_tree().paused = false
 	pause_menu.hide()
+	if repair_hint_label:
+		repair_hint_label.visible = false
 	print("Main game started: Wave %d, World %d" % [GameManager.current_wave, GameManager.current_world])
 	destroy_all_button.pressed.connect(_on_destroy_all_pressed)
 	skip_to_boss.pressed.connect(_skip_to_boss)
@@ -56,20 +60,22 @@ func _get_ordered_cannons() -> Array:
 	return [middle_cannon, left_cannon, right_cannon]
 
 
-func _fire_alternating_cannon(target_position: Vector2) -> void:
-	var cannons = _get_ordered_cannons()
-	var cannon_count = cannons.size()
-	if cannon_count == 0:
-		return
+func _fire_closest_cannon(target_position: Vector2) -> void:
+	var best_cannon: Node = null
+	var best_distance_sq := INF
 
-	for offset in range(cannon_count):
-		var idx = (next_cannon_index + offset) % cannon_count
-		var cannon = cannons[idx]
-		if cannon == null:
+	for cannon in _get_ordered_cannons():
+		if cannon == null or not cannon.has_method("can_fire"):
 			continue
-		if cannon.try_fire_at(target_position):
-			next_cannon_index = (idx + 1) % cannon_count
-			return
+		if not cannon.can_fire():
+			continue
+		var distance_sq = cannon.global_position.distance_squared_to(target_position)
+		if distance_sq < best_distance_sq:
+			best_distance_sq = distance_sq
+			best_cannon = cannon
+
+	if best_cannon != null and best_cannon.has_method("try_fire_at"):
+		best_cannon.try_fire_at(target_position)
 
 
 func _skip_to_boss():
@@ -127,10 +133,35 @@ func _process(delta):
 	AmmoLabel.text = "Ammo: %s" % GameManager.get_total_ammo_status()
 	wave_label.text = "🌊 Wave %d / 🌍 World %d" % [GameManager.current_wave, GameManager.current_world]
 	ResourceLabel.text = "Resources: %d" % GameManager.player_resources
+	_update_repair_hint(delta)
 
 	if _count_surviving_buildings() == 0:
 		print("🏚️ All buildings destroyed — returning to upgrade screen")
 		GameManager.player_died()
+
+
+func _update_repair_hint(delta: float) -> void:
+	if repair_hint_label == null:
+		return
+
+	if not GameManager.can_use_repair_shop():
+		repair_hint_label.visible = false
+		_repair_hint_linger_remaining = 0.0
+		return
+
+	var hovered_target = _find_hovered_destroyed_defense()
+	if hovered_target != null:
+		_repair_hint_linger_remaining = REPAIR_HINT_LINGER_SECONDS
+		repair_hint_label.text = "Hit R to repair (%d)" % GameManager.get_repair_shop_cost()
+		repair_hint_label.visible = true
+		return
+
+	if _repair_hint_linger_remaining > 0.0:
+		_repair_hint_linger_remaining = max(0.0, _repair_hint_linger_remaining - delta)
+		repair_hint_label.visible = true
+		return
+
+	repair_hint_label.visible = false
 
 
 func _count_surviving_buildings() -> int:
@@ -178,7 +209,7 @@ func _unhandled_input(event):
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_fire_alternating_cannon(get_global_mouse_position())
+		_fire_closest_cannon(get_global_mouse_position())
 		return
 
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_R:
