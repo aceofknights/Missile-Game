@@ -13,15 +13,6 @@ script = ExtResource("1_7l10b")
 
 [node name="Cannon" parent="." instance=ExtResource("2_oj5qe")]
 position = Vector2(608, 586)
-cannon_id = "middle"
-
-[node name="LeftCannon" parent="." instance=ExtResource("2_oj5qe")]
-position = Vector2(456, 586)
-cannon_id = "left"
-
-[node name="RightCannon" parent="." instance=ExtResource("2_oj5qe")]
-position = Vector2(760, 586)
-cannon_id = "right"
 
 [node name="Spawner" type="Node2D" parent="."]
 position = Vector2(0, -50)

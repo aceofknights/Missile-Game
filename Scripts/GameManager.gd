@@ -71,16 +71,43 @@ func _default_upgrade_state() -> Dictionary:
 	}
 
 
+# Replace _ensure_world_upgrade_data with this version
 func _ensure_world_upgrade_data(world: int) -> void:
 	if not world_upgrades.has(world):
 		world_upgrades[world] = _default_upgrade_state()
+
+	# IMPORTANT: use the local dictionary directly (no _world_state() calls)
 	if world == current_world:
 		var state: Dictionary = world_upgrades[world]
 		var cannons: Dictionary = state["cannons"]
 		for cannon_id in CANNON_IDS:
 			if bool(cannons[cannon_id]["unlocked"]):
-				_sync_cannon_ammo_caps(cannon_id)
+				_sync_cannon_ammo_caps_with_state(cannon_id, state)
 
+
+# Add this new helper (does NOT call _world_state)
+func _sync_cannon_ammo_caps_with_state(cannon_id: String, state: Dictionary) -> void:
+	var cannons: Dictionary = state["cannons"]
+	if not cannons.has(cannon_id):
+		return
+
+	var cannon_state: Dictionary = cannons[cannon_id]
+	if not bool(cannon_state["unlocked"]):
+		return
+
+	# IMPORTANT: use state-based max ammo (no _world_state / get_upgrade_level)
+	var max_ammo := _get_cannon_max_ammo_from_state(state, cannon_id)
+	var current_ammo := int(cannon_state["current_ammo"])
+
+	if current_ammo <= 0:
+		cannon_state["current_ammo"] = _get_cannon_starting_ammo_from_state(state, cannon_id)
+	else:
+		cannon_state["current_ammo"] = clamp(current_ammo, 0, max_ammo)
+
+# Keep your existing _sync_cannon_ammo_caps, but rewrite it as a wrapper:
+func _sync_cannon_ammo_caps(cannon_id: String) -> void:
+	var state := _world_state()
+	_sync_cannon_ammo_caps_with_state(cannon_id, state)
 
 func _world_state() -> Dictionary:
 	_ensure_world_upgrade_data(current_world)
@@ -248,25 +275,31 @@ func get_cannon_max_ammo(cannon_id: String) -> int:
 		_:
 			return 0
 
+func _get_upgrade_level_from_state(state: Dictionary, upgrade_key: String) -> int:
+	var levels: Dictionary = state.get("upgrade_levels", {})
+	return int(levels.get(upgrade_key, 0))
 
+
+func _get_cannon_max_ammo_from_state(state: Dictionary, cannon_id: String) -> int:
+	match cannon_id:
+		CANNON_MIDDLE:
+			return 10 + (_get_upgrade_level_from_state(state, "starting_ammo_middle_1") * 2)
+		CANNON_LEFT:
+			return 10
+		CANNON_RIGHT:
+			return 10
+		_:
+			return 0
+
+
+func _get_cannon_starting_ammo_from_state(state: Dictionary, cannon_id: String) -> int:
+	return _get_cannon_max_ammo_from_state(state, cannon_id)
+	
 func get_cannon_starting_ammo(cannon_id: String) -> int:
 	# For now, world-1 starts from full for unlocked cannons.
 	return get_cannon_max_ammo(cannon_id)
 
 
-func _sync_cannon_ammo_caps(cannon_id: String) -> void:
-	var cannons: Dictionary = _world_state()["cannons"]
-	if not cannons.has(cannon_id):
-		return
-	var cannon_state: Dictionary = cannons[cannon_id]
-	if not bool(cannon_state["unlocked"]):
-		return
-	var max_ammo = get_cannon_max_ammo(cannon_id)
-	var current_ammo = int(cannon_state["current_ammo"])
-	if current_ammo <= 0:
-		cannon_state["current_ammo"] = get_cannon_starting_ammo(cannon_id)
-	else:
-		cannon_state["current_ammo"] = clamp(current_ammo, 0, max_ammo)
 
 
 func get_cannon_current_ammo(cannon_id: String) -> int:
