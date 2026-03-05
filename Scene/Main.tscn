@@ -12,7 +12,15 @@
 script = ExtResource("1_7l10b")
 
 [node name="Cannon" parent="." instance=ExtResource("2_oj5qe")]
-position = Vector2(608, 586)
+position = Vector2(608, 607)
+
+[node name="LeftCannon" parent="." instance=ExtResource("2_oj5qe")]
+position = Vector2(64, 607)
+cannon_id = "left"
+
+[node name="RightCannon" parent="." instance=ExtResource("2_oj5qe")]
+position = Vector2(1107.03, 607)
+cannon_id = "right"
 
 [node name="Spawner" type="Node2D" parent="."]
 position = Vector2(0, -50)
@@ -56,6 +64,13 @@ offset_right = 568.0
 offset_bottom = 51.0
 text = "Give 100 Resources"
 
+[node name="RepairButton" type="Button" parent="UI"]
+offset_left = 319.0
+offset_top = 57.0
+offset_right = 568.0
+offset_bottom = 88.0
+text = "Repair Destroyed"
+
 [node name="AnnouncementLabel" type="Label" parent="UI"]
 visible = false
 offset_left = 552.0
@@ -71,21 +86,21 @@ offset_bottom = 53.0
 text = "ResourceLabel"
 
 [node name="Building" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(155, 610)
+position = Vector2(222, 610)
 
 [node name="Building2" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(360, 610)
+position = Vector2(427, 610)
 
 [node name="Building3" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(826, 610)
+position = Vector2(782, 610)
 
 [node name="Building4" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(1023, 610)
+position = Vector2(979, 610)
 
 [node name="Building5" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(928, 610)
+position = Vector2(884, 610)
 
 [node name="Building6" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(257.67, 610)
+position = Vector2(324.67, 610)
 
 [node name="PauseMenu" parent="." instance=ExtResource("5_u4f7x")]

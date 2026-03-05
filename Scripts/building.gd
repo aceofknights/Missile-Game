@@ -3,6 +3,7 @@ extends Area2D
 func _ready():
 	connect("area_entered", Callable(self, "_on_area_entered"))
 	add_to_group("building")
+	add_to_group("defense_target")
 
 func _on_area_entered(area):
 	if area.is_in_group("enemy"):

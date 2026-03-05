@@ -1,78 +1,94 @@
 extends Control
 
 @export var game_scene: PackedScene
-@onready var AmmoFactory = $VBoxContainer/AmmoFactoryButton
-@onready var ResourceLabel = $ResourceLabel
-@onready var b5_btn = $VBoxContainer/UnlockBuilding5Button
-@onready var b6_btn = $VBoxContainer/UnlockBuilding6Button
+@onready var resource_label: Label = $MarginContainer/VBoxContainer/ResourceLabel
+@onready var tree_vbox: VBoxContainer = $MarginContainer/VBoxContainer/ScrollContainer/TreeVBox
+
+var _upgrade_buttons: Dictionary = {}
+
+const TREE_ORDER := [
+	{"label": "First Upgrade", "indent": 0},
+	{"key": "starting_ammo_middle_1", "indent": 1},
+	{"label": "Offensive > Ammo", "indent": 0},
+	{"key": "ammo_factory_1", "indent": 1},
+	{"key": "ammo_factory_2", "indent": 2},
+	{"key": "max_ammo_middle_2", "indent": 1},
+	{"key": "max_ammo_middle_3", "indent": 2},
+	{"key": "starting_ammo_middle_2", "indent": 1},
+	{"key": "starting_ammo_middle_3", "indent": 2},
+	{"key": "starting_ammo_left_2", "indent": 2},
+	{"key": "starting_ammo_left_3", "indent": 3},
+	{"key": "starting_ammo_right_2", "indent": 2},
+	{"key": "starting_ammo_right_3", "indent": 3},
+	{"label": "Offensive > Cannon", "indent": 0},
+	{"key": "double_turret_middle", "indent": 1},
+	{"key": "fire_rate_middle", "indent": 1},
+	{"key": "unlock_left_cannon", "indent": 1},
+	{"key": "double_turret_left", "indent": 2},
+	{"key": "fire_rate_left", "indent": 2},
+	{"key": "unlock_right_cannon", "indent": 1},
+	{"key": "double_turret_right", "indent": 2},
+	{"key": "fire_rate_right", "indent": 2},
+	{"label": "Offensive > Missile", "indent": 0},
+	{"key": "explosion_size", "indent": 1},
+	{"key": "explosion_duration", "indent": 1},
+	{"key": "missile_speed", "indent": 1},
+	{"label": "Defensive", "indent": 0},
+	{"key": "building_5", "indent": 1},
+	{"key": "building_6", "indent": 2},
+	{"key": "repair_shop", "indent": 1},
+	{"label": "Economy", "indent": 0},
+	{"key": "resource_gain", "indent": 1}
+]
 
 
 func _ready():
-	update_resource_display()
-	$VBoxContainer/MaxAmmoButton.pressed.connect(upgrade_ammo)
-	AmmoFactory.pressed.connect(upgrade_reload)
-	$VBoxContainer/ContinueButton.pressed.connect(continue_game)
-	print("Upgrade screen opened")
-	print("Resources: %d" % GameManager.player_resources)
-	print("Upgrades: %s" % GameManager.get_player_upgrades())
-	print(get_tree().get_current_scene().get_tree_string())
-	b5_btn.pressed.connect(_buy_building5)
-	b6_btn.pressed.connect(_buy_building6)
-	update_building_buttons()
-	
-func update_building_buttons():
-	b5_btn.disabled = GameManager.get_extra_buildings() >= 1
-	b6_btn.disabled = GameManager.get_extra_buildings() >= 2 or GameManager.get_extra_buildings() < 1  # require 5th first
+	$MarginContainer/VBoxContainer/ContinueButton.pressed.connect(continue_game)
+	_build_tree()
+	_refresh_view()
 
-func _buy_building5():
-	_buy_extra_building(1, 25) # cost 10, unlock extra_buildings=1
 
-func _buy_building6():
-	_buy_extra_building(2, 50) # cost 20, unlock extra_buildings=2
+func _build_tree() -> void:
+	for child in tree_vbox.get_children():
+		child.queue_free()
+	_upgrade_buttons.clear()
 
-func _buy_extra_building(target_level: int, cost: int):
-	if GameManager.get_extra_buildings() >= target_level:
-		return
-	if GameManager.player_resources < cost:
-		print("❌ Not enough resources")
-		return
+	var defs = GameManager.get_upgrade_definitions_world_1()
+	for item in TREE_ORDER:
+		if item.has("label"):
+			var section := Label.new()
+			section.text = "%s%s" % ["  ".repeat(int(item.get("indent", 0))), String(item["label"])]
+			tree_vbox.add_child(section)
+			continue
+		var key = String(item.get("key", ""))
+		if not defs.has(key):
+			continue
+		var btn := Button.new()
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn.pressed.connect(func(): _buy_upgrade(key))
+		_upgrade_buttons[key] = {"button": btn, "indent": int(item.get("indent", 0))}
+		tree_vbox.add_child(btn)
 
-	GameManager.player_resources -= cost
-	GameManager.set_extra_buildings(target_level)
 
-	update_resource_display()
-	update_building_buttons()
-	print("✅ Extra buildings level now: %d" % GameManager.get_extra_buildings())
-	
-func update_resource_display():
-	ResourceLabel.text = "Resources: %d" % GameManager.player_resources
+func _buy_upgrade(upgrade_key: String) -> void:
+	GameManager.try_buy_upgrade(upgrade_key)
+	_refresh_view()
 
-func _on_upgrade_selected(upgrade_key: String, cost: int, callback: Callable):
-	if GameManager.player_resources >= cost:
-		GameManager.player_resources -= cost
-		GameManager.add_upgrade_stat(upgrade_key)
-		var level = int(GameManager.get_player_upgrades().get(upgrade_key, 0))
-		print("✅ Purchased upgrade: %s (level %d)" % [upgrade_key, level])
-		update_resource_display()
-		callback.call()  # Apply upgrade effect
-	else:
-		print("❌ Not enough resources for %s" % upgrade_key)
 
-func upgrade_ammo():
-	_on_upgrade_selected("ammo", 1, func ():
-		GameManager.add_ammo_upgrade(1)
-		print("Ammo upgraded to %d" % GameManager.get_ammo_level())
-	)
+func _refresh_view() -> void:
+	resource_label.text = "Resources: %d" % GameManager.player_resources
+	var defs = GameManager.get_upgrade_definitions_world_1()
+	for key in _upgrade_buttons.keys():
+		var meta: Dictionary = _upgrade_buttons[key]
+		var btn: Button = meta["button"]
+		var indent: int = meta["indent"]
+		var def: Dictionary = defs[key]
+		var level = GameManager.get_upgrade_level(key)
+		var max_level = int(def.get("max_level", 1))
+		var cost = GameManager.get_upgrade_cost(int(def.get("base_cost", 1)), level, String(def.get("path_rate", GameManager.PATH_MEDIUM)))
+		btn.text = "%s%s L%d/%d - Cost %d" % ["  ".repeat(indent), String(def.get("display_name", key)), level, max_level, cost]
+		btn.disabled = not GameManager.can_buy_upgrade(key)
 
-func upgrade_reload():
-	if GameManager.has_reload_upgrade():
-		print("❌ Reload already bought")
-		return
-	_on_upgrade_selected("reload_speed", 10, func ():
-		GameManager.buy_reload_upgrade_once()
-		print("Reload speed upgraded to %d" % GameManager.get_reload_speed_level())
-	)
 
 func continue_game():
 	GameManager.continue_from_upgrades()
-

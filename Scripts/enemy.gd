@@ -25,9 +25,12 @@ func _on_area_entered(area):
 		print("🔫 Hit by projectile")
 		die(false)
 		area.queue_free()
-	elif area.is_in_group("building"):
-		print("🏠 Hit a building")
-		area.queue_free()
+	elif area.is_in_group("defense_target"):
+		print("🏠 Hit a defense target")
+		if area.has_method("die"):
+			area.call_deferred("die")
+		else:
+			area.queue_free()
 		die(true)
 
 
