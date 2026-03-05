@@ -22,4 +22,5 @@ scale = Vector2(0.205822, 0.210673)
 texture = ExtResource("2_x0dry")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+modulate = Color(0, 1, 0.443137, 1)
 shape = SubResource("RectangleShape2D_gk6nl")
