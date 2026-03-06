@@ -26,6 +26,7 @@ func get_building_count():
 
 
 func _ready():
+	_ensure_repair_hint_label()
 	NodeContracts.require_nodes_with_types(self, {
 		"Cannon": "Area2D",
 		"LeftCannon": "Area2D",
@@ -35,7 +36,6 @@ func _ready():
 		"UI/AmmoLabel": "Label",
 		"UI/ResourceLabel": "Label",
 		"UI/WaveLabel": "Label",
-		"UI/RepairHintLabel": "Label",
 		"UI/DestroyAllButton": "Button",
 		"PauseMenu": "CanvasLayer"
 	})
@@ -52,6 +52,25 @@ func _ready():
 	GameManager.start_wave()
 	_apply_building_unlocks()
 	give_resources.pressed.connect(_give_resource)
+
+
+func _ensure_repair_hint_label() -> void:
+	if repair_hint_label != null:
+		return
+	var ui := get_node_or_null("UI") as CanvasLayer
+	if ui == null:
+		return
+	var label := Label.new()
+	label.name = "RepairHintLabel"
+	label.visible = false
+	label.offset_left = 395.0
+	label.offset_top = 546.0
+	label.offset_right = 815.0
+	label.offset_bottom = 569.0
+	label.text = "Hit R to repair for cost: 20"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ui.add_child(label)
+	repair_hint_label = label
 
 
 func _give_resource():
