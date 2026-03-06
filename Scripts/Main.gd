@@ -64,7 +64,7 @@ func _ensure_repair_hint_label() -> void:
 	label.name = "RepairHintLabel"
 	label.visible = false
 	label.offset_left = 395.0
-	label.offset_top = 546.0
+	label.offset_top = 346.0
 	label.offset_right = 815.0
 	label.offset_bottom = 569.0
 	label.text = "Hit R to repair for cost: 20"
