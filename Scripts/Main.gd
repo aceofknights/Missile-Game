@@ -26,6 +26,7 @@ func get_building_count():
 
 
 func _ready():
+	_ensure_repair_hint_label()
 	NodeContracts.require_nodes_with_types(self, {
 		"Cannon": "Area2D",
 		"LeftCannon": "Area2D",
@@ -35,7 +36,6 @@ func _ready():
 		"UI/AmmoLabel": "Label",
 		"UI/ResourceLabel": "Label",
 		"UI/WaveLabel": "Label",
-		"UI/RepairHintLabel": "Label",
 		"UI/DestroyAllButton": "Button",
 		"PauseMenu": "CanvasLayer"
 	})
@@ -44,6 +44,7 @@ func _ready():
 	pause_menu.hide()
 	if repair_hint_label:
 		repair_hint_label.visible = false
+		repair_hint_label.modulate.a = 1.0
 	print("Main game started: Wave %d, World %d" % [GameManager.current_wave, GameManager.current_world])
 	destroy_all_button.pressed.connect(_on_destroy_all_pressed)
 	skip_to_boss.pressed.connect(_skip_to_boss)
@@ -51,6 +52,25 @@ func _ready():
 	GameManager.start_wave()
 	_apply_building_unlocks()
 	give_resources.pressed.connect(_give_resource)
+
+
+func _ensure_repair_hint_label() -> void:
+	if repair_hint_label != null:
+		return
+	var ui := get_node_or_null("UI") as CanvasLayer
+	if ui == null:
+		return
+	var label := Label.new()
+	label.name = "RepairHintLabel"
+	label.visible = false
+	label.offset_left = 395.0
+	label.offset_top = 546.0
+	label.offset_right = 815.0
+	label.offset_bottom = 569.0
+	label.text = "Hit R to repair for cost: 20"
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	ui.add_child(label)
+	repair_hint_label = label
 
 
 func _give_resource():
@@ -144,22 +164,26 @@ func _process(delta):
 func _update_repair_hint(delta: float) -> void:
 	if repair_hint_label == null:
 		return
+	if not GameManager.can_use_repair_shop():
+		repair_hint_label.visible = false
+		_repair_hint_linger_remaining = 0.0
+		return
 
 	var hovered_destroyed_target = _find_hovered_destroyed_defense()
 	if hovered_destroyed_target != null:
 		_repair_hint_linger_remaining = REPAIR_HINT_LINGER_SECONDS
-		if GameManager.can_use_repair_shop():
-			repair_hint_label.text = "Hit R to repair Cost: %d" % GameManager.get_repair_shop_cost()
-		else:
-			repair_hint_label.text = "Repair Shop required to repair"
+		repair_hint_label.modulate.a = 1.0
+		repair_hint_label.text = "Hit R to repair for cost: %d" % GameManager.get_repair_shop_cost()
 		repair_hint_label.visible = true
 		return
 
 	if _repair_hint_linger_remaining > 0.0:
 		_repair_hint_linger_remaining = max(0.0, _repair_hint_linger_remaining - delta)
+		repair_hint_label.modulate.a = _repair_hint_linger_remaining / REPAIR_HINT_LINGER_SECONDS
 		repair_hint_label.visible = true
 		return
 
+	repair_hint_label.modulate.a = 1.0
 	repair_hint_label.visible = false
 
 
@@ -197,6 +221,8 @@ func _attempt_repair_hovered_defense() -> void:
 	if target.has_method("repair"):
 		GameManager.player_resources -= cost
 		target.repair()
+		if repair_hint_label:
+			_repair_hint_linger_remaining = REPAIR_HINT_LINGER_SECONDS
 
 
 func _unhandled_input(event):
