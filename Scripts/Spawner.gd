@@ -8,6 +8,13 @@ var screen_size
 
 @export var boss_scene: PackedScene
 const DEFAULT_BOSS_SCENE_PATH := "res://Scene/boss_ufo.tscn"
+const WORLD_BOSS_SCENES := {
+	1: "res://Scene/boss_ufo.tscn",
+	2: "res://Scene/boss_carrier.tscn",
+	3: "res://Scene/boss_world3.tscn",
+	4: "res://Scene/boss_world4.tscn",
+	5: "res://Scene/boss_world5.tscn"
+}
 
 
 # ✅ Safe add_child helper (prevents current_scene null crash during scene transitions)
@@ -26,10 +33,17 @@ func _ready():
 
 
 func _ensure_boss_scene() -> void:
+	var world_boss_path: String = WORLD_BOSS_SCENES.get(GameManager.current_world, DEFAULT_BOSS_SCENE_PATH)
+	var loaded = load(world_boss_path)
+	if loaded is PackedScene:
+		boss_scene = loaded
+		print("ℹ️ Boss scene loaded for World %d from %s" % [GameManager.current_world, world_boss_path])
+		return
+
 	if boss_scene != null:
 		return
 
-	var loaded = load(DEFAULT_BOSS_SCENE_PATH)
+	loaded = load(DEFAULT_BOSS_SCENE_PATH)
 	if loaded is PackedScene:
 		boss_scene = loaded
 		print("ℹ️ Boss scene fallback loaded from %s" % DEFAULT_BOSS_SCENE_PATH)
