@@ -5,6 +5,7 @@ signal plane_removed(plane: Area2D)
 @export var role := "fighter"
 @export var missile_scene: PackedScene
 @export var explosion_scene: PackedScene
+@export var fighter_projectile_scene: PackedScene
 @export var base_speed := 120.0
 @export var action_interval := 2.0
 @export var base_accuracy := 0.9
@@ -77,6 +78,9 @@ func _on_action_timer_timeout() -> void:
 
 
 func _fire_intercept() -> void:
+	if fighter_projectile_scene == null:
+		return
+
 	var projectiles = get_tree().get_nodes_in_group("projectile")
 	if projectiles.is_empty():
 		return
@@ -88,13 +92,11 @@ func _fire_intercept() -> void:
 	if randf() > hit_chance:
 		return
 
-	if explosion_scene:
-		var explosion = explosion_scene.instantiate()
-		explosion.global_position = projectile.global_position
-		explosion.gives_reward = false
-		get_tree().current_scene.add_child(explosion)
-
-	projectile.queue_free()
+	var shot = fighter_projectile_scene.instantiate()
+	shot.global_position = global_position + Vector2(0, 8)
+	shot.target_node = projectile
+	shot.target_position = projectile.global_position
+	get_tree().current_scene.add_child(shot)
 
 
 func _drop_bomb() -> void:

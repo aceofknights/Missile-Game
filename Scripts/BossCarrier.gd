@@ -6,6 +6,7 @@ signal boss_defeated
 @export var explosion_scene: PackedScene
 @export var missile_scene: PackedScene
 @export var plane_scene: PackedScene
+@export var fighter_projectile_scene: PackedScene
 @export var move_speed := 90.0
 @export var max_health := 5
 @export var immunity_duration := 2.5
@@ -194,6 +195,7 @@ func _spawn_plane(role: String) -> Area2D:
 	plane.role = role
 	plane.missile_scene = missile_scene
 	plane.explosion_scene = explosion_scene
+	plane.fighter_projectile_scene = fighter_projectile_scene
 	plane.global_position = global_position + Vector2(randf_range(-180.0, 180.0), randf_range(-30.0, 40.0))
 	plane.direction = Vector2(sign(randf() - 0.5), randf_range(-0.3, 0.3)).normalized()
 	plane.plane_removed.connect(_on_plane_removed)
