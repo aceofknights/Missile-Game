@@ -571,7 +571,18 @@ func start_wave():
 
 	print("📣 start_wave() called")
 	print("🌊 Starting Wave %d (World %d)" % [current_wave, current_world])
-	is_boss_wave = (current_wave % 10 == 0)
+	
+	if current_world == 1:
+		is_boss_wave = (current_wave % 10 == 0)
+	elif current_world == 2:
+		is_boss_wave = (current_wave % 15 == 0)
+	elif current_world == 3:
+		is_boss_wave = (current_wave % 20 == 0)
+	elif current_world == 4:
+		is_boss_wave = (current_wave % 35 == 0)
+	elif current_world == 5:
+		is_boss_wave = (current_wave % 50 == 0)
+
 
 	wave_active = true
 	enemies_alive = 0
