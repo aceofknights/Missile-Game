@@ -43,6 +43,9 @@ one_shot = true
 [node name="EmpTimer" type="Timer" parent="."]
 autostart = true
 
+[node name="EmpChargeTimer" type="Timer" parent="."]
+one_shot = true
+
 [node name="JamTimer" type="Timer" parent="."]
 autostart = true
 
@@ -50,4 +53,7 @@ autostart = true
 one_shot = true
 
 [node name="JamRing" type="Line2D" parent="."]
+visible = false
+
+[node name="EmpRing" type="Line2D" parent="."]
 visible = false
