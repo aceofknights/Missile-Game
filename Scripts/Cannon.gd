@@ -6,6 +6,7 @@ extends Area2D
 
 var cooldown := 0.0
 var shots_in_cycle := 0
+var emp_disabled_remaining := 0.0
 @onready var ammo_label: Label = $AmmoLabel
 @onready var fire_rate_bar: ProgressBar = $FireRateBar
 @onready var repair_label: Label = get_node_or_null("RepairLabel") as Label
@@ -28,6 +29,8 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if emp_disabled_remaining > 0.0:
+		emp_disabled_remaining = max(0.0, emp_disabled_remaining - delta)
 	if _can_operate():
 		look_at(get_global_mouse_position())
 		if cooldown > 0.0:
@@ -56,9 +59,16 @@ func _refresh_visibility_state() -> void:
 	if fire_rate_bar:
 		fire_rate_bar.visible = active
 	if repair_label:
-		repair_label.visible = false
+		repair_label.visible = emp_disabled_remaining > 0.0
+		if emp_disabled_remaining > 0.0:
+			repair_label.text = "EMP %.1fs" % emp_disabled_remaining
 	if sprite:
-		sprite.modulate = Color(0.35, 0.35, 0.35, 1.0) if destroyed else Color(1, 1, 1, 1)
+		if destroyed:
+			sprite.modulate = Color(0.35, 0.35, 0.35, 1.0)
+		elif emp_disabled_remaining > 0.0:
+			sprite.modulate = Color(0.55, 0.9, 1.0, 1.0)
+		else:
+			sprite.modulate = Color(1, 1, 1, 1)
 
 
 func _update_ui() -> void:
@@ -78,7 +88,7 @@ func _update_overlay_positions() -> void:
 
 
 func can_fire() -> bool:
-	return _can_operate() and cooldown <= 0.0 and GameManager.get_cannon_current_ammo(cannon_id) > 0
+	return _can_operate() and emp_disabled_remaining <= 0.0 and cooldown <= 0.0 and GameManager.get_cannon_current_ammo(cannon_id) > 0
 
 
 func try_fire_at(target_position: Vector2) -> bool:
@@ -111,6 +121,12 @@ func _on_area_entered(area: Area2D) -> void:
 		GameManager.destroy_cannon(cannon_id)
 		_refresh_visibility_state()
 
+
+
+
+func disable_temporarily(duration: float) -> void:
+	emp_disabled_remaining = max(emp_disabled_remaining, max(0.1, duration))
+	_refresh_visibility_state()
 
 func die() -> void:
 	GameManager.destroy_cannon(cannon_id)

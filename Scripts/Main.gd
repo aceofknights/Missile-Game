@@ -19,11 +19,26 @@ var base_buildings = 4
 var extra_buildings = 0
 const REPAIR_HINT_LINGER_SECONDS := 1.0
 var _repair_hint_linger_remaining := 0.0
+var target_jam_remaining := 0.0
+var target_jam_misfire_radius := 0.0
+var target_jam_delay_max := 0.0
 
 
 func get_building_count():
 	return base_buildings + GameManager.get_extra_buildings()
 
+
+
+
+func _enter_tree() -> void:
+	child_entered_tree.connect(_on_child_entered_tree)
+
+
+func _on_child_entered_tree(node: Node) -> void:
+	if node.has_signal("jam_charge_started"):
+		node.jam_charge_started.connect(_on_boss_jam_charge_started)
+	if node.has_signal("jam_pulse_started"):
+		node.jam_pulse_started.connect(_on_boss_jam_pulse_started)
 
 func _ready():
 	_ensure_repair_hint_label()
@@ -51,6 +66,11 @@ func _ready():
 	GameManager.connect("announce_wave", Callable(self, "_on_announce_wave"))
 	GameManager.start_wave()
 	_apply_building_unlocks()
+	for boss in get_tree().get_nodes_in_group("enemy"):
+		if boss.has_signal("jam_charge_started"):
+			boss.jam_charge_started.connect(_on_boss_jam_charge_started)
+		if boss.has_signal("jam_pulse_started"):
+			boss.jam_pulse_started.connect(_on_boss_jam_pulse_started)
 	give_resources.pressed.connect(_give_resource)
 
 
@@ -159,6 +179,8 @@ func _on_destroy_all_pressed():
 
 
 func _process(delta):
+	if target_jam_remaining > 0.0:
+		target_jam_remaining = max(0.0, target_jam_remaining - delta)
 	GameManager.update_ammo_factory(delta)
 	AmmoLabel.text = "Ammo: %s" % GameManager.get_total_ammo_status()
 	wave_label.text = "🌊 Wave %d / 🌍 World %d" % [GameManager.current_wave, GameManager.current_world]
@@ -218,6 +240,35 @@ func _find_hovered_destroyed_defense() -> Node:
 	return null
 
 
+
+
+func _on_boss_jam_charge_started(_duration: float) -> void:
+	announce("⚠ Relay charging: incoming target jam", 0.8)
+
+
+func _on_boss_jam_pulse_started(duration: float, misfire_radius: float) -> void:
+	target_jam_remaining = max(target_jam_remaining, duration)
+	target_jam_misfire_radius = max(target_jam_misfire_radius, misfire_radius)
+	target_jam_delay_max = max(target_jam_delay_max, 0.25)
+	announce("📡 Targeting JAMMED", min(duration, 1.4))
+
+
+func _get_jammed_target(base_target: Vector2) -> Vector2:
+	if target_jam_remaining <= 0.0:
+		return base_target
+	var drift_scale := clamp(target_jam_remaining / 2.0, 0.25, 1.0)
+	var offset := Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)).normalized()
+	offset *= randf_range(20.0, target_jam_misfire_radius * drift_scale)
+	return base_target + offset
+
+
+func _fire_with_jam(target_position: Vector2) -> void:
+	var jammed_target = _get_jammed_target(target_position)
+	if target_jam_remaining > 0.0:
+		var delay = randf_range(0.04, target_jam_delay_max)
+		await get_tree().create_timer(delay).timeout
+	_fire_closest_cannon(jammed_target)
+
 func _attempt_repair_hovered_defense() -> void:
 	if not GameManager.can_use_repair_shop():
 		return
@@ -243,7 +294,7 @@ func _unhandled_input(event):
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_fire_closest_cannon(get_global_mouse_position())
+		_fire_with_jam(get_global_mouse_position())
 		return
 
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_R:
