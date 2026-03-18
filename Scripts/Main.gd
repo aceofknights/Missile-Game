@@ -74,7 +74,7 @@ func _ensure_repair_hint_label() -> void:
 
 
 func _give_resource():
-	GameManager.player_resources += 100
+	GameManager.player_resources += 10000
 
 
 func _get_ordered_cannons() -> Array:
