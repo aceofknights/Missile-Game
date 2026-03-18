@@ -15,6 +15,7 @@ signal jam_pulse_started(duration: float, misfire_radius: float)
 @export var missile_drop_interval := 1.2
 @export var missile_drop_interval_min := 0.45
 @export var emp_interval := 4.8
+@export var emp_charge_duration := 0.8
 @export var jam_interval := 6.5
 @export var jam_charge_duration := 0.9
 @export var jam_duration_min := 1.0
@@ -26,15 +27,19 @@ signal jam_pulse_started(duration: float, misfire_radius: float)
 @onready var emp_timer: Timer = $EmpTimer
 @onready var jam_timer: Timer = $JamTimer
 @onready var jam_charge_timer: Timer = $JamChargeTimer
+@onready var emp_charge_timer: Timer = $EmpChargeTimer
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var boss_health = $boss_health
 @onready var jam_ring: Line2D = $JamRing
+@onready var emp_ring: Line2D = $EmpRing
 
 var health := 5
 var shield_active := true
 var hit_used_this_down_window := false
 var move_direction := 1.0
 var is_dead := false
+var queued_emp_targets: Array = []
+var emp_charge_active := false
 
 
 func _add_to_scene(node: Node) -> void:
@@ -60,6 +65,9 @@ func _ready() -> void:
 	emp_timer.wait_time = emp_interval
 	emp_timer.timeout.connect(_on_emp_timer_timeout)
 	emp_timer.start()
+	emp_charge_timer.one_shot = true
+	emp_charge_timer.wait_time = emp_charge_duration
+	emp_charge_timer.timeout.connect(_on_emp_charge_timer_timeout)
 
 	jam_timer.wait_time = jam_interval
 	jam_timer.timeout.connect(_on_jam_timer_timeout)
@@ -70,6 +78,7 @@ func _ready() -> void:
 	jam_charge_timer.timeout.connect(_on_jam_charge_timer_timeout)
 
 	_prepare_jam_ring()
+	_prepare_emp_ring()
 	_update_visuals()
 
 
@@ -80,6 +89,7 @@ func _process(delta: float) -> void:
 	boss_health.text = "Health %d" % health
 	_move_like_ufo(delta)
 	_animate_jam_ring(delta)
+	_animate_emp_ring(delta)
 	_update_missile_rate_by_health()
 
 
@@ -147,6 +157,7 @@ func _die_for_real(no_reward := false) -> void:
 	missile_timer.stop()
 	shield_timer.stop()
 	emp_timer.stop()
+	emp_charge_timer.stop()
 	jam_timer.stop()
 	jam_charge_timer.stop()
 
@@ -187,7 +198,23 @@ func _on_missile_timer_timeout() -> void:
 func _on_emp_timer_timeout() -> void:
 	if is_dead:
 		return
-	spawn_emp_missile()
+	_queue_emp_attack()
+
+
+func _on_emp_charge_timer_timeout() -> void:
+	if is_dead:
+		return
+	_hide_emp_charge_ring()
+	emp_charge_active = false
+	var attack_origin := global_position + Vector2(0, 28)
+	EmpAttackUtils.spawn_emp_volley(
+		self,
+		emp_missile_scene,
+		attack_origin,
+		queued_emp_targets,
+		Callable(GameManager, "_on_enemy_died")
+	)
+	queued_emp_targets.clear()
 
 
 func _on_jam_timer_timeout() -> void:
@@ -229,26 +256,29 @@ func spawn_normal_missile() -> void:
 	_add_to_scene(missile)
 
 
+func _queue_emp_attack() -> void:
+	if emp_charge_active:
+		return
+	var active_cannons := EmpAttackUtils.get_active_cannons(get_tree())
+	queued_emp_targets = EmpAttackUtils.select_emp_targets_for_health(active_cannons, health)
+	if queued_emp_targets.is_empty():
+		return
+	emp_charge_active = true
+	_show_emp_charge_ring()
+	emp_charge_timer.start()
+
+
 func spawn_emp_missile() -> void:
 	if emp_missile_scene == null:
 		return
 
-	var targets := get_tree().get_nodes_in_group("cannon")
-	if targets.is_empty():
-		return
-
-	var missile = emp_missile_scene.instantiate()
-	GameManager.enemies_alive += 1
-	missile.connect("enemy_died", Callable(GameManager, "_on_enemy_died"))
-
-
-	var pick = targets[randi() % targets.size()]
-	var target_pos := pick.global_position
-	var direction = (target_pos - global_position).normalized()
-
-	missile.global_position = global_position + Vector2(0, 28)
-	missile.velocity = direction
-	_add_to_scene(missile)
+	EmpAttackUtils.spawn_emp_volley(
+		self,
+		emp_missile_scene,
+		global_position + Vector2(0, 28),
+		EmpAttackUtils.select_emp_targets_for_health(EmpAttackUtils.get_active_cannons(get_tree()), health),
+		Callable(GameManager, "_on_enemy_died")
+	)
 
 
 func _prepare_jam_ring() -> void:
@@ -265,6 +295,20 @@ func _prepare_jam_ring() -> void:
 		jam_ring.add_point(Vector2(cos(angle), sin(angle)) * radius)
 
 
+func _prepare_emp_ring() -> void:
+	if emp_ring == null:
+		return
+	emp_ring.visible = false
+	emp_ring.width = 5.0
+	emp_ring.default_color = Color(0.2, 1.0, 1.0, 0.85)
+	emp_ring.clear_points()
+	var points := 40
+	var radius := 42.0
+	for i in range(points + 1):
+		var angle := TAU * float(i) / float(points)
+		emp_ring.add_point(Vector2(cos(angle), sin(angle)) * radius)
+
+
 func _show_jam_charge_ring() -> void:
 	if jam_ring == null:
 		return
@@ -279,12 +323,34 @@ func _hide_jam_charge_ring() -> void:
 	jam_ring.visible = false
 
 
+func _show_emp_charge_ring() -> void:
+	if emp_ring == null:
+		return
+	emp_ring.visible = true
+	emp_ring.scale = Vector2(0.35, 0.35)
+	emp_ring.modulate.a = 0.2
+
+
+func _hide_emp_charge_ring() -> void:
+	if emp_ring == null:
+		return
+	emp_ring.visible = false
+
+
 func _animate_jam_ring(delta: float) -> void:
 	if jam_ring == null or not jam_ring.visible:
 		return
 	var growth := 2.2 * delta / max(0.01, jam_charge_duration)
 	jam_ring.scale += Vector2(growth, growth)
 	jam_ring.modulate.a = min(1.0, jam_ring.modulate.a + (1.8 * delta / max(0.01, jam_charge_duration)))
+
+
+func _animate_emp_ring(delta: float) -> void:
+	if emp_ring == null or not emp_ring.visible:
+		return
+	var growth := 2.4 * delta / max(0.01, emp_charge_duration)
+	emp_ring.scale += Vector2(growth, growth)
+	emp_ring.modulate.a = min(1.0, emp_ring.modulate.a + (2.0 * delta / max(0.01, emp_charge_duration)))
 
 
 func _update_visuals() -> void:

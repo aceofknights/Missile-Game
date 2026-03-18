@@ -13,6 +13,7 @@ func _ready() -> void:
 	rotation = velocity.angle()
 	connect("area_entered", Callable(self, "_on_area_entered"))
 	add_to_group("enemy")
+	add_to_group("emp_missile")
 
 
 func _process(delta: float) -> void:

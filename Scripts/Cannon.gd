@@ -117,7 +117,7 @@ func fire(target_position: Vector2) -> bool:
 
 
 func _on_area_entered(area: Area2D) -> void:
-	if area.is_in_group("enemy"):
+	if area.is_in_group("enemy") and not area.is_in_group("emp_missile"):
 		GameManager.destroy_cannon(cannon_id)
 		_refresh_visibility_state()
 
