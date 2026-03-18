@@ -74,7 +74,7 @@ func _ensure_repair_hint_label() -> void:
 
 
 func _give_resource():
-	GameManager.player_resources += 100
+	GameManager.player_resources += 10000
 
 
 func _get_ordered_cannons() -> Array:
@@ -100,7 +100,16 @@ func _fire_closest_cannon(target_position: Vector2) -> void:
 
 
 func _skip_to_boss():
-	GameManager.current_wave = 10
+	if GameManager.current_world == 1:
+		GameManager.current_wave = 10
+	elif GameManager.current_world == 2:
+		GameManager.current_wave = 15
+	elif GameManager.current_world == 3:
+		GameManager.current_wave = 20
+	elif GameManager.current_world == 4:
+		GameManager.current_wave = 35
+	elif GameManager.current_world == 5:
+		GameManager.current_wave = 50
 
 
 func _apply_building_unlocks():
