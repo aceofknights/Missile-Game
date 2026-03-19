@@ -77,3 +77,9 @@ offset_right = 874.0
 offset_bottom = 583.0
 text = "Status"
 horizontal_alignment = 1
+
+[node name="UnlockAllWorldsButton" type="Button" parent="."]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+text = "UnlockAllWorldsButton"

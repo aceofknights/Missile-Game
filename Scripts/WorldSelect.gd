@@ -6,6 +6,7 @@ extends Control
 @onready var world4_btn: Button = $CenterContainer/VBoxContainer/World4Button
 @onready var world5_btn: Button = $CenterContainer/VBoxContainer/World5Button
 @onready var status_label: Label = $StatusLabel
+@onready var unlock_all_worlds_btn: Button = $UnlockAllWorldsButton
 
 
 func _ready():
@@ -14,6 +15,8 @@ func _ready():
 	world3_btn.pressed.connect(func(): _select_world(3))
 	world4_btn.pressed.connect(func(): _select_world(4))
 	world5_btn.pressed.connect(func(): _select_world(5))
+	unlock_all_worlds_btn.pressed.connect(_unlock_all_worlds_for_debug)
+	unlock_all_worlds_btn.visible = OS.is_debug_build()
 	_refresh_buttons()
 
 
@@ -42,3 +45,9 @@ func _select_world(world: int) -> void:
 
 	status_label.text = "Launching World %d..." % world
 	GameManager.select_world(world)
+
+
+func _unlock_all_worlds_for_debug() -> void:
+	GameManager.highest_world_unlocked = GameManager.WORLD_COUNT
+	_refresh_buttons()
+	status_label.text = "Debug: All worlds unlocked"

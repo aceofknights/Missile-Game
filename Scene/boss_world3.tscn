@@ -1,9 +1,9 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=9 format=3]
 
-[ext_resource type="Script" path="res://Scripts/BossUfo.gd" id="1"]
+[ext_resource type="Script" path="res://Scripts/BossWorld3.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="3"]
-[ext_resource type="PackedScene" uid="uid://cvsqtfppxjfw0" path="res://Scene/scatter_missile.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://Scene/emp_missile.tscn" id="4"]
 [ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="5"]
 
 [sub_resource type="CircleShape2D" id="1"]
@@ -13,7 +13,8 @@ radius = 42.0
 script = ExtResource("1")
 explosion_scene = ExtResource("2")
 missile_scene = ExtResource("3")
-scatter_missile_scene = ExtResource("4")
+emp_missile_scene = ExtResource("4")
+max_health = 5
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.85, 0.85, 1, 1)
@@ -38,3 +39,21 @@ offset_bottom = -28.0
 
 [node name="ScatterTimer" type="Timer" parent="."]
 one_shot = true
+
+[node name="EmpTimer" type="Timer" parent="."]
+autostart = true
+
+[node name="EmpChargeTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="JamTimer" type="Timer" parent="."]
+autostart = true
+
+[node name="JamChargeTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="JamRing" type="Line2D" parent="."]
+visible = false
+
+[node name="EmpRing" type="Line2D" parent="."]
+visible = false
