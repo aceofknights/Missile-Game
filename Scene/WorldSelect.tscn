@@ -69,15 +69,6 @@ text = "World 4"
 layout_mode = 2
 text = "World 5"
 
-
-[node name="UnlockAllWorldsButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 24.0
-offset_top = 24.0
-offset_right = 238.0
-offset_bottom = 58.0
-text = "DEBUG: Unlock All Worlds"
-
 [node name="StatusLabel" type="Label" parent="."]
 layout_mode = 0
 offset_left = 379.0
@@ -86,3 +77,9 @@ offset_right = 874.0
 offset_bottom = 583.0
 text = "Status"
 horizontal_alignment = 1
+
+[node name="UnlockAllWorldsButton" type="Button" parent="."]
+layout_mode = 0
+offset_right = 8.0
+offset_bottom = 8.0
+text = "UnlockAllWorldsButton"

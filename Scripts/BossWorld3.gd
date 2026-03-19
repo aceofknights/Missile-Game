@@ -20,7 +20,8 @@ signal jam_pulse_started(duration: float, misfire_radius: float)
 @export var jam_charge_duration := 0.9
 @export var jam_duration_min := 1.0
 @export var jam_duration_max := 2.0
-@export var jam_misfire_radius := 95.0
+@export var jam_misfire_radius_min := 95.0
+@export var jam_misfire_radius_max := 180.0
 
 @onready var shield_timer: Timer = $ShieldTimer
 @onready var missile_timer: Timer = $MissileTimer
@@ -31,7 +32,6 @@ signal jam_pulse_started(duration: float, misfire_radius: float)
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var boss_health = $boss_health
 @onready var jam_ring: Line2D = $JamRing
-@onready var emp_ring: Line2D = $EmpRing
 
 var health := 5
 var shield_active := true
@@ -65,6 +65,7 @@ func _ready() -> void:
 	emp_timer.wait_time = emp_interval
 	emp_timer.timeout.connect(_on_emp_timer_timeout)
 	emp_timer.start()
+
 	emp_charge_timer.one_shot = true
 	emp_charge_timer.wait_time = emp_charge_duration
 	emp_charge_timer.timeout.connect(_on_emp_charge_timer_timeout)
@@ -78,7 +79,6 @@ func _ready() -> void:
 	jam_charge_timer.timeout.connect(_on_jam_charge_timer_timeout)
 
 	_prepare_jam_ring()
-	_prepare_emp_ring()
 	_update_visuals()
 
 
@@ -89,7 +89,6 @@ func _process(delta: float) -> void:
 	boss_health.text = "Health %d" % health
 	_move_like_ufo(delta)
 	_animate_jam_ring(delta)
-	_animate_emp_ring(delta)
 	_update_missile_rate_by_health()
 
 
@@ -123,8 +122,8 @@ func _move_like_ufo(delta: float) -> void:
 
 func _update_missile_rate_by_health() -> void:
 	var lost_health := float(max_health - health)
-	var t := lost_health / max(1.0, float(max_health - 1))
-	var current_interval = lerp(missile_drop_interval, missile_drop_interval_min, t)
+	var t: float = lost_health / maxf(1.0, float(max_health - 1))
+	var current_interval: float = lerp(missile_drop_interval, missile_drop_interval_min, t)
 	if abs(missile_timer.wait_time - current_interval) > 0.01:
 		missile_timer.wait_time = current_interval
 		if missile_timer.is_stopped():
@@ -192,7 +191,7 @@ func _on_shield_timer_timeout() -> void:
 func _on_missile_timer_timeout() -> void:
 	if is_dead:
 		return
-	spawn_normal_missile()
+	# spawn_normal_missile()
 
 
 func _on_emp_timer_timeout() -> void:
@@ -204,9 +203,8 @@ func _on_emp_timer_timeout() -> void:
 func _on_emp_charge_timer_timeout() -> void:
 	if is_dead:
 		return
-	_hide_emp_charge_ring()
 	emp_charge_active = false
-	var attack_origin := global_position + Vector2(0, 28)
+	var attack_origin: Vector2 = global_position + Vector2(0, 28)
 	EmpAttackUtils.spawn_emp_volley(
 		self,
 		emp_missile_scene,
@@ -229,14 +227,20 @@ func _on_jam_charge_timer_timeout() -> void:
 	if is_dead:
 		return
 	_hide_jam_charge_ring()
-	var duration := _current_jam_duration()
-	emit_signal("jam_pulse_started", duration, jam_misfire_radius)
+	var duration: float = _current_jam_duration()
+	var radius: float = _current_jam_radius()
+	emit_signal("jam_pulse_started", duration, radius)
 	jam_timer.start()
 
 
 func _current_jam_duration() -> float:
-	var lost_health_ratio := float(max_health - health) / max(1.0, float(max_health - 1))
+	var lost_health_ratio: float = float(max_health - health) / maxf(1.0, float(max_health - 1))
 	return lerp(jam_duration_min, jam_duration_max, lost_health_ratio)
+
+
+func _current_jam_radius() -> float:
+	var lost_health_ratio: float = float(max_health - health) / maxf(1.0, float(max_health - 1))
+	return lerp(jam_misfire_radius_min, jam_misfire_radius_max, lost_health_ratio)
 
 
 func spawn_normal_missile() -> void:
@@ -248,8 +252,8 @@ func spawn_normal_missile() -> void:
 	missile.connect("enemy_died", Callable(GameManager, "_on_enemy_died"))
 
 	var viewport = get_viewport_rect().size
-	var target = Vector2(randf_range(40.0, viewport.x - 40.0), viewport.y)
-	var direction = (target - global_position).normalized()
+	var target: Vector2 = Vector2(randf_range(40.0, viewport.x - 40.0), viewport.y)
+	var direction: Vector2 = (target - global_position).normalized()
 
 	missile.global_position = global_position + Vector2(0, 32)
 	missile.velocity = direction
@@ -264,7 +268,6 @@ func _queue_emp_attack() -> void:
 	if queued_emp_targets.is_empty():
 		return
 	emp_charge_active = true
-	_show_emp_charge_ring()
 	emp_charge_timer.start()
 
 
@@ -291,22 +294,8 @@ func _prepare_jam_ring() -> void:
 	var points := 48
 	var radius := 56.0
 	for i in range(points + 1):
-		var angle := TAU * float(i) / float(points)
+		var angle: float = TAU * float(i) / float(points)
 		jam_ring.add_point(Vector2(cos(angle), sin(angle)) * radius)
-
-
-func _prepare_emp_ring() -> void:
-	if emp_ring == null:
-		return
-	emp_ring.visible = false
-	emp_ring.width = 5.0
-	emp_ring.default_color = Color(0.2, 1.0, 1.0, 0.85)
-	emp_ring.clear_points()
-	var points := 40
-	var radius := 42.0
-	for i in range(points + 1):
-		var angle := TAU * float(i) / float(points)
-		emp_ring.add_point(Vector2(cos(angle), sin(angle)) * radius)
 
 
 func _show_jam_charge_ring() -> void:
@@ -323,34 +312,12 @@ func _hide_jam_charge_ring() -> void:
 	jam_ring.visible = false
 
 
-func _show_emp_charge_ring() -> void:
-	if emp_ring == null:
-		return
-	emp_ring.visible = true
-	emp_ring.scale = Vector2(0.35, 0.35)
-	emp_ring.modulate.a = 0.2
-
-
-func _hide_emp_charge_ring() -> void:
-	if emp_ring == null:
-		return
-	emp_ring.visible = false
-
-
 func _animate_jam_ring(delta: float) -> void:
 	if jam_ring == null or not jam_ring.visible:
 		return
-	var growth := 2.2 * delta / max(0.01, jam_charge_duration)
+	var growth: float = 2.2 * delta / maxf(0.01, float(jam_charge_duration))
 	jam_ring.scale += Vector2(growth, growth)
-	jam_ring.modulate.a = min(1.0, jam_ring.modulate.a + (1.8 * delta / max(0.01, jam_charge_duration)))
-
-
-func _animate_emp_ring(delta: float) -> void:
-	if emp_ring == null or not emp_ring.visible:
-		return
-	var growth := 2.4 * delta / max(0.01, emp_charge_duration)
-	emp_ring.scale += Vector2(growth, growth)
-	emp_ring.modulate.a = min(1.0, emp_ring.modulate.a + (2.0 * delta / max(0.01, emp_charge_duration)))
+	jam_ring.modulate.a = minf(1.0, jam_ring.modulate.a + (1.8 * delta / maxf(0.01, float(jam_charge_duration))))
 
 
 func _update_visuals() -> void:
