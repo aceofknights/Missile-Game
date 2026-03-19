@@ -3,14 +3,16 @@ extends Area2D
 signal clone_destroyed(clone: Area2D)
 
 @export var missile_scene: PackedScene
-@export var ion_missile_scene: PackedScene
-@export var normal_fire_interval: float = 1.45
-@export var ion_fire_interval: float = 3.6
+@export var fire_interval: float = 1.5
+@export var orbit_radius: float = 52.0
+@export var orbit_speed: float = 1.8
 
-@onready var normal_timer: Timer = $NormalFireTimer
-@onready var ion_timer: Timer = $IonFireTimer
+@onready var fire_timer: Timer = $FireTimer
 
-var attack_enabled := false
+var orbit_center := Vector2.ZERO
+var orbit_angle := 0.0
+var orbit_enabled := false
+var firing_enabled := false
 
 
 func _ready() -> void:
@@ -19,53 +21,55 @@ func _ready() -> void:
 	monitorable = true
 	area_entered.connect(_on_area_entered)
 
-	normal_timer.one_shot = false
-	normal_timer.wait_time = normal_fire_interval
-	normal_timer.timeout.connect(_on_normal_fire_timeout)
-
-	ion_timer.one_shot = false
-	ion_timer.wait_time = ion_fire_interval
-	ion_timer.timeout.connect(_on_ion_fire_timeout)
+	fire_timer.wait_time = fire_interval
+	fire_timer.timeout.connect(_on_fire_timer_timeout)
 
 
-func begin_attack_phase() -> void:
-	if attack_enabled:
+func begin_clone_phase(center: Vector2, start_angle: float, can_fire: bool) -> void:
+	orbit_center = center
+	orbit_angle = start_angle
+	orbit_enabled = true
+	firing_enabled = can_fire
+	if firing_enabled:
+		fire_timer.start(randf_range(0.2, fire_interval))
+	else:
+		fire_timer.stop()
+
+
+func set_firing_enabled(enabled: bool) -> void:
+	firing_enabled = enabled
+	if firing_enabled:
+		fire_timer.start(randf_range(0.2, fire_interval))
+	else:
+		fire_timer.stop()
+
+
+func _process(delta: float) -> void:
+	if not orbit_enabled:
 		return
-	attack_enabled = true
-	normal_timer.start(randf_range(0.2, normal_fire_interval))
-	ion_timer.start(randf_range(0.6, ion_fire_interval))
-
-
-func stop_attack_phase() -> void:
-	attack_enabled = false
-	normal_timer.stop()
-	ion_timer.stop()
+	orbit_angle += orbit_speed * delta
+	global_position = orbit_center + Vector2(cos(orbit_angle), sin(orbit_angle)) * orbit_radius
 
 
 func _on_area_entered(area: Area2D) -> void:
 	if area.name != "Projectile":
 		return
 	area.queue_free()
-	_destroy_clone()
+	emit_signal("clone_destroyed", self)
+	queue_free()
 
 
-func _on_normal_fire_timeout() -> void:
-	if not attack_enabled:
+func _on_fire_timer_timeout() -> void:
+	if not firing_enabled:
 		return
-	_spawn_missile(missile_scene)
+	_spawn_normal_missile()
 
 
-func _on_ion_fire_timeout() -> void:
-	if not attack_enabled:
-		return
-	_spawn_missile(ion_missile_scene)
-
-
-func _spawn_missile(scene: PackedScene) -> void:
-	if scene == null:
+func _spawn_normal_missile() -> void:
+	if missile_scene == null:
 		return
 
-	var missile = scene.instantiate()
+	var missile = missile_scene.instantiate()
 	GameManager.enemies_alive += 1
 	missile.connect("enemy_died", Callable(GameManager, "_on_enemy_died"))
 
@@ -74,9 +78,3 @@ func _spawn_missile(scene: PackedScene) -> void:
 	missile.global_position = global_position + Vector2(0, 24)
 	missile.velocity = (target - missile.global_position).normalized()
 	get_tree().current_scene.add_child(missile)
-
-
-func _destroy_clone() -> void:
-	stop_attack_phase()
-	emit_signal("clone_destroyed", self)
-	queue_free()

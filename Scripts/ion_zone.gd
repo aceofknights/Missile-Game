@@ -1,6 +1,6 @@
 extends Area2D
 
-@export var duration: float = 3.0
+@export var duration: float = 5.0
 @export var radius: float = 120.0
 @export var player_projectile_speed_multiplier: float = 0.55
 @export var enemy_missile_speed_multiplier: float = 1.4
