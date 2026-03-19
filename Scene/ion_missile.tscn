@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=5 format=3 uid="uid://dvi5mtwyi0k1x"]
 
 [ext_resource type="Script" path="res://Scripts/ion_missile.gd" id="1"]
 [ext_resource type="PackedScene" path="res://Scene/ion_zone.tscn" id="2"]
@@ -8,6 +8,7 @@
 radius = 16.0
 
 [node name="IonMissile" type="Area2D"]
+collision_mask = 3
 script = ExtResource("1")
 ion_zone_scene = ExtResource("2")
 

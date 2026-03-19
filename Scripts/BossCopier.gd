@@ -15,7 +15,7 @@ signal boss_defeated
 @export var clone_fire_delay := 1.0
 @export var teleport_settle_delay := 0.1
 
-@export var normal_fire_interval := 1.15
+@export var normal_fire_interval := 2.15
 @export var ion_fire_interval := 3.0
 
 @export var clone_count_healthy := 3
@@ -257,7 +257,7 @@ func _spawn_clones_for_current_phase() -> void:
 
 	var viewport := get_viewport_rect().size
 	var count := _get_clone_count_for_health()
-	for i in count:
+	for i in range(count):
 		var clone = clone_scene.instantiate()
 		clone.missile_scene = missile_scene
 		clone.fire_interval = normal_fire_interval

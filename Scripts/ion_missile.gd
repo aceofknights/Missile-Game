@@ -34,22 +34,25 @@ func _physics_process(delta: float) -> void:
 	position += velocity * speed * speed_multiplier * delta
 
 	if global_position.y >= trigger_y:
-		_detonate(true)
+		_detonate(true, true)
 
 
 func _on_area_entered(area: Area2D) -> void:
 	if is_dying:
 		return
+
 	if area.name == "Projectile":
 		area.queue_free()
-		_detonate(false)
+		_detonate(false, false)
+	elif area.name == "Explosion":
+		_detonate(false, false)
 	elif area.is_in_group("defense_target"):
 		if area.has_method("die"):
 			area.call_deferred("die")
-		_detonate(true)
+		_detonate(true, true)
 
 
-func _detonate(no_reward: bool) -> void:
+func _detonate(no_reward: bool, spawn_zone: bool) -> void:
 	if is_dying:
 		return
 	is_dying = true
@@ -57,7 +60,9 @@ func _detonate(no_reward: bool) -> void:
 	if not no_reward:
 		GameManager.add_resources(1)
 
-	_spawn_ion_zone_if_possible()
+	if spawn_zone:
+		_spawn_ion_zone_if_possible()
+
 	emit_signal("enemy_died")
 	queue_free()
 
