@@ -1,6 +1,7 @@
 extends Area2D
 
 var destroyed := false
+var permanently_destroyed := false
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var repair_label: Label = get_node_or_null("RepairLabel") as Label
 
@@ -68,7 +69,14 @@ func _is_mouse_over_defense(global_mouse_position: Vector2) -> bool:
 
 
 func repair() -> void:
+	if permanently_destroyed:
+		return
 	destroyed = false
 	monitoring = true
 	monitorable = true
 	_update_visual_state()
+
+
+func destroy_permanently() -> void:
+	permanently_destroyed = true
+	die()
