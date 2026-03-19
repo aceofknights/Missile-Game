@@ -1,40 +1,48 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
-[ext_resource type="Script" path="res://Scripts/BossUfo.gd" id="1"]
+[ext_resource type="Script" path="res://Scripts/BossCopier.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="3"]
-[ext_resource type="PackedScene" uid="uid://cvsqtfppxjfw0" path="res://Scene/scatter_missile.tscn" id="4"]
-[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="5"]
+[ext_resource type="PackedScene" path="res://Scene/ion_missile.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://Scene/boss_copier_clone.tscn" id="5"]
+[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="6"]
 
 [sub_resource type="CircleShape2D" id="1"]
 radius = 42.0
 
-[node name="BossPlaceholder" type="Area2D"]
+[node name="BossCopier" type="Area2D"]
 script = ExtResource("1")
 explosion_scene = ExtResource("2")
 missile_scene = ExtResource("3")
-scatter_missile_scene = ExtResource("4")
+ion_missile_scene = ExtResource("4")
+clone_scene = ExtResource("5")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-modulate = Color(0.85, 0.85, 1, 1)
-scale = Vector2(0.55, 0.35)
-texture = ExtResource("5")
+modulate = Color(0.52, 0.88, 1, 1)
+scale = Vector2(0.58, 0.36)
+texture = ExtResource("6")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1")
 
-[node name="ShieldTimer" type="Timer" parent="."]
-one_shot = true
-autostart = true
-
-[node name="MissileTimer" type="Timer" parent="."]
-autostart = true
-
 [node name="boss_health" type="Label" parent="."]
-offset_left = -20.0
-offset_top = -51.0
-offset_right = 20.0
-offset_bottom = -28.0
+offset_left = -32.0
+offset_top = -56.0
+offset_right = 57.0
+offset_bottom = -27.0
 
-[node name="ScatterTimer" type="Timer" parent="."]
+[node name="NormalFireTimer" type="Timer" parent="."]
+
+[node name="IonFireTimer" type="Timer" parent="."]
+
+[node name="PhaseTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="CloneDelayTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="CloneTimeoutTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="VanishTimer" type="Timer" parent="."]
 one_shot = true

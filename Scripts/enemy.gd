@@ -1,32 +1,33 @@
 extends Area2D
-@export var explosion_scene: PackedScene
-var speed = 150
-var velocity = Vector2.ZERO
-signal enemy_died
-var is_dying = false
 
-func _ready():
+@export var explosion_scene: PackedScene
+@export var speed := 150.0
+
+signal enemy_died
+
+var velocity := Vector2.ZERO
+var is_dying := false
+
+
+func _ready() -> void:
 	rotation = velocity.angle()
 	connect("area_entered", Callable(self, "_on_area_entered"))
 	add_to_group("enemy")
-	# this is a test comment
-	
-func _process(delta):
-	position += velocity * speed * delta
-	
-	# Check if hit the ground
-	if position.y >= get_viewport_rect().size.y:
-		print("Enemy hit the ground!")
-		die(true)  # So we still emit enemy_died
 
-func _on_area_entered(area):
-	print("Entered: ", area.name)
+
+func _process(delta: float) -> void:
+	var zone_multiplier := IonFieldUtils.get_speed_multiplier_at(global_position, false)
+	position += velocity * speed * zone_multiplier * delta
+
+	if position.y >= get_viewport_rect().size.y:
+		die(true)
+
+
+func _on_area_entered(area: Area2D) -> void:
 	if area.name == "Projectile":
-		print("🔫 Hit by projectile")
 		die(false)
 		area.queue_free()
 	elif area.is_in_group("defense_target"):
-		print("🏠 Hit a defense target")
 		if area.has_method("die"):
 			area.call_deferred("die")
 		else:
@@ -34,29 +35,20 @@ func _on_area_entered(area):
 		die(true)
 
 
-func die(no_reward := false):
+func die(no_reward := false) -> void:
 	if is_dying:
-		print("⚠️ Already dying, skipping...")
 		return
 	is_dying = true
-	
-	# Only reward when not falling
+
 	if not no_reward:
 		GameManager.add_resources(1)
-	
-	print("Enemy died")
+
 	emit_signal("enemy_died")
-	
+
 	if explosion_scene:
-		print("💥 Spawning explosion")
 		var explosion = explosion_scene.instantiate()
 		explosion.global_position = global_position
-		# ✅ Set reward flag for the explosion
 		explosion.gives_reward = not no_reward
-  # true = player deserves reward
-
 		get_tree().current_scene.add_child(explosion)
-	else:
-		print("❌ No explosion scene!")
-	queue_free()
 
+	queue_free()
