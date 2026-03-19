@@ -11,30 +11,22 @@ var is_dying: bool = false
 
 func _ready() -> void:
 	rotation = velocity.angle()
-
 	monitoring = true
 	monitorable = true
-
 	area_entered.connect(_on_area_entered)
-
 	add_to_group("enemy")
 	add_to_group("emp_missile")
 
-	print("EMP ready")
-	print("EMP monitoring=", monitoring, " monitorable=", monitorable)
-	print("EMP layer=", collision_layer, " mask=", collision_mask)
-
 
 func _physics_process(delta: float) -> void:
-	position += velocity * speed * delta
+	var zone_multiplier := IonFieldUtils.get_speed_multiplier_at(global_position, false)
+	position += velocity * speed * zone_multiplier * delta
 
 	if position.y >= get_viewport_rect().size.y:
 		die(true)
 
 
 func _on_area_entered(area: Area2D) -> void:
-	print("EMP touched area: ", area.name, " groups: ", area.get_groups())
-
 	if area.name == "Projectile":
 		die(false)
 		area.queue_free()
