@@ -9,6 +9,7 @@ var shots_in_cycle := 0
 var emp_disabled_remaining := 0.0
 var jam_end_time: float = 0.0
 var jam_misfire_radius: float = 0.0
+var permanently_destroyed: bool = false
 
 @onready var ammo_label: Label = $AmmoLabel
 @onready var fire_rate_bar: ProgressBar = $FireRateBar
@@ -212,6 +213,8 @@ func _is_mouse_over_cannon(global_mouse_position: Vector2) -> bool:
 
 
 func repair() -> void:
+	if permanently_destroyed:
+		return
 	GameManager.set_cannon_unlocked(cannon_id, true)
 	GameManager.set_cannon_current_ammo(cannon_id, GameManager.get_cannon_starting_ammo(cannon_id))
 	cooldown = 0.0
@@ -219,3 +222,8 @@ func repair() -> void:
 	emp_disabled_remaining = 0.0
 	clear_targeting_jam()
 	_refresh_visibility_state()
+
+
+func destroy_permanently() -> void:
+	permanently_destroyed = true
+	die()

@@ -1,40 +1,60 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=11 format=3]
 
-[ext_resource type="Script" path="res://Scripts/BossUfo.gd" id="1"]
+[ext_resource type="Script" path="res://Scripts/BossWorld5.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="3"]
 [ext_resource type="PackedScene" uid="uid://cvsqtfppxjfw0" path="res://Scene/scatter_missile.tscn" id="4"]
-[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="5"]
+[ext_resource type="PackedScene" uid="uid://dqofihdy7ehf8" path="res://Scene/emp_missile.tscn" id="5"]
+[ext_resource type="PackedScene" uid="uid://dvi5mtwyi0k1x" path="res://Scene/ion_missile.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://Scene/boss_plane.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://Scene/fighter_intercept_shot.tscn" id="8"]
+[ext_resource type="PackedScene" path="res://Scene/laser_weak_point.tscn" id="9"]
+[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="10"]
 
 [sub_resource type="CircleShape2D" id="1"]
-radius = 42.0
+radius = 62.0
 
-[node name="BossPlaceholder" type="Area2D"]
+[node name="BossMothership" type="Area2D"]
 script = ExtResource("1")
 explosion_scene = ExtResource("2")
 missile_scene = ExtResource("3")
 scatter_missile_scene = ExtResource("4")
+emp_missile_scene = ExtResource("5")
+ion_missile_scene = ExtResource("6")
+plane_scene = ExtResource("7")
+fighter_projectile_scene = ExtResource("8")
+laser_weak_point_scene = ExtResource("9")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-modulate = Color(0.85, 0.85, 1, 1)
-scale = Vector2(0.55, 0.35)
-texture = ExtResource("5")
+modulate = Color(0.52, 0.88, 1, 1)
+scale = Vector2(0.92, 0.34)
+texture = ExtResource("10")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1")
 
+[node name="boss_health" type="Label" parent="."]
+offset_left = -112.0
+offset_top = -76.0
+offset_right = 119.0
+offset_bottom = -40.0
+
 [node name="ShieldTimer" type="Timer" parent="."]
 one_shot = true
-autostart = true
 
 [node name="MissileTimer" type="Timer" parent="."]
-autostart = true
-
-[node name="boss_health" type="Label" parent="."]
-offset_left = -20.0
-offset_top = -51.0
-offset_right = 20.0
-offset_bottom = -28.0
 
 [node name="ScatterTimer" type="Timer" parent="."]
+
+[node name="EmpTimer" type="Timer" parent="."]
+
+[node name="IonTimer" type="Timer" parent="."]
+
+[node name="FighterSpawnTimer" type="Timer" parent="."]
+
+[node name="BomberSpawnTimer" type="Timer" parent="."]
+
+[node name="LaserTimer" type="Timer" parent="."]
+
+[node name="LaserChargeTimer" type="Timer" parent="."]
 one_shot = true

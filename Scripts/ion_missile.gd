@@ -6,6 +6,9 @@ signal enemy_died
 @export var ion_zone_scene: PackedScene
 @export var ion_zone_duration: float = 5.0
 @export var ion_zone_radius: float = 120.0
+@export var max_active_zones: int = 1
+@export var zone_player_projectile_speed_multiplier: float = 0.55
+@export var zone_enemy_missile_speed_multiplier: float = 1.4
 @export var explode_height_ratio_min: float = 0.45
 @export var explode_height_ratio_max: float = 0.65
 
@@ -70,11 +73,13 @@ func _detonate(no_reward: bool, spawn_zone: bool) -> void:
 func _spawn_ion_zone_if_possible() -> void:
 	if ion_zone_scene == null:
 		return
-	if not IonHazardController.can_spawn_zone():
+	if not IonHazardController.can_spawn_zone(max_active_zones):
 		return
 
 	var zone = ion_zone_scene.instantiate()
 	zone.global_position = global_position
 	zone.duration = ion_zone_duration
 	zone.radius = ion_zone_radius
+	zone.player_projectile_speed_multiplier = zone_player_projectile_speed_multiplier
+	zone.enemy_missile_speed_multiplier = zone_enemy_missile_speed_multiplier
 	get_tree().current_scene.add_child(zone)
