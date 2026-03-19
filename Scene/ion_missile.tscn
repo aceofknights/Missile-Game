@@ -1,0 +1,20 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://Scripts/ion_missile.gd" id="1"]
+[ext_resource type="PackedScene" path="res://Scene/ion_zone.tscn" id="2"]
+[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="3"]
+
+[sub_resource type="CircleShape2D" id="1"]
+radius = 16.0
+
+[node name="IonMissile" type="Area2D"]
+script = ExtResource("1")
+ion_zone_scene = ExtResource("2")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.4, 0.85, 1, 1)
+scale = Vector2(0.12, 0.3)
+texture = ExtResource("3")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("1")
