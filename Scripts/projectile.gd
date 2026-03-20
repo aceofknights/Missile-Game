@@ -1,7 +1,7 @@
 extends Area2D
 
 @export var explosion_scene: PackedScene
-@export var speed := 400
+@export var speed := 360
 var target: Vector2
 
 

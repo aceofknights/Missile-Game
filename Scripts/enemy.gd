@@ -1,7 +1,7 @@
 extends Area2D
 
 @export var explosion_scene: PackedScene
-@export var speed := 150.0
+@export var speed := 100.0
 
 signal enemy_died
 
