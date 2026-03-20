@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://g0r4peps31qo"]
 
 [ext_resource type="Script" path="res://Scripts/explosion.gd" id="1_08i34"]
-[ext_resource type="Texture2D" uid="uid://5senxme5ud0g" path="res://circle.png" id="1_k0cll"]
+[ext_resource type="Texture2D" uid="uid://bin3nvp7wu8im" path="res://assets/Ellipse 1.png" id="2_am2h8"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ouckh"]
 
@@ -19,8 +19,8 @@ autostart = true
 [node name="Sprite2D" type="Sprite2D" parent="."]
 material = SubResource("ShaderMaterial_ouckh")
 position = Vector2(7.62939e-06, -7.62939e-06)
-scale = Vector2(0.0085, 0.0085)
-texture = ExtResource("1_k0cll")
+scale = Vector2(0.384, 0.384)
+texture = ExtResource("2_am2h8")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_bxo0u")

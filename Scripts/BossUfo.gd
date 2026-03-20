@@ -7,12 +7,15 @@ signal boss_defeated
 @export var missile_scene: PackedScene
 @export var scatter_missile_scene: PackedScene
 @export var move_speed := 120.0
-@export var max_health := 1
+@export var max_health := 3
 @export var shield_up_duration := 3.5
 @export var shield_down_duration := 2.0
 @export var missile_drop_interval := 1.0
-@export var scatter_min_interval := 5.0
-@export var scatter_max_interval := 8.0
+
+# Scatter starts at 8 seconds and speeds up each time boss is hit
+@export var scatter_start_interval := 8.0
+@export var scatter_interval_step := 2.0
+@export var scatter_min_interval := 3.0
 
 @onready var shield_timer: Timer = $ShieldTimer
 @onready var missile_timer: Timer = $MissileTimer
@@ -23,23 +26,22 @@ signal boss_defeated
 var health := 3
 var shield_active := true
 var hit_used_this_down_window := false
-var scatter_released := false
 var move_direction := 1.0
 var is_dead := false
+var current_scatter_interval := 8.0
 
 
-# ✅ Safe add_child helper (prevents current_scene null crash during scene transitions)
 func _add_to_scene(node: Node) -> void:
 	var parent := get_parent()
 	if is_instance_valid(parent):
 		parent.add_child(node)
 	else:
-		# Fallback if we're somehow not parented (rare)
 		get_tree().root.add_child(node)
 
 
 func _ready():
 	health = max_health
+	current_scatter_interval = scatter_start_interval
 	add_to_group("enemy")
 
 	shield_timer.wait_time = shield_up_duration
@@ -52,6 +54,7 @@ func _ready():
 
 	scatter_timer.one_shot = true
 	scatter_timer.timeout.connect(_on_scatter_timer_timeout)
+	_schedule_next_scatter()
 
 	_update_visuals()
 
@@ -67,27 +70,27 @@ func _process(delta):
 
 	var boss_speed
 
-	if health == 3:
+	if health >= 3:
 		boss_speed = 1
 	elif health == 2:
 		boss_speed = 2
 		if move_direction == 1:
 			move_direction = boss_speed
 		elif move_direction == -1:
-			move_direction = boss_speed * -1
+			move_direction = -boss_speed
 	else:
 		boss_speed = 5
 		if move_direction == 2:
 			move_direction = boss_speed
 		elif move_direction == -2:
-			move_direction = boss_speed * -1
+			move_direction = -boss_speed
 
 	if global_position.x < 120:
 		global_position.x = 120
 		move_direction = boss_speed
 	elif global_position.x > viewport.x - 120:
 		global_position.x = viewport.x - 120
-		move_direction = boss_speed * -1
+		move_direction = -boss_speed
 
 
 func die(no_reward := false):
@@ -108,6 +111,13 @@ func die(no_reward := false):
 		_die_for_real(no_reward)
 		return
 
+	# Speed up scatter every time the boss is hit
+	current_scatter_interval = max(scatter_min_interval, current_scatter_interval - scatter_interval_step)
+	print("☄️ Scatter interval now: %.2f seconds" % current_scatter_interval)
+
+	# Restart timer so the ramp-up is felt immediately
+	_schedule_next_scatter()
+
 	if health == 1:
 		var viewport = get_viewport_rect().size
 		if global_position.x < 120:
@@ -116,12 +126,6 @@ func die(no_reward := false):
 		elif global_position.x > viewport.x - 120:
 			global_position.x = viewport.x - 120
 			move_direction = -5.0
-
-	# 🔧 PATCH: start repeating scatter when entering phase (HP == 1)
-	if health == 1 and not scatter_released:
-		scatter_released = true
-		spawn_scatter_missile()          # fire one immediately (optional)
-		_schedule_next_scatter()         # then keep firing every 5–8 seconds
 
 	if health == 2:
 		var viewport = get_viewport_rect().size
@@ -139,7 +143,7 @@ func _die_for_real(no_reward := false):
 	is_dead = true
 	missile_timer.stop()
 	shield_timer.stop()
-	scatter_timer.stop() # 🔧 PATCH: stop scatter timer too
+	scatter_timer.stop()
 
 	if not no_reward:
 		GameManager.add_resources(10)
@@ -177,21 +181,18 @@ func _on_missile_timer_timeout():
 	spawn_normal_missile()
 
 
-# 🔧 PATCH: scatter timer callback + scheduler
 func _on_scatter_timer_timeout():
 	if is_dead:
 		return
-	if health == 1:
-		spawn_scatter_missile()
-		_schedule_next_scatter()
+	spawn_scatter_missile()
+	_schedule_next_scatter()
 
 
 func _schedule_next_scatter():
 	if is_dead:
 		return
-	if health != 1:
-		return
-	scatter_timer.wait_time = randf_range(scatter_min_interval, scatter_max_interval)
+	scatter_timer.stop()
+	scatter_timer.wait_time = current_scatter_interval
 	scatter_timer.start()
 
 

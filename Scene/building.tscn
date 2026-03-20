@@ -1,10 +1,10 @@
 [gd_scene load_steps=4 format=3 uid="uid://vug46xq86s6a"]
 
 [ext_resource type="Script" path="res://Scripts/building.gd" id="1_158o7"]
-[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="1_tn12e"]
+[ext_resource type="Texture2D" uid="uid://dylfru1gt8h5i" path="res://assets/Building.png" id="2_h47om"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ot00v"]
-size = Vector2(68, 68)
+size = Vector2(42, 14)
 
 [node name="Building" type="Area2D" groups=["building"]]
 collision_layer = 4
@@ -13,8 +13,8 @@ script = ExtResource("1_158o7")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.0823529, 0.0784314, 0.960784, 1)
-scale = Vector2(0.53125, 0.53125)
-texture = ExtResource("1_tn12e")
+scale = Vector2(0.326, 0.326)
+texture = ExtResource("2_h47om")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_ot00v")
