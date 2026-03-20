@@ -7,7 +7,7 @@
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_givr7"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_gk6nl"]
-size = Vector2(26, 28)
+size = Vector2(13, 13)
 
 [node name="Enemy" type="Area2D"]
 collision_mask = 4
@@ -18,7 +18,7 @@ explosion_scene = ExtResource("2_jdirn")
 modulate = Color(1, 0.0117647, 0.0117647, 1)
 material = SubResource("CanvasItemMaterial_givr7")
 rotation = -3.14159
-scale = Vector2(0.205822, 0.210673)
+scale = Vector2(0.1, 0.102)
 texture = ExtResource("2_x0dry")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

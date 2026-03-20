@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2_y2y6o"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_h4p2n"]
-size = Vector2(32, 32)
+size = Vector2(12, 12)
 
 [node name="Projectile" type="Area2D" groups=["projectile"]]
 position = Vector2(36, 13)
@@ -19,5 +19,5 @@ disabled = true
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(1, 1, 0, 1)
-scale = Vector2(0.25, 0.25)
+scale = Vector2(0.1, 0.1)
 texture = ExtResource("2_nbhe5")
