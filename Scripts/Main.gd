@@ -14,7 +14,18 @@ extends Node2D
 @onready var building6 = $Building6
 @onready var skip_to_boss = $UI/SkipToBoss
 @onready var give_resources = $UI/GiveResources
+@onready var ground: CanvasItem = $Ground
 
+
+
+@export var world_1_ground_color: Color = Color(0.15, 0.45, 0.35, 1.0) # dark teal-green
+@export var world_2_ground_color: Color = Color(0.45, 0.22, 0.18, 1.0) # dark rust
+@export var world_3_ground_color: Color = Color(0.28, 0.18, 0.45, 1.0) # dark purple
+@export var world_4_ground_color: Color = Color(0.18, 0.28, 0.42, 1.0) # dark blue
+@export var world_5_ground_color: Color = Color(0.32, 0.45, 0.18, 1.0) # toxic green
+@export var default_ground_color: Color = Color(0.35, 0.35, 0.35, 1.0)
+
+var _last_ground_world: int = -1
 var base_buildings = 4
 var extra_buildings = 0
 
@@ -36,6 +47,7 @@ func _on_child_entered_tree(node: Node) -> void:
 
 func _ready() -> void:
 	_ensure_repair_hint_label()
+	_apply_ground_color()
 
 	NodeContracts.require_nodes_with_types(self, {
 		"Cannon": "Area2D",
@@ -71,6 +83,28 @@ func _ready() -> void:
 	for node in get_tree().get_nodes_in_group("enemy"):
 		_connect_boss_signals(node)
 
+func _apply_ground_color() -> void:
+	if ground == null:
+		return
+
+	if _last_ground_world == GameManager.current_world:
+		return
+
+	_last_ground_world = GameManager.current_world
+
+	match GameManager.current_world:
+		1:
+			ground.modulate = world_1_ground_color
+		2:
+			ground.modulate = world_2_ground_color
+		3:
+			ground.modulate = world_3_ground_color
+		4:
+			ground.modulate = world_4_ground_color
+		5:
+			ground.modulate = world_5_ground_color
+		_:
+			ground.modulate = default_ground_color
 
 func _ensure_repair_hint_label() -> void:
 	if repair_hint_label != null:
@@ -185,7 +219,7 @@ func _process(delta: float) -> void:
 	AmmoLabel.text = "Ammo: %s" % GameManager.get_total_ammo_status()
 	wave_label.text = "🌊 Wave %d / 🌍 World %d" % [GameManager.current_wave, GameManager.current_world]
 	ResourceLabel.text = "Resources: %d" % GameManager.player_resources
-
+	_apply_ground_color()
 	_update_repair_hint(delta)
 
 	if _count_surviving_buildings() == 0:

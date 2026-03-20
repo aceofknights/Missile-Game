@@ -21,11 +21,21 @@ func _ready() -> void:
 func _on_area_entered(area: Area2D) -> void:
 	if destroyed:
 		return
-	if area.name != "Projectile":
+
+	if area.name == "Projectile":
+		area.queue_free()
+		_apply_damage()
+	elif area.name == "Explosion":
+		_apply_damage()
+
+
+func _apply_damage() -> void:
+	if destroyed:
 		return
-	area.queue_free()
+
 	current_hp -= 1
 	_update_label()
+
 	if current_hp <= 0:
 		destroyed = true
 		emit_signal("weak_point_destroyed")
