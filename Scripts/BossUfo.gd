@@ -20,8 +20,10 @@ signal boss_defeated
 @onready var shield_timer: Timer = $ShieldTimer
 @onready var missile_timer: Timer = $MissileTimer
 @onready var scatter_timer: Timer = $ScatterTimer
-@onready var sprite: Sprite2D = $Sprite2D
+@onready var sprite: Sprite2D = $BossSprite
 @onready var boss_health = $boss_health
+@onready var shield_sprite: Sprite2D = $ShieldSprite
+
 
 var health := 3
 var shield_active := true
@@ -56,7 +58,7 @@ func _ready():
 	scatter_timer.timeout.connect(_on_scatter_timer_timeout)
 	_schedule_next_scatter()
 
-	_update_visuals()
+	_set_shield_active(true)
 
 
 func _process(delta):
@@ -136,7 +138,6 @@ func die(no_reward := false):
 			global_position.x = viewport.x - 120
 			move_direction = -2.0
 
-	_update_visuals()
 
 
 func _die_for_real(no_reward := false):
@@ -162,16 +163,15 @@ func _die_for_real(no_reward := false):
 
 func _on_shield_timer_timeout():
 	if shield_active:
-		shield_active = false
+		_set_shield_active(false)
 		hit_used_this_down_window = false
 		shield_timer.wait_time = shield_down_duration
 		print("⚡ Boss shield DOWN")
 	else:
-		shield_active = true
+		_set_shield_active(true)
 		shield_timer.wait_time = shield_up_duration
 		print("🛡️ Boss shield UP")
 
-	_update_visuals()
 	shield_timer.start()
 
 
@@ -237,8 +237,8 @@ func spawn_scatter_missile():
 	print("☄️ Scatter missile launched")
 
 
-func _update_visuals():
-	if shield_active:
-		sprite.modulate = Color(0.5, 0.85, 1.0, 1.0)
-	else:
-		sprite.modulate = Color(1.0, 0.45, 0.45, 1.0)
+func _set_shield_active(value: bool) -> void:
+	shield_active = value
+
+	if shield_sprite:
+		shield_sprite.visible = shield_active
