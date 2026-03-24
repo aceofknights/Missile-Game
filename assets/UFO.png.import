@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cylj26wgcnhhg"
-path="res://.godot/imported/Building.png-170572efc4fec734cd186f48911d4d15.ctex"
+uid="uid://bssqqfha7qxt8"
+path="res://.godot/imported/UFO.png-a9971b745578b39a33329528d527cfb7.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Building.png"
-dest_files=["res://.godot/imported/Building.png-170572efc4fec734cd186f48911d4d15.ctex"]
+source_file="res://assets/UFO.png"
+dest_files=["res://.godot/imported/UFO.png-a9971b745578b39a33329528d527cfb7.ctex"]
 
 [params]
 
