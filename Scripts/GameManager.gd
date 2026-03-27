@@ -45,6 +45,8 @@ var wave_active := false
 var spawner: Node = null
 
 signal announce_wave(message: String, duration: float)
+signal world_victory_requested
+signal player_defeat_requested
 
 
 func _ready():
@@ -649,7 +651,7 @@ func start_new_game():
 
 func player_died():
 	save_game()
-	load_upgrade_screen()
+	emit_signal("player_defeat_requested")
 
 
 
@@ -755,7 +757,7 @@ func on_boss_defeated() -> void:
 		return
 	if not is_boss_wave:
 		return
-	_on_world_defeated()
+	emit_signal("world_victory_requested")
 
 
 func next_wave_or_boss():
@@ -787,3 +789,11 @@ func load_upgrade_screen():
 
 func advance_to_next_world():
 	_on_world_defeated()
+
+
+func continue_after_victory() -> void:
+	_on_world_defeated()
+
+
+func continue_after_player_defeat() -> void:
+	load_upgrade_screen()
