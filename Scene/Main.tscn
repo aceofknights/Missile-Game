@@ -92,21 +92,21 @@ offset_bottom = 53.0
 text = "ResourceLabel"
 
 [node name="Building" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(222, 610)
+position = Vector2(215, 610)
 
 [node name="Building2" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(427, 610)
+position = Vector2(458, 610)
 
 [node name="Building3" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(782, 610)
+position = Vector2(754, 610)
 
 [node name="Building4" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(979, 610)
+position = Vector2(951, 610)
 
 [node name="Building5" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(884, 610)
+position = Vector2(856, 610)
 
 [node name="Building6" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(324.67, 610)
+position = Vector2(332.67, 610)
 
 [node name="PauseMenu" parent="." instance=ExtResource("5_u4f7x")]
