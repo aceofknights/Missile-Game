@@ -71,9 +71,6 @@ func _ready() -> void:
 		"UI/ResourceLabel": "Label",
 		"UI/WaveLabel": "Label",
 		"UI/DestroyAllButton": "Button",
-		"UI/EndStateOverlay": "Control",
-		"UI/EndStateOverlay/CenterContainer/Panel/VBoxContainer/EndStateLabel": "Label",
-		"UI/EndStateOverlay/CenterContainer/Panel/VBoxContainer/ContinueButton": "Button",
 		"PauseMenu": "CanvasLayer"
 	})
 
