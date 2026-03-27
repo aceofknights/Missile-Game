@@ -37,6 +37,7 @@ const TREE_ORDER := [
 	{"key": "building_5", "indent": 1},
 	{"key": "building_6", "indent": 2},
 	{"key": "repair_shop", "indent": 1},
+	{"key": "shield", "indent":1},
 	{"label": "Economy", "indent": 0},
 	{"key": "resource_gain", "indent": 1}
 ]
@@ -60,15 +61,23 @@ func _build_tree() -> void:
 			section.text = "%s%s" % ["  ".repeat(int(item.get("indent", 0))), String(item["label"])]
 			tree_vbox.add_child(section)
 			continue
-		var key = String(item.get("key", ""))
+
+		var key := String(item.get("key", ""))
+		if key == "":
+			continue
 		if not defs.has(key):
 			continue
+		if not GameManager.is_upgrade_available_in_world(key, GameManager.current_world):
+			continue
+
 		var btn := Button.new()
 		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		btn.pressed.connect(func(): _buy_upgrade(key))
-		_upgrade_buttons[key] = {"button": btn, "indent": int(item.get("indent", 0))}
+		_upgrade_buttons[key] = {
+			"button": btn,
+			"indent": int(item.get("indent", 0))
+		}
 		tree_vbox.add_child(btn)
-
 
 func _buy_upgrade(upgrade_key: String) -> void:
 	GameManager.try_buy_upgrade(upgrade_key)

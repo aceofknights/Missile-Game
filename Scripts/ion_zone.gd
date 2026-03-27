@@ -15,20 +15,35 @@ func _ready() -> void:
 	monitoring = false
 	monitorable = false
 
-	var circle := collision_shape.shape as CircleShape2D
+	var circle: CircleShape2D = collision_shape.shape as CircleShape2D
 	if circle == null:
 		circle = CircleShape2D.new()
 		collision_shape.shape = circle
 	circle.radius = radius
 
-	if sprite:
-		var diameter := maxf(1.0, radius * 2.0)
-		sprite.scale = Vector2(diameter / 128.0, diameter / 128.0)
+	_update_sprite_to_match_radius()
 
 	life_timer.wait_time = duration
 	life_timer.one_shot = true
 	life_timer.timeout.connect(queue_free)
 	life_timer.start()
+
+
+func _update_sprite_to_match_radius() -> void:
+	if sprite == null:
+		return
+	if sprite.texture == null:
+		return
+
+	var tex_size: Vector2 = sprite.texture.get_size()
+	if tex_size.x <= 0.0 or tex_size.y <= 0.0:
+		return
+
+	var diameter: float = maxf(1.0, radius * 2.0)
+	sprite.scale = Vector2(
+		diameter / tex_size.x,
+		diameter / tex_size.y
+	)
 
 
 func contains_point(point: Vector2) -> bool:

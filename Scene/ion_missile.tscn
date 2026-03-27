@@ -1,11 +1,11 @@
 [gd_scene load_steps=5 format=3 uid="uid://dvi5mtwyi0k1x"]
 
 [ext_resource type="Script" path="res://Scripts/ion_missile.gd" id="1"]
-[ext_resource type="PackedScene" path="res://Scene/ion_zone.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://bgajgpd0rd0m" path="res://Scene/ion_zone.tscn" id="2"]
 [ext_resource type="Texture2D" uid="uid://d2wo0oumwktd6" path="res://assets/missile_white.png" id="3_2x7lo"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_j8ntg"]
-size = Vector2(14, 21)
+size = Vector2(22, 16)
 
 [node name="IonMissile" type="Area2D"]
 collision_mask = 3
@@ -14,9 +14,9 @@ ion_zone_scene = ExtResource("2")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.4, 0.85, 1, 1)
+rotation = 1.5708
 scale = Vector2(0.408837, 0.4)
 texture = ExtResource("3_2x7lo")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, 0.5)
 shape = SubResource("RectangleShape2D_j8ntg")

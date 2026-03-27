@@ -1,20 +1,27 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=5 format=3 uid="uid://c3c4anmiybcym"]
 
 [ext_resource type="Script" path="res://Scripts/BossPlane.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="2"]
+[ext_resource type="Texture2D" uid="uid://6ud1v6dv0d8d" path="res://assets/Fighter.png" id="2_yr3n4"]
+[ext_resource type="Texture2D" uid="uid://bthhhfndtxk5s" path="res://assets/Bomber.png" id="3_o3yci"]
 
-[sub_resource type="CircleShape2D" id="1"]
-radius = 22.0
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_0x4sn"]
+height = 54.0
 
 [node name="BossPlane" type="Area2D"]
 script = ExtResource("1")
+fighter_texture = ExtResource("2_yr3n4")
+bomber_texture = ExtResource("3_o3yci")
+fighter_scale = Vector2(0.1, 0.1)
+bomber_scale = Vector2(0.05, 0.05)
+fighter_color = Color(0.964652, 0.407681, 0.496731, 1)
+bomber_color = Color(0.160406, 0.718072, 0.449207, 1)
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(0.2, 0.12)
-texture = ExtResource("2")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("1")
+rotation = 1.5708
+shape = SubResource("CapsuleShape2D_0x4sn")
 
 [node name="ActionTimer" type="Timer" parent="."]
 autostart = true

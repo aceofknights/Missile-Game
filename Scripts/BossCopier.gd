@@ -29,7 +29,6 @@ signal boss_defeated
 @export var real_orbit_radius := 58.0
 @export var real_orbit_speed := 1.6
 
-@onready var sprite: Sprite2D = $Sprite2D
 @onready var boss_health_label: Label = $boss_health
 @onready var normal_fire_timer: Timer = $NormalFireTimer
 @onready var ion_fire_timer: Timer = $IonFireTimer
@@ -37,6 +36,7 @@ signal boss_defeated
 @onready var clone_fire_delay_timer: Timer = $CloneDelayTimer
 @onready var teleport_delay_timer: Timer = $CloneTimeoutTimer
 @onready var invisible_timer: Timer = $VanishTimer
+@onready var shield_sprite: Sprite2D = $ShieldSprite
 
 var health := 5
 var move_direction := 1.0
@@ -146,6 +146,7 @@ func _die_for_real(no_reward := false) -> void:
 
 	_clear_all_timers()
 	_clear_clones()
+	_set_shield_active(false)
 
 	if not no_reward:
 		GameManager.add_resources(18)
@@ -172,12 +173,11 @@ func _clear_all_timers() -> void:
 
 func _enter_shielded_phase() -> void:
 	state = BossState.SHIELDED
-	shield_active = true
+	_set_shield_active(true)
 	invulnerable = true
 	visible = true
 	monitoring = true
 	monitorable = true
-	sprite.modulate = Color(0.52, 0.88, 1.0, 1.0)
 
 	_clear_clones()
 	_start_real_firing(true)
@@ -192,9 +192,8 @@ func _on_shield_phase_timer_timeout() -> void:
 
 func _begin_clone_phase() -> void:
 	state = BossState.TELEPORTING_TO_CLONE
-	shield_active = false
+	_set_shield_active(false)
 	invulnerable = false
-	sprite.modulate = Color(1.0, 0.55, 0.58, 1.0)
 	_start_real_firing(false)
 
 	_teleport_real_boss()
@@ -238,7 +237,7 @@ func _end_clone_phase_to_invisible_reset() -> void:
 	visible = false
 	monitoring = false
 	monitorable = false
-	shield_active = true
+	_set_shield_active(true)
 	invulnerable = true
 	invisible_timer.start(invisible_duration)
 
@@ -345,3 +344,9 @@ func _get_clone_count_for_health() -> int:
 	if health <= mid_phase_health_threshold:
 		return clone_count_mid
 	return clone_count_healthy
+
+
+func _set_shield_active(value: bool) -> void:
+	shield_active = value
+	if shield_sprite:
+		shield_sprite.visible = shield_active

@@ -1,28 +1,35 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=8 format=3 uid="uid://da61lyp6k626a"]
 
 [ext_resource type="Script" path="res://Scripts/BossWorld3.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="3"]
-[ext_resource type="PackedScene" path="res://Scene/emp_missile.tscn" id="4"]
-[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="5"]
+[ext_resource type="PackedScene" uid="uid://dqofihdy7ehf8" path="res://Scene/emp_missile.tscn" id="4"]
+[ext_resource type="Texture2D" uid="uid://du3p1u2m5ejgl" path="res://assets/Cyber_drone_white.png" id="5_n4ncd"]
+[ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="6_50x62"]
 
-[sub_resource type="CircleShape2D" id="1"]
-radius = 42.0
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_4u6xy"]
+radius = 45.0
+height = 200.0
 
 [node name="BossPlaceholder" type="Area2D"]
 script = ExtResource("1")
 explosion_scene = ExtResource("2")
 missile_scene = ExtResource("3")
 emp_missile_scene = ExtResource("4")
-max_health = 5
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-modulate = Color(0.85, 0.85, 1, 1)
-scale = Vector2(0.55, 0.35)
-texture = ExtResource("5")
+modulate = Color(0.619424, 0.267317, 0.947765, 1)
+scale = Vector2(0.343235, 0.265007)
+texture = ExtResource("5_n4ncd")
+
+[node name="ShieldSprite" type="Sprite2D" parent="."]
+scale = Vector2(0.618483, 0.332346)
+texture = ExtResource("6_50x62")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("1")
+position = Vector2(0, 2)
+rotation = 1.5708
+shape = SubResource("CapsuleShape2D_4u6xy")
 
 [node name="ShieldTimer" type="Timer" parent="."]
 one_shot = true
