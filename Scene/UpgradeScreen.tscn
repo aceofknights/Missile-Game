@@ -48,3 +48,11 @@ size_flags_horizontal = 3
 [node name="ContinueButton" type="Button" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Continue"
+
+[node name="SaveQuitButton" type="Button" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Save and Quit"
+
+[node name="WorldSelectButton" type="Button" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Back to World Select"
