@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=13 format=3 uid="uid://butngk3a4eknx"]
 
 [ext_resource type="Script" path="res://Scripts/BossWorld5.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2"]
@@ -6,13 +6,15 @@
 [ext_resource type="PackedScene" uid="uid://cvsqtfppxjfw0" path="res://Scene/scatter_missile.tscn" id="4"]
 [ext_resource type="PackedScene" uid="uid://dqofihdy7ehf8" path="res://Scene/emp_missile.tscn" id="5"]
 [ext_resource type="PackedScene" uid="uid://dvi5mtwyi0k1x" path="res://Scene/ion_missile.tscn" id="6"]
-[ext_resource type="PackedScene" path="res://Scene/boss_plane.tscn" id="7"]
-[ext_resource type="PackedScene" path="res://Scene/fighter_intercept_shot.tscn" id="8"]
-[ext_resource type="PackedScene" path="res://Scene/laser_weak_point.tscn" id="9"]
-[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="10"]
+[ext_resource type="PackedScene" uid="uid://c3c4anmiybcym" path="res://Scene/boss_plane.tscn" id="7"]
+[ext_resource type="PackedScene" uid="uid://b2ws5gk4are15" path="res://Scene/fighter_intercept_shot.tscn" id="8"]
+[ext_resource type="PackedScene" uid="uid://c8yifnhlddca2" path="res://Scene/laser_weak_point.tscn" id="9"]
+[ext_resource type="Texture2D" uid="uid://b26bwb2cdmmix" path="res://assets/Mothership.png" id="10_a2cpn"]
+[ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="11_wugop"]
 
-[sub_resource type="CircleShape2D" id="1"]
-radius = 62.0
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_am8nv"]
+radius = 47.0
+height = 128.0
 
 [node name="BossMothership" type="Area2D"]
 script = ExtResource("1")
@@ -26,12 +28,18 @@ fighter_projectile_scene = ExtResource("8")
 laser_weak_point_scene = ExtResource("9")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-modulate = Color(0.52, 0.88, 1, 1)
-scale = Vector2(0.92, 0.34)
-texture = ExtResource("10")
+modulate = Color(0.980392, 1, 0, 1)
+scale = Vector2(0.227195, 0.251843)
+texture = ExtResource("10_a2cpn")
+
+[node name="ShieldSprite" type="Sprite2D" parent="."]
+scale = Vector2(0.336493, 0.251843)
+texture = ExtResource("11_wugop")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("1")
+visible = false
+rotation = 1.5708
+shape = SubResource("CapsuleShape2D_am8nv")
 
 [node name="boss_health" type="Label" parent="."]
 offset_left = -112.0

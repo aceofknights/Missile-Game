@@ -8,20 +8,20 @@ signal jam_pulse_started(duration: float, misfire_radius: float)
 @export var explosion_scene: PackedScene
 @export var missile_scene: PackedScene
 @export var emp_missile_scene: PackedScene
-@export var move_speed := 120.0
-@export var max_health := 5
-@export var shield_up_duration := 3.5
-@export var shield_down_duration := 2.0
-@export var missile_drop_interval := 1.2
-@export var missile_drop_interval_min := 0.45
-@export var emp_interval := 4.8
-@export var emp_charge_duration := 0.8
-@export var jam_interval := 6.5
-@export var jam_charge_duration := 0.9
-@export var jam_duration_min := 1.0
-@export var jam_duration_max := 2.0
-@export var jam_misfire_radius_min := 95.0
-@export var jam_misfire_radius_max := 180.0
+@export var move_speed: float = 120.0
+@export var max_health: int = 5
+@export var shield_up_duration: float = 3.5
+@export var shield_down_duration: float = 2.0
+@export var missile_drop_interval: float = 1.2
+@export var missile_drop_interval_min: float = 0.45
+@export var emp_interval: float = 4.8
+@export var emp_charge_duration: float = 0.8
+@export var jam_interval: float = 6.5
+@export var jam_charge_duration: float = 0.9
+@export var jam_duration_min: float = 1.0
+@export var jam_duration_max: float = 2.0
+@export var jam_misfire_radius_min: float = 95.0
+@export var jam_misfire_radius_max: float = 180.0
 
 @onready var shield_timer: Timer = $ShieldTimer
 @onready var missile_timer: Timer = $MissileTimer
@@ -29,21 +29,21 @@ signal jam_pulse_started(duration: float, misfire_radius: float)
 @onready var jam_timer: Timer = $JamTimer
 @onready var jam_charge_timer: Timer = $JamChargeTimer
 @onready var emp_charge_timer: Timer = $EmpChargeTimer
-@onready var sprite: Sprite2D = $Sprite2D
-@onready var boss_health = $boss_health
+@onready var boss_health: Label = $boss_health
 @onready var jam_ring: Line2D = $JamRing
+@onready var shield_sprite: Sprite2D = $ShieldSprite
 
-var health := 5
-var shield_active := true
-var hit_used_this_down_window := false
-var move_direction := 1.0
-var is_dead := false
+var health: int = 5
+var shield_active: bool = true
+var hit_used_this_down_window: bool = false
+var move_direction: float = 1.0
+var is_dead: bool = false
 var queued_emp_targets: Array = []
-var emp_charge_active := false
+var emp_charge_active: bool = false
 
 
 func _add_to_scene(node: Node) -> void:
-	var parent := get_parent()
+	var parent: Node = get_parent()
 	if is_instance_valid(parent):
 		parent.add_child(node)
 	else:
@@ -79,7 +79,7 @@ func _ready() -> void:
 	jam_charge_timer.timeout.connect(_on_jam_charge_timer_timeout)
 
 	_prepare_jam_ring()
-	_update_visuals()
+	_set_shield_active(true)
 
 
 func _process(delta: float) -> void:
@@ -93,35 +93,28 @@ func _process(delta: float) -> void:
 
 
 func _move_like_ufo(delta: float) -> void:
-	var viewport = get_viewport_rect().size
-	global_position.x += move_direction * move_speed * delta
+	var viewport: Vector2 = get_viewport_rect().size
 
-	var boss_speed
+	var boss_speed: float = 1.0
 	if health >= 4:
-		boss_speed = 1
+		boss_speed = 1.0
 	elif health >= 2:
-		boss_speed = 2
-		if move_direction == 1:
-			move_direction = boss_speed
-		elif move_direction == -1:
-			move_direction = boss_speed * -1
+		boss_speed = 2.0
 	else:
-		boss_speed = 5
-		if move_direction == 2:
-			move_direction = boss_speed
-		elif move_direction == -2:
-			move_direction = boss_speed * -1
+		boss_speed = 5.0
 
-	if global_position.x < 120:
-		global_position.x = 120
-		move_direction = boss_speed
-	elif global_position.x > viewport.x - 120:
-		global_position.x = viewport.x - 120
-		move_direction = boss_speed * -1
+	global_position.x += move_direction * boss_speed * move_speed * delta
+
+	if global_position.x < 120.0:
+		global_position.x = 120.0
+		move_direction = 1.0
+	elif global_position.x > viewport.x - 120.0:
+		global_position.x = viewport.x - 120.0
+		move_direction = -1.0
 
 
 func _update_missile_rate_by_health() -> void:
-	var lost_health := float(max_health - health)
+	var lost_health: float = float(max_health - health)
 	var t: float = lost_health / maxf(1.0, float(max_health - 1))
 	var current_interval: float = lerp(missile_drop_interval, missile_drop_interval_min, t)
 	if abs(missile_timer.wait_time - current_interval) > 0.01:
@@ -130,7 +123,7 @@ func _update_missile_rate_by_health() -> void:
 			missile_timer.start()
 
 
-func die(no_reward := false) -> void:
+func die(no_reward: bool = false) -> void:
 	if is_dead:
 		return
 	if shield_active:
@@ -148,10 +141,8 @@ func die(no_reward := false) -> void:
 		_die_for_real(no_reward)
 		return
 
-	_update_visuals()
 
-
-func _die_for_real(no_reward := false) -> void:
+func _die_for_real(no_reward: bool = false) -> void:
 	is_dead = true
 	missile_timer.stop()
 	shield_timer.stop()
@@ -159,6 +150,7 @@ func _die_for_real(no_reward := false) -> void:
 	emp_charge_timer.stop()
 	jam_timer.stop()
 	jam_charge_timer.stop()
+	_set_shield_active(false)
 
 	if not no_reward:
 		GameManager.add_resources(10)
@@ -177,21 +169,20 @@ func _die_for_real(no_reward := false) -> void:
 
 func _on_shield_timer_timeout() -> void:
 	if shield_active:
-		shield_active = false
+		_set_shield_active(false)
 		hit_used_this_down_window = false
 		shield_timer.wait_time = shield_down_duration
 	else:
-		shield_active = true
+		_set_shield_active(true)
 		shield_timer.wait_time = shield_up_duration
 
-	_update_visuals()
 	shield_timer.start()
 
 
 func _on_missile_timer_timeout() -> void:
 	if is_dead:
 		return
-	# spawn_normal_missile()
+	spawn_normal_missile()
 
 
 func _on_emp_timer_timeout() -> void:
@@ -247,11 +238,11 @@ func spawn_normal_missile() -> void:
 	if missile_scene == null:
 		return
 
-	var missile = missile_scene.instantiate()
+	var missile: Area2D = missile_scene.instantiate()
 	GameManager.enemies_alive += 1
 	missile.connect("enemy_died", Callable(GameManager, "_on_enemy_died"))
 
-	var viewport = get_viewport_rect().size
+	var viewport: Vector2 = get_viewport_rect().size
 	var target: Vector2 = Vector2(randf_range(40.0, viewport.x - 40.0), viewport.y)
 	var direction: Vector2 = (target - global_position).normalized()
 
@@ -263,7 +254,7 @@ func spawn_normal_missile() -> void:
 func _queue_emp_attack() -> void:
 	if emp_charge_active:
 		return
-	var active_cannons := EmpAttackUtils.get_active_cannons(get_tree())
+	var active_cannons: Array = EmpAttackUtils.get_active_cannons(get_tree())
 	queued_emp_targets = EmpAttackUtils.select_emp_targets_for_health(active_cannons, health)
 	if queued_emp_targets.is_empty():
 		return
@@ -291,8 +282,8 @@ func _prepare_jam_ring() -> void:
 	jam_ring.width = 6.0
 	jam_ring.default_color = Color(0.4, 0.95, 1.0, 0.85)
 	jam_ring.clear_points()
-	var points := 48
-	var radius := 56.0
+	var points: int = 48
+	var radius: float = 56.0
 	for i in range(points + 1):
 		var angle: float = TAU * float(i) / float(points)
 		jam_ring.add_point(Vector2(cos(angle), sin(angle)) * radius)
@@ -320,8 +311,7 @@ func _animate_jam_ring(delta: float) -> void:
 	jam_ring.modulate.a = minf(1.0, jam_ring.modulate.a + (1.8 * delta / maxf(0.01, float(jam_charge_duration))))
 
 
-func _update_visuals() -> void:
-	if shield_active:
-		sprite.modulate = Color(0.7, 0.95, 1.0, 1.0)
-	else:
-		sprite.modulate = Color(1.0, 0.55, 0.55, 1.0)
+func _set_shield_active(value: bool) -> void:
+	shield_active = value
+	if shield_sprite:
+		shield_sprite.visible = shield_active

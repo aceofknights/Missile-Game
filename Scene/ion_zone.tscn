@@ -1,7 +1,7 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=4 format=3 uid="uid://bgajgpd0rd0m"]
 
 [ext_resource type="Script" path="res://Scripts/ion_zone.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="2"]
+[ext_resource type="Texture2D" uid="uid://crkkkfocagerw" path="res://assets/Ion Zone.png" id="2_agahj"]
 
 [sub_resource type="CircleShape2D" id="1"]
 radius = 120.0
@@ -11,7 +11,8 @@ script = ExtResource("1")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.45, 0.75, 1, 0.32)
-texture = ExtResource("2")
+scale = Vector2(0.390159, 0.367481)
+texture = ExtResource("2_agahj")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1")

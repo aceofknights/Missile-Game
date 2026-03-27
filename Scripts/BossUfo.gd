@@ -6,31 +6,29 @@ signal boss_defeated
 @export var explosion_scene: PackedScene
 @export var missile_scene: PackedScene
 @export var scatter_missile_scene: PackedScene
-@export var move_speed := 120.0
-@export var max_health := 3
-@export var shield_up_duration := 3.5
-@export var shield_down_duration := 2.0
-@export var missile_drop_interval := 1.0
+@export var move_speed: float = 120.0
+@export var max_health: int = 3
+@export var shield_up_duration: float = 3.5
+@export var shield_down_duration: float = 2.0
+@export var missile_drop_interval: float = 1.0
 
 # Scatter starts at 8 seconds and speeds up each time boss is hit
-@export var scatter_start_interval := 8.0
-@export var scatter_interval_step := 2.0
-@export var scatter_min_interval := 3.0
+@export var scatter_start_interval: float = 8.0
+@export var scatter_interval_step: float = 2.0
+@export var scatter_min_interval: float = 3.0
 
 @onready var shield_timer: Timer = $ShieldTimer
 @onready var missile_timer: Timer = $MissileTimer
 @onready var scatter_timer: Timer = $ScatterTimer
-@onready var sprite: Sprite2D = $BossSprite
-@onready var boss_health = $boss_health
+@onready var boss_health: Label = $boss_health
 @onready var shield_sprite: Sprite2D = $ShieldSprite
 
-
-var health := 3
-var shield_active := true
-var hit_used_this_down_window := false
-var move_direction := 1.0
-var is_dead := false
-var current_scatter_interval := 8.0
+var health: int = 3
+var shield_active: bool = true
+var hit_used_this_down_window: bool = false
+var move_direction: float = 1.0
+var is_dead: bool = false
+var current_scatter_interval: float = 8.0
 
 
 func _add_to_scene(node: Node) -> void:
@@ -41,7 +39,7 @@ func _add_to_scene(node: Node) -> void:
 		get_tree().root.add_child(node)
 
 
-func _ready():
+func _ready() -> void:
 	health = max_health
 	current_scatter_interval = scatter_start_interval
 	add_to_group("enemy")
@@ -61,41 +59,33 @@ func _ready():
 	_set_shield_active(true)
 
 
-func _process(delta):
+func _process(delta: float) -> void:
 	if is_dead:
 		return
 
 	boss_health.text = "Health %d" % health
 
-	var viewport = get_viewport_rect().size
-	global_position.x += move_direction * move_speed * delta
-
-	var boss_speed
+	var viewport := get_viewport_rect().size
+	var boss_speed: float = 1.0
 
 	if health >= 3:
-		boss_speed = 1
+		boss_speed = 1.0
 	elif health == 2:
-		boss_speed = 2
-		if move_direction == 1:
-			move_direction = boss_speed
-		elif move_direction == -1:
-			move_direction = -boss_speed
+		boss_speed = 2.0
 	else:
-		boss_speed = 5
-		if move_direction == 2:
-			move_direction = boss_speed
-		elif move_direction == -2:
-			move_direction = -boss_speed
+		boss_speed = 5.0
+
+	global_position.x += move_direction * boss_speed * move_speed * delta
 
 	if global_position.x < 120:
 		global_position.x = 120
-		move_direction = boss_speed
+		move_direction = 1.0
 	elif global_position.x > viewport.x - 120:
 		global_position.x = viewport.x - 120
-		move_direction = -boss_speed
+		move_direction = -1.0
 
 
-func die(no_reward := false):
+func die(no_reward: bool = false) -> void:
 	if is_dead:
 		return
 	if shield_active:
@@ -113,38 +103,18 @@ func die(no_reward := false):
 		_die_for_real(no_reward)
 		return
 
-	# Speed up scatter every time the boss is hit
 	current_scatter_interval = max(scatter_min_interval, current_scatter_interval - scatter_interval_step)
 	print("☄️ Scatter interval now: %.2f seconds" % current_scatter_interval)
 
-	# Restart timer so the ramp-up is felt immediately
 	_schedule_next_scatter()
 
-	if health == 1:
-		var viewport = get_viewport_rect().size
-		if global_position.x < 120:
-			global_position.x = 120
-			move_direction = 5.0
-		elif global_position.x > viewport.x - 120:
-			global_position.x = viewport.x - 120
-			move_direction = -5.0
 
-	if health == 2:
-		var viewport = get_viewport_rect().size
-		if global_position.x < 120:
-			global_position.x = 120
-			move_direction = 2.0
-		elif global_position.x > viewport.x - 120:
-			global_position.x = viewport.x - 120
-			move_direction = -2.0
-
-
-
-func _die_for_real(no_reward := false):
+func _die_for_real(no_reward: bool = false) -> void:
 	is_dead = true
 	missile_timer.stop()
 	shield_timer.stop()
 	scatter_timer.stop()
+	_set_shield_active(false)
 
 	if not no_reward:
 		GameManager.add_resources(10)
@@ -161,7 +131,7 @@ func _die_for_real(no_reward := false):
 	queue_free()
 
 
-func _on_shield_timer_timeout():
+func _on_shield_timer_timeout() -> void:
 	if shield_active:
 		_set_shield_active(false)
 		hit_used_this_down_window = false
@@ -175,20 +145,20 @@ func _on_shield_timer_timeout():
 	shield_timer.start()
 
 
-func _on_missile_timer_timeout():
+func _on_missile_timer_timeout() -> void:
 	if is_dead:
 		return
 	spawn_normal_missile()
 
 
-func _on_scatter_timer_timeout():
+func _on_scatter_timer_timeout() -> void:
 	if is_dead:
 		return
 	spawn_scatter_missile()
 	_schedule_next_scatter()
 
 
-func _schedule_next_scatter():
+func _schedule_next_scatter() -> void:
 	if is_dead:
 		return
 	scatter_timer.stop()
@@ -196,7 +166,7 @@ func _schedule_next_scatter():
 	scatter_timer.start()
 
 
-func spawn_normal_missile():
+func spawn_normal_missile() -> void:
 	if is_dead:
 		return
 	if missile_scene == null:
@@ -206,9 +176,9 @@ func spawn_normal_missile():
 	GameManager.enemies_alive += 1
 	missile.connect("enemy_died", Callable(GameManager, "_on_enemy_died"))
 
-	var viewport = get_viewport_rect().size
-	var target = Vector2(randf_range(40.0, viewport.x - 40.0), viewport.y)
-	var direction = (target - global_position).normalized()
+	var viewport := get_viewport_rect().size
+	var target := Vector2(randf_range(40.0, viewport.x - 40.0), viewport.y)
+	var direction := (target - global_position).normalized()
 
 	missile.global_position = global_position + Vector2(0, 30)
 	missile.velocity = direction
@@ -216,7 +186,7 @@ func spawn_normal_missile():
 	_add_to_scene(missile)
 
 
-func spawn_scatter_missile():
+func spawn_scatter_missile() -> void:
 	if is_dead:
 		return
 	if scatter_missile_scene == null:
@@ -226,9 +196,9 @@ func spawn_scatter_missile():
 	GameManager.enemies_alive += 1
 	missile.connect("enemy_died", Callable(GameManager, "_on_enemy_died"))
 
-	var viewport = get_viewport_rect().size
-	var target = Vector2(randf_range(80.0, viewport.x - 80.0), viewport.y)
-	var direction = (target - global_position).normalized()
+	var viewport := get_viewport_rect().size
+	var target := Vector2(randf_range(80.0, viewport.x - 80.0), viewport.y)
+	var direction := (target - global_position).normalized()
 
 	missile.global_position = global_position + Vector2(0, 35)
 	missile.velocity = direction
@@ -239,6 +209,5 @@ func spawn_scatter_missile():
 
 func _set_shield_active(value: bool) -> void:
 	shield_active = value
-
 	if shield_sprite:
 		shield_sprite.visible = shield_active

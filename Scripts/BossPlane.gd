@@ -11,6 +11,12 @@ signal plane_removed(plane: Area2D)
 @export var base_accuracy := 0.9
 @export var min_accuracy := 0.35
 @export var accuracy_decay_per_second := 0.12
+@export var fighter_texture: Texture2D
+@export var bomber_texture: Texture2D
+@export var fighter_scale: Vector2 = Vector2(1, 1)
+@export var bomber_scale: Vector2 = Vector2(1, 1)
+@export var fighter_color: Color = Color()
+@export var bomber_color: Color = Color()
 
 @onready var action_timer: Timer = $ActionTimer
 @onready var sprite: Sprite2D = $Sprite2D
@@ -26,15 +32,28 @@ func _ready() -> void:
 	monitoring = true
 	monitorable = true
 	connect("area_entered", Callable(self, "_on_area_entered"))
+
 	action_timer.wait_time = action_interval
 	action_timer.timeout.connect(_on_action_timer_timeout)
 	action_timer.start()
+
+	_apply_role_visuals()
+
+
+func _apply_role_visuals() -> void:
+	if sprite == null:
+		return
+
 	if role == "bomber":
-		sprite.modulate = Color(1.0, 0.75, 0.4, 1.0)
+		if bomber_texture:
+			sprite.texture = bomber_texture
+		sprite.scale = bomber_scale
+		sprite.modulate = bomber_color
 	else:
-		sprite.modulate = Color(0.7, 1.0, 0.9, 1.0)
-
-
+		if fighter_texture:
+			sprite.texture = fighter_texture
+		sprite.scale = fighter_scale
+		sprite.modulate = fighter_color
 func _process(delta: float) -> void:
 	if _is_dead:
 		return

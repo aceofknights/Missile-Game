@@ -7,21 +7,26 @@ signal boss_defeated
 @export var missile_scene: PackedScene
 @export var plane_scene: PackedScene
 @export var fighter_projectile_scene: PackedScene
-@export var move_speed := 90.0
-@export var max_health := 5
-@export var immunity_duration := 2.5
+@export var move_speed: float = 90.0
+@export var max_health: int = 5
+@export var immunity_duration: float = 2.5
+@export var shield_up_duration: float = 3.5
+@export var shield_down_duration: float = 2.0
 
-@onready var sprite: Sprite2D = $Sprite2D
 @onready var boss_health_label: Label = $boss_health
 @onready var fighter_spawn_timer: Timer = $FighterSpawnTimer
 @onready var bomber_spawn_timer: Timer = $BomberSpawnTimer
 @onready var immunity_timer: Timer = $ImmunityTimer
+@onready var shield_timer: Timer = $ShieldTimer
+@onready var shield_sprite: Sprite2D = $ShieldSprite
 
-var health := 5
-var phase := 1
-var move_direction := 1.0
-var is_immune := false
-var is_dead := false
+var health: int = 5
+var phase: int = 1
+var move_direction: float = 1.0
+var is_immune: bool = false
+var is_dead: bool = false
+var shield_active: bool = true
+var hit_used_this_down_window: bool = false
 var fighters: Array[Area2D] = []
 var bombers: Array[Area2D] = []
 
@@ -54,17 +59,21 @@ func _ready() -> void:
 	fighter_spawn_timer.timeout.connect(_on_fighter_spawn_timer_timeout)
 	bomber_spawn_timer.timeout.connect(_on_bomber_spawn_timer_timeout)
 	immunity_timer.timeout.connect(_on_immunity_timeout)
+	shield_timer.timeout.connect(_on_shield_timer_timeout)
+
+	shield_timer.wait_time = shield_up_duration
+	shield_timer.start()
 
 	_update_phase_state()
-	_update_visuals()
 	_update_label()
+	_set_shield_active(true)
 
 
 func _process(delta: float) -> void:
 	if is_dead:
 		return
 
-	var viewport = get_viewport_rect().size
+	var viewport: Vector2 = get_viewport_rect().size
 	position.x += move_direction * move_speed * delta
 
 	if position.x < 160.0:
@@ -84,13 +93,23 @@ func _on_area_entered(area: Area2D) -> void:
 	die(false)
 
 
-func die(no_reward := false) -> void:
+func die(no_reward: bool = false) -> void:
 	if is_dead:
 		return
+	if shield_active:
+		print("🛡️ Carrier shield blocked the hit")
+		return
 	if is_immune:
+		print("⚠️ Carrier is immune")
+		return
+	if hit_used_this_down_window:
+		print("🛡️ Carrier already took a hit during this shield break")
 		return
 
+	hit_used_this_down_window = true
 	health -= 1
+	print("🚢 Carrier hit! Remaining HP: %d" % health)
+
 	if health <= 0:
 		_die_for_real(no_reward)
 		return
@@ -98,11 +117,10 @@ func die(no_reward := false) -> void:
 	_reset_fighter_accuracy()
 	_start_immunity_window()
 	_update_phase_state()
-	_update_visuals()
 	_update_label()
 
 
-func _die_for_real(no_reward := false) -> void:
+func _die_for_real(no_reward: bool = false) -> void:
 	if is_dead:
 		return
 	is_dead = true
@@ -110,6 +128,8 @@ func _die_for_real(no_reward := false) -> void:
 	fighter_spawn_timer.stop()
 	bomber_spawn_timer.stop()
 	immunity_timer.stop()
+	shield_timer.stop()
+	_set_shield_active(false)
 
 	for fighter in fighters:
 		if is_instance_valid(fighter):
@@ -142,7 +162,20 @@ func _start_immunity_window() -> void:
 
 func _on_immunity_timeout() -> void:
 	is_immune = false
-	_update_visuals()
+
+
+func _on_shield_timer_timeout() -> void:
+	if shield_active:
+		_set_shield_active(false)
+		hit_used_this_down_window = false
+		shield_timer.wait_time = shield_down_duration
+		print("⚡ Carrier shield DOWN")
+	else:
+		_set_shield_active(true)
+		shield_timer.wait_time = shield_up_duration
+		print("🛡️ Carrier shield UP")
+
+	shield_timer.start()
 
 
 func _update_phase_state() -> void:
@@ -161,7 +194,7 @@ func _update_phase_state() -> void:
 	if bomber_spawn_timer.is_stopped():
 		bomber_spawn_timer.start()
 
-	var speed_boost = 1.35 if phase == 3 else 1.0
+	var speed_boost: float = 1.35 if phase == 3 else 1.0
 	for fighter in fighters:
 		if is_instance_valid(fighter):
 			fighter.set_speed_multiplier(speed_boost)
@@ -174,7 +207,7 @@ func _on_fighter_spawn_timer_timeout() -> void:
 	_prune_units()
 	if fighters.size() >= PHASE_MAX_UNITS[phase]:
 		return
-	var fighter = _spawn_plane("fighter")
+	var fighter: Area2D = _spawn_plane("fighter")
 	if fighter != null:
 		fighters.append(fighter)
 
@@ -183,7 +216,7 @@ func _on_bomber_spawn_timer_timeout() -> void:
 	_prune_units()
 	if bombers.size() >= PHASE_MAX_UNITS[phase]:
 		return
-	var bomber = _spawn_plane("bomber")
+	var bomber: Area2D = _spawn_plane("bomber")
 	if bomber != null:
 		bombers.append(bomber)
 
@@ -191,7 +224,8 @@ func _on_bomber_spawn_timer_timeout() -> void:
 func _spawn_plane(role: String) -> Area2D:
 	if plane_scene == null:
 		return null
-	var plane = plane_scene.instantiate()
+
+	var plane: Area2D = plane_scene.instantiate()
 	plane.role = role
 	plane.missile_scene = missile_scene
 	plane.explosion_scene = explosion_scene
@@ -199,8 +233,10 @@ func _spawn_plane(role: String) -> Area2D:
 	plane.global_position = global_position + Vector2(randf_range(-180.0, 180.0), randf_range(-30.0, 40.0))
 	plane.direction = Vector2(sign(randf() - 0.5), randf_range(-0.3, 0.3)).normalized()
 	plane.plane_removed.connect(_on_plane_removed)
+
 	if phase == 3:
 		plane.set_speed_multiplier(1.35)
+
 	get_tree().current_scene.add_child(plane)
 	return plane
 
@@ -225,8 +261,7 @@ func _update_label() -> void:
 	boss_health_label.text = "Carrier HP %d  P%d" % [health, phase]
 
 
-func _update_visuals() -> void:
-	if is_immune:
-		sprite.modulate = Color(0.65, 0.82, 1.0, 1.0)
-	else:
-		sprite.modulate = Color(1.0, 0.6, 0.35, 1.0)
+func _set_shield_active(value: bool) -> void:
+	shield_active = value
+	if shield_sprite:
+		shield_sprite.visible = shield_active

@@ -132,6 +132,15 @@ func get_upgrade_cost(base_cost: int, level: int, path_rate: String) -> int:
 	var multiplier = float(COST_MULTIPLIER.get(path_rate, COST_MULTIPLIER[PATH_MEDIUM]))
 	return int(round(base_cost * pow(multiplier, level)))
 
+func is_upgrade_available_in_world(upgrade_key: String, world: int) -> bool:
+	var defs = get_upgrade_definitions_world_1()
+	if not defs.has(upgrade_key):
+		return false
+
+	var def: Dictionary = defs[upgrade_key]
+	var min_world: int = int(def.get("min_world", 1))
+
+	return world >= min_world
 
 func get_upgrade_definitions_world_1() -> Dictionary:
 	# World 1 base tree. Later worlds can extend this while preserving the keys.
@@ -143,6 +152,16 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"path_rate": PATH_CHEAP,
 			"requires": []
 		},
+		
+		"shield": {
+			"display_name": "Shield Generator",
+			"max_level": 1,
+			"base_cost": 100,
+			"path_rate": PATH_EXPENSIVE,
+			"requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}],
+			"min_world": 2,	
+		},
+		
 		"ammo_factory_1": {
 			"display_name": "Ammo Factory 1",
 			"max_level": 10,
@@ -206,13 +225,16 @@ func can_buy_upgrade(upgrade_key: String) -> bool:
 	if not defs.has(upgrade_key):
 		return false
 
+	if not is_upgrade_available_in_world(upgrade_key, current_world):
+		return false
+
 	var def: Dictionary = defs[upgrade_key]
-	var level = get_upgrade_level(upgrade_key)
+	var level: int = get_upgrade_level(upgrade_key)
 	if level >= int(def.get("max_level", 1)):
 		return false
 
 	for requirement in def.get("requires", []):
-		var req_upgrade: String = requirement.get("upgrade", "")
+		var req_upgrade: String = String(requirement.get("upgrade", ""))
 		var req_level: int = int(requirement.get("min_level", 1))
 		if get_upgrade_level(req_upgrade) < req_level:
 			return false
