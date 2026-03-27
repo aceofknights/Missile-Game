@@ -67,9 +67,10 @@ func _create_trail() -> void:
 	trail_line = Line2D.new()
 	trail_line.default_color = trail_color
 	trail_line.width = trail_width
-	trail_line.z_index = -1
+	trail_line.z_as_relative = false
+	trail_line.z_index = 1000
 	trail_line.add_point(global_position)
-	get_tree().current_scene.add_child.call_deferred(trail_line)
+	get_tree().current_scene.add_child(trail_line)
 
 
 func _update_trail() -> void:
