@@ -1,6 +1,8 @@
 extends Node
 
 const WORLD_COUNT := 5
+const SAVE_PATH := "user://savegame.save"
+const SAVE_VERSION := 1
 
 const CANNON_MIDDLE := "middle"
 const CANNON_LEFT := "left"
@@ -47,6 +49,99 @@ signal announce_wave(message: String, duration: float)
 
 func _ready():
 	_ensure_world_upgrade_data(current_world)
+
+
+func _int_to_string_dict(source: Dictionary) -> Dictionary:
+	var converted := {}
+	for key in source.keys():
+		converted[str(key)] = source[key]
+	return converted
+
+
+func _string_to_int_dict(source: Dictionary) -> Dictionary:
+	var converted := {}
+	for key in source.keys():
+		converted[int(str(key))] = source[key]
+	return converted
+
+
+func save_game() -> bool:
+	var save_data := {
+		"version": SAVE_VERSION,
+		"current_world": current_world,
+		"current_wave": current_wave,
+		"player_resources": player_resources,
+		"highest_world_unlocked": highest_world_unlocked,
+		"world_upgrades": _int_to_string_dict(world_upgrades)
+	}
+
+	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if file == null:
+		push_error("Failed to save game: %s" % FileAccess.get_open_error())
+		return false
+
+	file.store_string(JSON.stringify(save_data))
+	return true
+
+
+func has_save_game() -> bool:
+	return FileAccess.file_exists(SAVE_PATH)
+
+
+func erase_save_game() -> void:
+	if not has_save_game():
+		return
+
+	var user_dir := DirAccess.open("user://")
+	if user_dir == null:
+		push_error("Failed to open user directory while deleting save.")
+		return
+	user_dir.remove("savegame.save")
+
+
+func load_game() -> bool:
+	if not has_save_game():
+		return false
+
+	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if file == null:
+		push_error("Failed to open save file: %s" % FileAccess.get_open_error())
+		return false
+
+	var parsed = JSON.parse_string(file.get_as_text())
+	if typeof(parsed) != TYPE_DICTIONARY:
+		push_error("Save file format invalid.")
+		return false
+
+	var save_data: Dictionary = parsed
+	current_world = int(save_data.get("current_world", 1))
+	current_wave = int(save_data.get("current_wave", 1))
+	player_resources = int(save_data.get("player_resources", 0))
+	highest_world_unlocked = clamp(int(save_data.get("highest_world_unlocked", 1)), 1, WORLD_COUNT)
+	world_upgrades = _string_to_int_dict(save_data.get("world_upgrades", {}))
+
+	for world in range(1, WORLD_COUNT + 1):
+		_ensure_world_upgrade_data(world)
+		var state: Dictionary = world_upgrades[world]
+		var cannons: Dictionary = state["cannons"]
+		for cannon_id in CANNON_IDS:
+			if not cannons.has(cannon_id):
+				cannons[cannon_id] = _default_cannon_state(cannon_id)
+				continue
+			var cannon_state: Dictionary = cannons[cannon_id]
+			cannon_state["unlocked"] = bool(cannon_state.get("unlocked", cannon_id == CANNON_MIDDLE))
+			cannon_state["destroyed"] = bool(cannon_state.get("destroyed", false))
+			cannon_state["current_ammo"] = int(cannon_state.get("current_ammo", 0))
+			cannon_state["ammo_factory_progress"] = float(cannon_state.get("ammo_factory_progress", 0.0))
+			_sync_cannon_ammo_caps_with_state(cannon_id, state)
+
+		state["extra_buildings"] = int(state.get("extra_buildings", 0))
+		state["upgrade_levels"] = state.get("upgrade_levels", {})
+		state["ammo_factory_distribution_index"] = int(state.get("ammo_factory_distribution_index", 0))
+
+	current_world = clamp(current_world, 1, highest_world_unlocked)
+	_ensure_world_upgrade_data(current_world)
+	return true
 
 
 func _default_cannon_state(cannon_id: String) -> Dictionary:
@@ -548,10 +643,12 @@ func start_new_game():
 	highest_world_unlocked = 1
 	world_upgrades.clear()
 	_ensure_world_upgrade_data(1)
+	save_game()
 	get_tree().change_scene_to_file("res://Scene/WorldSelect.tscn")
 
 
 func player_died():
+	save_game()
 	load_upgrade_screen()
 
 
@@ -680,6 +777,7 @@ func _on_world_defeated() -> void:
 		_ensure_world_upgrade_data(next_world)
 
 	current_wave = 1
+	save_game()
 	get_tree().change_scene_to_file("res://Scene/WorldSelect.tscn")
 
 

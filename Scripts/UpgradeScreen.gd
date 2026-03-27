@@ -45,6 +45,8 @@ const TREE_ORDER := [
 
 func _ready():
 	$MarginContainer/VBoxContainer/ContinueButton.pressed.connect(continue_game)
+	$MarginContainer/VBoxContainer/SaveQuitButton.pressed.connect(_on_save_and_quit_pressed)
+	$MarginContainer/VBoxContainer/WorldSelectButton.pressed.connect(_on_back_to_world_select_pressed)
 	_build_tree()
 	_refresh_view()
 
@@ -104,3 +106,13 @@ func _refresh_view() -> void:
 
 func continue_game():
 	GameManager.continue_from_upgrades()
+
+
+func _on_save_and_quit_pressed() -> void:
+	GameManager.save_game()
+	get_tree().change_scene_to_file("res://Scene/MainMenu.tscn")
+
+
+func _on_back_to_world_select_pressed() -> void:
+	GameManager.save_game()
+	get_tree().change_scene_to_file("res://Scene/WorldSelect.tscn")

@@ -78,6 +78,14 @@ offset_bottom = 583.0
 text = "Status"
 horizontal_alignment = 1
 
+[node name="SaveQuitButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = 152.0
+offset_bottom = 55.0
+text = "Save and Quit"
+
 [node name="UnlockAllWorldsButton" type="Button" parent="."]
 layout_mode = 0
 offset_right = 8.0
