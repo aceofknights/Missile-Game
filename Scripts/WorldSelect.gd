@@ -7,6 +7,7 @@ extends Control
 @onready var world5_btn: Button = $CenterContainer/VBoxContainer/World5Button
 @onready var status_label: Label = $StatusLabel
 @onready var unlock_all_worlds_btn: Button = $UnlockAllWorldsButton
+@onready var save_quit_button: Button = $SaveQuitButton
 
 
 func _ready():
@@ -16,6 +17,7 @@ func _ready():
 	world4_btn.pressed.connect(func(): _select_world(4))
 	world5_btn.pressed.connect(func(): _select_world(5))
 	unlock_all_worlds_btn.pressed.connect(_unlock_all_worlds_for_debug)
+	save_quit_button.pressed.connect(_on_save_and_quit_pressed)
 	unlock_all_worlds_btn.visible = OS.is_debug_build()
 	_refresh_buttons()
 
@@ -49,5 +51,11 @@ func _select_world(world: int) -> void:
 
 func _unlock_all_worlds_for_debug() -> void:
 	GameManager.highest_world_unlocked = GameManager.WORLD_COUNT
+	GameManager.save_game()
 	_refresh_buttons()
 	status_label.text = "Debug: All worlds unlocked"
+
+
+func _on_save_and_quit_pressed() -> void:
+	GameManager.save_game()
+	get_tree().change_scene_to_file("res://Scene/MainMenu.tscn")
