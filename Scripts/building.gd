@@ -78,5 +78,12 @@ func repair() -> void:
 
 
 func destroy_permanently() -> void:
+	if permanently_destroyed:
+		return
 	permanently_destroyed = true
-	die()
+	destroyed = true
+	monitoring = false
+	monitorable = false
+	if is_in_group("building"):
+		remove_from_group("building")
+	queue_free()

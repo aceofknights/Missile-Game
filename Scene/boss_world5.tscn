@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://butngk3a4eknx"]
+[gd_scene load_steps=14 format=3 uid="uid://butngk3a4eknx"]
 
 [ext_resource type="Script" path="res://Scripts/BossWorld5.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2"]
@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://c8yifnhlddca2" path="res://Scene/laser_weak_point.tscn" id="9"]
 [ext_resource type="Texture2D" uid="uid://b26bwb2cdmmix" path="res://assets/Mothership.png" id="10_a2cpn"]
 [ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="11_wugop"]
+[ext_resource type="PackedScene" path="res://Scene/laser_strike_indicator.tscn" id="12_jvf3d"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_am8nv"]
 radius = 47.0
@@ -26,6 +27,7 @@ ion_missile_scene = ExtResource("6")
 plane_scene = ExtResource("7")
 fighter_projectile_scene = ExtResource("8")
 laser_weak_point_scene = ExtResource("9")
+laser_indicator_projectile_scene = ExtResource("12_jvf3d")
 max_health = 1
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

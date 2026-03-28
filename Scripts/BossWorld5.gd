@@ -13,6 +13,7 @@ signal laser_fired(target_name: String)
 @export var plane_scene: PackedScene
 @export var fighter_projectile_scene: PackedScene
 @export var laser_weak_point_scene: PackedScene
+@export var laser_indicator_projectile_scene: PackedScene
 
 # --------------------------------------------------
 # DEBUG ATTACK TOGGLES
@@ -524,14 +525,43 @@ func _on_laser_charge_timer_timeout() -> void:
 		return
 
 	if is_instance_valid(laser_target):
-		if laser_target.has_method("destroy_permanently"):
-			laser_target.destroy_permanently()
-		elif laser_target.has_method("die"):
-			laser_target.call_deferred("die")
-		emit_signal("laser_fired", laser_target.name)
+		var target_to_hit: Node2D = laser_target
+		var target_name: String = laser_target.name
+		_fire_laser_indicator(target_to_hit, target_name)
 
 	_cleanup_laser_state()
 	_restart_laser_cooldown()
+
+
+func _fire_laser_indicator(target_to_hit: Node2D, target_name: String) -> void:
+	if laser_indicator_projectile_scene == null:
+		_apply_laser_hit_to_target(target_to_hit, target_name)
+		return
+
+	var indicator: Node2D = laser_indicator_projectile_scene.instantiate()
+	if indicator == null:
+		_apply_laser_hit_to_target(target_to_hit, target_name)
+		return
+
+	if indicator.has_signal("strike_impact"):
+		indicator.strike_impact.connect(_on_laser_indicator_impact)
+
+	if indicator.has_method("setup_strike"):
+		indicator.setup_strike(global_position + Vector2(0, 34), target_to_hit, target_name)
+	_add_to_scene(indicator)
+
+
+func _on_laser_indicator_impact(target_to_hit: Node2D, target_name: String) -> void:
+	_apply_laser_hit_to_target(target_to_hit, target_name)
+
+
+func _apply_laser_hit_to_target(target_to_hit: Node2D, target_name: String) -> void:
+	if is_instance_valid(target_to_hit):
+		if target_to_hit.has_method("destroy_permanently"):
+			target_to_hit.destroy_permanently()
+		elif target_to_hit.has_method("die"):
+			target_to_hit.call_deferred("die")
+	emit_signal("laser_fired", target_name)
 
 
 func _cleanup_laser_state() -> void:
