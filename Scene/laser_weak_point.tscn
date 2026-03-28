@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://c8yifnhlddca2"]
 
 [ext_resource type="Script" path="res://Scripts/LaserWeakPoint.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="2"]
+[ext_resource type="Texture2D" uid="uid://bin3nvp7wu8im" path="res://assets/Ellipse 1.png" id="2_mtovt"]
 
 [sub_resource type="CircleShape2D" id="1"]
 radius = 16.0
@@ -9,11 +9,12 @@ radius = 16.0
 [node name="LaserWeakPoint" type="Area2D"]
 collision_mask = 3
 script = ExtResource("1")
+flash_colors = Array[Color]([Color(1, 0.1, 0.1, 1), Color(1, 1, 1, 1), Color(1, 0.9, 0.2, 1)])
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(1, 0.25, 0.2, 1)
 scale = Vector2(0.24, 0.24)
-texture = ExtResource("2")
+texture = ExtResource("2_mtovt")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1")
