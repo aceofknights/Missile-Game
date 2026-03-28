@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://7md30sih7d62"
+path="res://.godot/imported/Mrs. Lamb's Meltdown v2.mp3-ba7fd3c07395906a6d80b1195e4b3c4e.mp3str"
+
+[deps]
+
+source_file="res://sounds/Mrs. Lamb's Meltdown v2.mp3"
+dest_files=["res://.godot/imported/Mrs. Lamb's Meltdown v2.mp3-ba7fd3c07395906a6d80b1195e4b3c4e.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
