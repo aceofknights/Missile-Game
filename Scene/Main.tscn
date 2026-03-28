@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://ctxqd2rutxxdu"]
+[gd_scene load_steps=11 format=3 uid="uid://ctxqd2rutxxdu"]
 
 [ext_resource type="Script" path="res://Scripts/Main.gd" id="1_7l10b"]
 [ext_resource type="Texture2D" uid="uid://vtmbpawopp0o" path="res://assets/Space Background.png" id="2_6dmxf"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://imc4shtg5sg6" path="res://Scene/boss_ufo.tscn" id="5_pxfj6"]
 [ext_resource type="PackedScene" uid="uid://dfts4hlsrshmv" path="res://Scene/PauseMenu.tscn" id="5_u4f7x"]
 [ext_resource type="PackedScene" uid="uid://vug46xq86s6a" path="res://Scene/building.tscn" id="6_ldoyd"]
+[ext_resource type="AudioStream" uid="uid://7md30sih7d62" path="res://sounds/Mrs. Lamb's Meltdown v2.mp3" id="10_ef283"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_7l10b")
@@ -92,17 +93,17 @@ offset_bottom = 53.0
 text = "ResourceLabel"
 
 [node name="EndStateOverlay" type="Control" parent="UI"]
-visible = false
 process_mode = 2
+visible = false
+layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 0
 
 [node name="Dimmer" type="ColorRect" parent="UI/EndStateOverlay"]
-anchors_preset = 15
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
@@ -110,7 +111,7 @@ grow_vertical = 2
 color = Color(0, 0, 0, 0.45)
 
 [node name="CenterContainer" type="CenterContainer" parent="UI/EndStateOverlay"]
-anchors_preset = 15
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
@@ -146,7 +147,6 @@ process_mode = 2
 layout_mode = 2
 text = "Continue"
 
-
 [node name="Building" parent="." instance=ExtResource("6_ldoyd")]
 position = Vector2(215, 610)
 
@@ -166,3 +166,8 @@ position = Vector2(856, 610)
 position = Vector2(332.67, 610)
 
 [node name="PauseMenu" parent="." instance=ExtResource("5_u4f7x")]
+
+[node name="Music" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("10_ef283")
+volume_db = -7.429
+autoplay = true
