@@ -26,6 +26,8 @@ ion_missile_scene = ExtResource("6")
 plane_scene = ExtResource("7")
 fighter_projectile_scene = ExtResource("8")
 laser_weak_point_scene = ExtResource("9")
+debug_enable_fighters = false
+debug_enable_bombers = false
 max_health = 1
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
