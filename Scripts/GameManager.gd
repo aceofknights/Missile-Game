@@ -50,6 +50,7 @@ var ion_wave_end_time := 0.0
 var ion_wave_next_ready_time := 0.0
 var lure_end_time := 0.0
 var lure_position := Vector2.ZERO
+var lure_next_ready_time := 0.0
 
 signal announce_wave(message: String, duration: float)
 signal world_victory_requested
@@ -325,23 +326,35 @@ func is_ion_wave_active(now_seconds: float) -> bool:
 
 func get_enemy_global_speed_multiplier(now_seconds: float) -> float:
 	if is_ion_wave_active(now_seconds):
-		return 0.6
+		return 0.2
 	return 1.0
 
 
-func can_trigger_lure() -> bool:
-	return get_upgrade_level("lure") > 0
+func get_lure_recharge_time() -> float:
+	var level := get_upgrade_level("lure")
+	if level <= 0:
+		return 9999.0
+	return maxf(4.0, 12.0 - float(level))
+
+
+func can_trigger_lure(now_seconds: float) -> bool:
+	return get_upgrade_level("lure") > 0 and now_seconds >= lure_next_ready_time
 
 
 func trigger_lure(pos: Vector2, now_seconds: float) -> void:
-	if not can_trigger_lure():
+	if not can_trigger_lure(now_seconds):
 		return
 	lure_position = pos
 	lure_end_time = now_seconds + (2.0 + float(get_upgrade_level("lure")))
+	lure_next_ready_time = now_seconds + get_lure_recharge_time()
 
 
 func is_lure_active(now_seconds: float) -> bool:
 	return now_seconds < lure_end_time
+
+
+func get_lure_cooldown_remaining(now_seconds: float) -> float:
+	return maxf(0.0, lure_next_ready_time - now_seconds)
 
 func is_upgrade_available_in_world(upgrade_key: String, world: int) -> bool:
 	var defs = get_upgrade_definitions_world_1()
@@ -810,6 +823,7 @@ func _reset_temporary_upgrade_runtime_state() -> void:
 	ion_wave_end_time = 0.0
 	ion_wave_next_ready_time = 0.0
 	lure_end_time = 0.0
+	lure_next_ready_time = 0.0
 
 
 func start_wave():

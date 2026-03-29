@@ -31,6 +31,8 @@ func _on_area_entered(area):
 	if destroyed:
 		return
 	if area.is_in_group("enemy"):
+		if handle_enemy_impact(area):
+			return
 		print("Building destroyed by Enemy")
 		area.call_deferred("die", false)
 		die()

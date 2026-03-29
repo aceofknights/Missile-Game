@@ -11,7 +11,7 @@ signal enemy_died
 var velocity := Vector2.ZERO
 var is_dying := false
 var trail_line: Line2D
-var lure_curve_time_remaining := 1.25
+var lure_curve_time_remaining := 3.0
 
 
 func _ready() -> void:
@@ -25,7 +25,7 @@ func _process(delta: float) -> void:
 	var now_seconds := Time.get_ticks_msec() / 1000.0
 	if GameManager.is_lure_active(now_seconds) and lure_curve_time_remaining > 0.0:
 		var to_lure := (GameManager.lure_position - global_position).normalized()
-		velocity = velocity.lerp(to_lure, minf(1.0, 1.8 * delta)).normalized()
+		velocity = velocity.lerp(to_lure, minf(1.0, 4.0 * delta)).normalized()
 		lure_curve_time_remaining = maxf(0.0, lure_curve_time_remaining - delta)
 
 	var zone_multiplier := IonFieldUtils.get_speed_multiplier_at(global_position, false)
