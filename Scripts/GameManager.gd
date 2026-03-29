@@ -51,6 +51,8 @@ var ion_wave_next_ready_time := 0.0
 var lure_end_time := 0.0
 var lure_position := Vector2.ZERO
 var lure_next_ready_time := 0.0
+var active_shield_emp_disabled_until := 0.0
+var passive_shield_emp_disabled_until := 0.0
 
 signal announce_wave(message: String, duration: float)
 signal world_victory_requested
@@ -275,7 +277,8 @@ func set_active_shield_held(is_held: bool) -> void:
 
 
 func is_active_shield_up() -> bool:
-	return has_active_shields_upgrade() and active_shield_is_held and active_shield_charge > 0.0
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	return has_active_shields_upgrade() and active_shield_is_held and active_shield_charge > 0.0 and now_seconds >= active_shield_emp_disabled_until
 
 
 func update_active_shield(delta: float) -> void:
@@ -289,6 +292,11 @@ func update_active_shield(delta: float) -> void:
 	active_shield_max_charge = get_active_shield_max_charge()
 	if previous_max <= 0.0:
 		active_shield_charge = active_shield_max_charge
+
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	if now_seconds < active_shield_emp_disabled_until:
+		active_shield_is_held = false
+		return
 
 	if active_shield_is_held and active_shield_charge > 0.0:
 		active_shield_charge = maxf(0.0, active_shield_charge - delta)
@@ -359,6 +367,26 @@ func is_lure_active(now_seconds: float) -> bool:
 
 func get_lure_cooldown_remaining(now_seconds: float) -> float:
 	return maxf(0.0, lure_next_ready_time - now_seconds)
+
+
+func apply_emp_to_shields(duration: float) -> void:
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	var end_time := now_seconds + maxf(0.1, duration)
+	active_shield_emp_disabled_until = maxf(active_shield_emp_disabled_until, end_time)
+	passive_shield_emp_disabled_until = maxf(passive_shield_emp_disabled_until, end_time)
+	active_shield_is_held = false
+
+
+func is_active_shield_emp_disabled(now_seconds: float) -> bool:
+	return now_seconds < active_shield_emp_disabled_until
+
+
+func get_active_shield_emp_disabled_remaining(now_seconds: float) -> float:
+	return maxf(0.0, active_shield_emp_disabled_until - now_seconds)
+
+
+func is_passive_shield_emp_disabled(now_seconds: float) -> bool:
+	return now_seconds < passive_shield_emp_disabled_until
 
 func is_upgrade_available_in_world(upgrade_key: String, world: int) -> bool:
 	var defs = get_upgrade_definitions_world_1()
@@ -828,6 +856,8 @@ func _reset_temporary_upgrade_runtime_state() -> void:
 	ion_wave_next_ready_time = 0.0
 	lure_end_time = 0.0
 	lure_next_ready_time = 0.0
+	active_shield_emp_disabled_until = 0.0
+	passive_shield_emp_disabled_until = 0.0
 
 
 func start_wave():

@@ -60,6 +60,7 @@ var _lure_label: Label
 var _lure_bar: ProgressBar
 var _shield_energy_label: Label
 var _shield_energy_bar: ProgressBar
+var _shield_emp_warn_cooldown := 0.0
 
 
 func get_building_count() -> int:
@@ -261,6 +262,7 @@ func _process(delta: float) -> void:
 	_update_auto_cannon(delta)
 	_update_active_shield_visual()
 	_update_ability_status_ui()
+	_shield_emp_warn_cooldown = maxf(0.0, _shield_emp_warn_cooldown - delta)
 	AmmoLabel.text = "Ammo: %s" % GameManager.get_total_ammo_status()
 	wave_label.text = "🌊 Wave %d / 🌍 World %d" % [GameManager.current_wave, GameManager.current_world]
 	ResourceLabel.text = "Resources: %d" % GameManager.player_resources
@@ -301,6 +303,9 @@ func _create_active_shield_sprite() -> void:
 func _handle_upgrade_hotkeys() -> void:
 	var now_seconds := Time.get_ticks_msec() / 1000.0
 	var hold_space := Input.is_key_pressed(KEY_SPACE)
+	if hold_space and GameManager.is_active_shield_emp_disabled(now_seconds) and _shield_emp_warn_cooldown <= 0.0:
+		announce("⚠ Shield disabled by EMP!", 0.6)
+		_shield_emp_warn_cooldown = 0.8
 	GameManager.set_active_shield_held(hold_space)
 	var w_down := Input.is_key_pressed(KEY_W)
 	if w_down and not _w_was_down:
@@ -514,7 +519,10 @@ func _update_ability_status_ui() -> void:
 
 	if _shield_energy_label:
 		_shield_energy_label.visible = active_shield_level > 0
-		_shield_energy_label.text = "Active Shield Energy: %d%%" % int(round(shield_ratio * 100.0))
+		if GameManager.is_active_shield_emp_disabled(now_seconds):
+			_shield_energy_label.text = "Active Shield: EMP %.1fs" % GameManager.get_active_shield_emp_disabled_remaining(now_seconds)
+		else:
+			_shield_energy_label.text = "Active Shield Energy: %d%%" % int(round(shield_ratio * 100.0))
 	if _shield_energy_bar:
 		_shield_energy_bar.visible = active_shield_level > 0
 		_shield_energy_bar.value = shield_ratio

@@ -41,7 +41,13 @@ func _on_area_entered(area: Area2D) -> void:
 		area.queue_free()
 		return
 
+	if area.is_in_group("active_base_shield"):
+		GameManager.apply_emp_to_shields(emp_disable_duration)
+		die(true)
+		return
+
 	if area.is_in_group("defense_target") or area.is_in_group("cannon"):
+		GameManager.apply_emp_to_shields(emp_disable_duration)
 		if area.has_method("disable_temporarily"):
 			area.disable_temporarily(emp_disable_duration)
 		elif area.has_method("die"):

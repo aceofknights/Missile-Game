@@ -50,22 +50,30 @@ func _setup_temp_shield_sprite() -> void:
 
 
 func _setup_shield_hits_label() -> void:
-	shield_hits_label.top_level = true
+	shield_hits_label.top_level = false
 	shield_hits_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	shield_hits_label.theme_override_colors/font_color = Color(0.9, 1.0, 1.0, 1.0)
+	shield_hits_label.theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+	shield_hits_label.theme_override_constants/outline_size = 2
 	shield_hits_label.visible = false
+	shield_hits_label.z_index = 25
 	add_child(shield_hits_label)
 
 
 func _update_shield_hits_label() -> void:
 	if shield_hits_label == null:
 		return
-	shield_hits_label.global_position = global_position + Vector2(-46, 34)
+	shield_hits_label.position = Vector2(-38, 26)
 	var max_hits := GameManager.get_shield_generator_hit_capacity()
 	var show := max_hits > 0 and not destroyed
 	shield_hits_label.visible = show
 	if not show:
 		return
-	shield_hits_label.text = "🛡 %d" % max(0, shield_hits_remaining)
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	if GameManager.is_passive_shield_emp_disabled(now_seconds):
+		shield_hits_label.text = "S:EMP"
+	else:
+		shield_hits_label.text = "S:%d" % max(0, shield_hits_remaining)
 
 
 func _update_shield_state(delta: float) -> void:
@@ -73,6 +81,12 @@ func _update_shield_state(delta: float) -> void:
 	if max_hits <= 0 or destroyed:
 		shield_hits_remaining = 0
 		shield_cooldown_remaining = 0.0
+		if shield_sprite:
+			shield_sprite.visible = false
+		return
+
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	if GameManager.is_passive_shield_emp_disabled(now_seconds):
 		if shield_sprite:
 			shield_sprite.visible = false
 		return
@@ -89,6 +103,9 @@ func _update_shield_state(delta: float) -> void:
 
 func handle_enemy_impact(enemy: Area2D) -> bool:
 	if destroyed:
+		return false
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	if GameManager.is_passive_shield_emp_disabled(now_seconds):
 		return false
 
 	_update_shield_state(0.0)
