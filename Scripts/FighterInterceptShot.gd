@@ -24,7 +24,10 @@ func _process(delta: float) -> void:
 	if is_instance_valid(target_node):
 		target_position = target_node.global_position
 		if global_position.distance_to(target_node.global_position) <= hit_radius:
-			target_node.queue_free()
+			if target_node.has_method("die"):
+				target_node.call_deferred("die", true)
+			else:
+				target_node.queue_free()
 			queue_free()
 			return
 
