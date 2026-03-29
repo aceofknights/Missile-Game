@@ -10,6 +10,7 @@ size = Vector2(22, 16)
 [node name="IonMissile" type="Area2D"]
 collision_mask = 3
 script = ExtResource("1")
+trail_color = Color(1, 1, 0, 1)
 ion_zone_scene = ExtResource("2")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

@@ -189,7 +189,7 @@ func _on_area_entered(area: Area2D) -> void:
 
 
 func _setup_temp_shield_sprite() -> void:
-	shield_sprite.texture = preload("res://circle.png")
+	shield_sprite.texture = preload("res://assets/ShieldUfo.png")
 	shield_sprite.modulate = Color(0.4, 0.95, 1.0, 0.35)
 	shield_sprite.scale = Vector2(0.2, 0.12)
 	shield_sprite.visible = false
