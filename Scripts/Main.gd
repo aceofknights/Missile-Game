@@ -293,8 +293,11 @@ func _create_active_shield_sprite() -> void:
 	_active_shield_hitbox.add_child(_active_shield_sprite)
 
 	_active_shield_collision = CollisionShape2D.new()
-	var shield_shape := EllipseShape2D.new()
-	shield_shape.radius = Vector2(220, 88)
+	_active_shield_collision = CollisionShape2D.new()
+	var shield_shape := CapsuleShape2D.new()
+	shield_shape.radius = 128.0
+	shield_shape.height = 1264.0
+	_active_shield_collision.rotation_degrees = 90
 	_active_shield_collision.shape = shield_shape
 	_active_shield_collision.disabled = true
 	_active_shield_hitbox.add_child(_active_shield_collision)

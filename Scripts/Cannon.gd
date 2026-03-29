@@ -177,6 +177,7 @@ func is_targeting_jammed() -> bool:
 	var now: float = Time.get_ticks_msec() / 1000.0
 	return now < jam_end_time
 
+
 func clear_targeting_jam() -> void:
 	jam_end_time = 0.0
 	jam_misfire_radius = 0.0
@@ -200,11 +201,11 @@ func _setup_temp_shield_sprite() -> void:
 
 
 func _setup_shield_hits_label() -> void:
-	shield_hits_label.top_level = false
+	shield_hits_label.top_level = true
 	shield_hits_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shield_hits_label.theme_override_colors/font_color = Color(0.9, 1.0, 1.0, 1.0)
-	shield_hits_label.theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-	shield_hits_label.theme_override_constants/outline_size = 2
+	shield_hits_label.add_theme_color_override("font_color", Color(0.9, 1.0, 1.0, 1.0))
+	shield_hits_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
+	shield_hits_label.add_theme_constant_override("outline_size", 2)
 	shield_hits_label.visible = false
 	shield_hits_label.z_index = 25
 	add_child(shield_hits_label)
@@ -213,17 +214,20 @@ func _setup_shield_hits_label() -> void:
 func _update_shield_hits_label() -> void:
 	if shield_hits_label == null:
 		return
-	shield_hits_label.position = Vector2(-32, 40)
+
+	shield_hits_label.global_position = global_position + Vector2(-5, 0)
+
 	var max_hits := GameManager.get_shield_generator_hit_capacity()
 	var show := max_hits > 0 and _can_operate()
 	shield_hits_label.visible = show
 	if not show:
 		return
+
 	var now_seconds := Time.get_ticks_msec() / 1000.0
 	if GameManager.is_passive_shield_emp_disabled(now_seconds):
-		shield_hits_label.text = "S:EMP"
+		shield_hits_label.text = "EMP"
 	else:
-		shield_hits_label.text = "S:%d" % max(0, shield_hits_remaining)
+		shield_hits_label.text = "%d" % max(0, shield_hits_remaining)
 
 
 func _update_shield_state(delta: float) -> void:
