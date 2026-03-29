@@ -38,8 +38,11 @@ func _physics_process(delta: float) -> void:
 	if is_dying:
 		return
 
+	var now_seconds := Time.get_ticks_msec() / 1000.0
 	var speed_multiplier := IonFieldUtils.get_speed_multiplier_at(global_position, false)
-	position += velocity * speed * speed_multiplier * delta
+	var global_multiplier := GameManager.get_enemy_global_speed_multiplier(now_seconds)
+	position += velocity * speed * speed_multiplier * global_multiplier * delta
+	rotation = velocity.angle()
 	_update_trail()
 
 	if global_position.y >= trigger_y:

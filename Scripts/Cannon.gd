@@ -10,11 +10,15 @@ var emp_disabled_remaining := 0.0
 var jam_end_time: float = 0.0
 var jam_misfire_radius: float = 0.0
 var permanently_destroyed: bool = false
+var shield_hits_remaining := 0
+var shield_cooldown_remaining := 0.0
 
 @onready var ammo_label: Label = $AmmoLabel
 @onready var fire_rate_bar: ProgressBar = $FireRateBar
 @onready var repair_label: Label = get_node_or_null("RepairLabel") as Label
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var shield_sprite: Sprite2D = Sprite2D.new()
+@onready var shield_hits_label: Label = Label.new()
 
 
 func _ready() -> void:
@@ -27,6 +31,8 @@ func _ready() -> void:
 	fire_rate_bar.top_level = true
 	if repair_label:
 		repair_label.top_level = true
+	_setup_temp_shield_sprite()
+	_setup_shield_hits_label()
 	_refresh_visibility_state()
 	_update_overlay_positions()
 	_update_ui()
@@ -45,6 +51,8 @@ func _process(delta: float) -> void:
 			cooldown = maxf(0.0, cooldown - delta)
 
 	_update_overlay_positions()
+	_update_shield_state(delta)
+	_update_shield_hits_label()
 	_update_ui()
 	_refresh_visibility_state()
 
@@ -87,6 +95,9 @@ func _refresh_visibility_state() -> void:
 			sprite.modulate = Color(0.8, 1.0, 1.0, 1.0)
 		else:
 			sprite.modulate = Color(1, 1, 1, 1)
+
+	if shield_sprite:
+		shield_sprite.visible = active and shield_hits_remaining > 0
 
 
 func _update_ui() -> void:
@@ -166,6 +177,7 @@ func is_targeting_jammed() -> bool:
 	var now: float = Time.get_ticks_msec() / 1000.0
 	return now < jam_end_time
 
+
 func clear_targeting_jam() -> void:
 	jam_end_time = 0.0
 	jam_misfire_radius = 0.0
@@ -174,8 +186,81 @@ func clear_targeting_jam() -> void:
 
 func _on_area_entered(area: Area2D) -> void:
 	if area.is_in_group("enemy") and not area.is_in_group("emp_missile"):
+		if handle_enemy_impact(area):
+			return
 		GameManager.destroy_cannon(cannon_id)
 		_refresh_visibility_state()
+
+
+func _setup_temp_shield_sprite() -> void:
+	shield_sprite.texture = preload("res://assets/ShieldUfo.png")
+	shield_sprite.modulate = Color(0.4, 0.95, 1.0, 0.35)
+	shield_sprite.scale = Vector2(0.13, 0.1)
+	shield_sprite.visible = false
+	add_child(shield_sprite)
+
+
+func _setup_shield_hits_label() -> void:
+	shield_hits_label.top_level = true
+	shield_hits_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	shield_hits_label.add_theme_color_override("font_color", Color(0.9, 1.0, 1.0, 1.0))
+	shield_hits_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
+	shield_hits_label.add_theme_constant_override("outline_size", 2)
+	shield_hits_label.visible = false
+	shield_hits_label.z_index = 25
+	add_child(shield_hits_label)
+
+
+func _update_shield_hits_label() -> void:
+	if shield_hits_label == null:
+		return
+
+	shield_hits_label.global_position = global_position + Vector2(-5, 0)
+
+	var max_hits := GameManager.get_shield_generator_hit_capacity()
+	var show := max_hits > 0 and _can_operate()
+	shield_hits_label.visible = show
+	if not show:
+		return
+
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	if GameManager.is_passive_shield_emp_disabled(now_seconds):
+		shield_hits_label.text = "EMP"
+	else:
+		shield_hits_label.text = "%d" % max(0, shield_hits_remaining)
+
+
+func _update_shield_state(delta: float) -> void:
+	var max_hits := GameManager.get_shield_generator_hit_capacity()
+	if max_hits <= 0 or not _can_operate():
+		shield_hits_remaining = 0
+		shield_cooldown_remaining = 0.0
+		return
+
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	if GameManager.is_passive_shield_emp_disabled(now_seconds):
+		return
+
+	if shield_hits_remaining <= 0:
+		if shield_cooldown_remaining <= 0.0:
+			shield_hits_remaining = max_hits
+		else:
+			shield_cooldown_remaining = maxf(0.0, shield_cooldown_remaining - delta)
+
+
+func handle_enemy_impact(enemy: Area2D) -> bool:
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	if GameManager.is_passive_shield_emp_disabled(now_seconds):
+		return false
+	_update_shield_state(0.0)
+	if shield_hits_remaining > 0:
+		shield_hits_remaining -= 1
+		if shield_hits_remaining <= 0:
+			shield_cooldown_remaining = GameManager.get_shield_generator_cooldown_seconds()
+		if enemy:
+			enemy.call_deferred("die", true)
+		return true
+	return false
 
 
 func disable_temporarily(duration: float) -> void:
@@ -227,3 +312,5 @@ func repair() -> void:
 func destroy_permanently() -> void:
 	permanently_destroyed = true
 	die()
+	if is_instance_valid(sprite):
+		sprite.queue_free()
