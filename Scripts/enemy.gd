@@ -5,6 +5,7 @@ extends Area2D
 @export var trail_color: Color = Color.WHITE
 @export var trail_width: float = 2.0
 @export var trail_min_distance: float = 4.0
+@export var offscreen_despawn_margin: float = 64.0
 
 signal enemy_died
 
@@ -33,6 +34,7 @@ func _process(delta: float) -> void:
 	position += velocity * speed * zone_multiplier * global_multiplier * delta
 	rotation = velocity.angle()
 	_update_trail()
+	_despawn_if_out_of_bounds()
 
 	if position.y >= get_viewport_rect().size.y:
 		die(true)
@@ -59,7 +61,7 @@ func _on_area_entered(area: Area2D) -> void:
 		die(true)
 
 
-func die(no_reward := false) -> void:
+func die(no_reward := false, spawn_explosion := true) -> void:
 	if is_dying:
 		return
 	is_dying = true
@@ -69,7 +71,7 @@ func die(no_reward := false) -> void:
 
 	emit_signal("enemy_died")
 
-	if explosion_scene:
+	if spawn_explosion and explosion_scene:
 		var explosion = explosion_scene.instantiate()
 		explosion.global_position = global_position
 		explosion.gives_reward = not no_reward
@@ -109,3 +111,15 @@ func _cleanup_trail() -> void:
 	if is_instance_valid(trail_line):
 		trail_line.queue_free()
 	trail_line = null
+
+
+func _despawn_if_out_of_bounds() -> void:
+	var viewport_size := get_viewport_rect().size
+	if global_position.x < -offscreen_despawn_margin:
+		die(true, false)
+		return
+	if global_position.x > viewport_size.x + offscreen_despawn_margin:
+		die(true, false)
+		return
+	if global_position.y < -offscreen_despawn_margin:
+		die(true, false)
