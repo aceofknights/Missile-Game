@@ -23,7 +23,7 @@ func _ready() -> void:
 	current_hp = max(1, max_hp)
 	monitoring = true
 	monitorable = true
-	area_entered.connect(_on_area_entered)
+	add_to_group("weak_point")
 	_update_label()
 	_update_flash_color()
 
@@ -33,18 +33,7 @@ func _process(delta: float) -> void:
 	_update_flash_color()
 
 
-func _on_area_entered(area: Area2D) -> void:
-	if destroyed:
-		return
-
-	if area.name == "Projectile":
-		area.queue_free()
-		_apply_damage()
-	elif area.name == "Explosion":
-		_apply_damage()
-
-
-func _apply_damage() -> void:
+func apply_explosion_damage() -> void:
 	if destroyed:
 		return
 

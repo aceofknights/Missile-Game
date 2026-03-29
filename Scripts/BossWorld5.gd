@@ -35,22 +35,22 @@ signal laser_fired(target_name: String)
 
 # Shield windows (per phase)
 @export var shield_up_by_phase: Array[float] = [3.2, 2.6, 2.2, 1.5]
-@export var shield_down_by_phase: Array[float] = [2.1, 1.7, 1.3, 0.9]
+@export var shield_down_by_phase: Array[float] = [5, 3, 1.3, 0.9]
 
 # Generic missiles
-@export var normal_missile_interval_by_phase: Array[float] = [1.1, 0.9, 0.75, 0.58]
+@export var normal_missile_interval_by_phase: Array[float] = [5, 3, 1, 0.50]
 
 # Scatter missiles
-@export var scatter_interval_by_phase: Array[float] = [4.2, 3.0, 2.4, 1.9]
+@export var scatter_interval_by_phase: Array[float] = [999, 10, 5, 2.8]
 @export var scatter_split_delay: float = 0.95
 @export var scatter_spread_offset_3: float = 140.0
 @export var scatter_spread_offset_5: float = 210.0
 
 # EMP volleys
-@export var emp_interval_by_phase: Array[float] = [7.5, 5.8, 4.5, 3.6]
+@export var emp_interval_by_phase: Array[float] = [999, 12, 8, 4]
 
 # Ion missiles / zones
-@export var ion_interval_by_phase: Array[float] = [8.2, 5.4, 4.2, 3.2]
+@export var ion_interval_by_phase: Array[float] = [999, 999, 13, 7]
 @export var ion_zone_duration_by_phase: Array[float] = [4.5, 5.5, 6.0, 6.5]
 @export var ion_zone_radius_by_phase: Array[float] = [105.0, 120.0, 135.0, 150.0]
 @export var ion_player_slow_by_phase: Array[float] = [0.65, 0.55, 0.48, 0.42]
@@ -58,16 +58,16 @@ signal laser_fired(target_name: String)
 @export var ion_max_active_zones_by_phase: Array[int] = [1, 1, 2, 3]
 
 # Carrier behavior reuse
-@export var fighter_spawn_interval_by_phase: Array[float] = [4.2, 3.0, 2.25, 1.8]
-@export var bomber_spawn_interval_by_phase: Array[float] = [5.2, 3.8, 2.8, 2.2]
+@export var fighter_spawn_interval_by_phase: Array[float] = [7, 5, 4, 2]
+@export var bomber_spawn_interval_by_phase: Array[float] = [999, 8, 4.2, 2]
 @export var max_fighters_by_phase: Array[int] = [2, 3, 4, 5]
 @export var max_bombers_by_phase: Array[int] = [1, 2, 3, 4]
 
 # Signature laser
 @export var laser_unlock_phase: int = 3
-@export var laser_base_interval_by_phase: Array[float] = [999.0, 999.0, 15.0, 8.0]
-@export var laser_charge_duration_by_phase: Array[float] = [3.2, 2.8, 10, 7]
-@export var laser_weak_point_hp_by_phase: Array[int] = [2, 3, 3, 5]
+@export var laser_base_interval_by_phase: Array[float] = [999.0, 999.0, 15, 8]
+@export var laser_charge_duration_by_phase: Array[float] = [3.2, 2.8, 12, 10]
+@export var laser_weak_point_hp_by_phase: Array[int] = [2, 3, 2, 4]
 @export var laser_target_cannons_weight: float = 0.2
 
 @onready var boss_health_label: Label = $boss_health
@@ -97,6 +97,7 @@ var laser_target: Node2D = null
 var laser_weak_point: Area2D = null
 var was_in_laser_phase: bool = false
 
+
 func _ready() -> void:
 	health = max_health
 	add_to_group("enemy")
@@ -104,8 +105,6 @@ func _ready() -> void:
 	monitorable = true
 	area_entered.connect(_on_area_entered)
 
-	_apply_phase_tuning(true)
-	_update_label()
 	shield_timer.timeout.connect(_on_shield_timer_timeout)
 	missile_timer.timeout.connect(_on_missile_timer_timeout)
 	scatter_timer.timeout.connect(_on_scatter_timer_timeout)
@@ -143,7 +142,6 @@ func die(no_reward: bool = false) -> void:
 	if is_dead:
 		return
 
-	# Phase 3+ : boss cannot be damaged directly anymore.
 	if _is_laser_phase_active():
 		if laser_charge_active:
 			print("🛡️ Mothership laser is charging - destroy the weak point")
@@ -151,7 +149,6 @@ func die(no_reward: bool = false) -> void:
 			print("🛡️ Mothership can only be damaged by destroying the laser weak point")
 		return
 
-	# Phase 1-2 : standard UFO-style shield window logic
 	if shield_active:
 		print("🛡️ Mothership shield blocked the hit")
 		return
@@ -176,7 +173,7 @@ func die(no_reward: bool = false) -> void:
 	var is_laser_phase_now: bool = _is_laser_phase_active()
 	if not was_laser_phase_before_hit and is_laser_phase_now:
 		print("🔺 Entered laser phase - starting laser cooldown")
-		_restart_laser_cooldown()
+		_restart_laser_cooldown(false)
 
 	was_in_laser_phase = is_laser_phase_now
 	_update_label()
@@ -234,9 +231,6 @@ func _apply_phase_tuning(force_restart_timers: bool) -> void:
 	var p: int = _phase_index()
 	var laser_phase: bool = _is_laser_phase_active()
 
-	# Shield behavior split:
-	# Phase 1-2 = normal UFO-style shield cycle
-	# Phase 3+ = shield stays up unless laser is actively charging
 	if debug_enable_shield_cycle:
 		if laser_phase:
 			shield_timer.stop()
@@ -263,48 +257,45 @@ func _apply_phase_tuning(force_restart_timers: bool) -> void:
 	fighter_timer.wait_time = _phase_value_float(fighter_spawn_interval_by_phase, p)
 	bomber_timer.wait_time = _phase_value_float(bomber_spawn_interval_by_phase, p)
 
+	# Only do randomized/desynced startup on initial force restart.
+	# Later phase changes use the exact interval so attacks do not fire too early.
 	if force_restart_timers:
-		if debug_enable_normal_missiles:
-			missile_timer.start(randf_range(0.2, missile_timer.wait_time))
-		else:
-			missile_timer.stop()
-
-		if debug_enable_scatter_missiles:
-			scatter_timer.start(randf_range(0.8, scatter_timer.wait_time))
-		else:
-			scatter_timer.stop()
-
-		if debug_enable_emp:
-			emp_timer.start(randf_range(1.2, emp_timer.wait_time))
-		else:
-			emp_timer.stop()
-
-		if debug_enable_ion:
-			ion_timer.start(randf_range(1.4, ion_timer.wait_time))
-		else:
-			ion_timer.stop()
-
-		if debug_enable_fighters:
-			fighter_timer.start(randf_range(0.6, fighter_timer.wait_time))
-		else:
-			fighter_timer.stop()
-
-		if debug_enable_bombers:
-			bomber_timer.start(randf_range(0.9, bomber_timer.wait_time))
-		else:
-			bomber_timer.stop()
+		_restart_attack_timer(missile_timer, debug_enable_normal_missiles, true)
+		_restart_attack_timer(scatter_timer, debug_enable_scatter_missiles, true)
+		_restart_attack_timer(emp_timer, debug_enable_emp, true)
+		_restart_attack_timer(ion_timer, debug_enable_ion, true)
+		_restart_attack_timer(fighter_timer, debug_enable_fighters, true)
+		_restart_attack_timer(bomber_timer, debug_enable_bombers, true)
+	else:
+		_restart_attack_timer(missile_timer, debug_enable_normal_missiles, false)
+		_restart_attack_timer(scatter_timer, debug_enable_scatter_missiles, false)
+		_restart_attack_timer(emp_timer, debug_enable_emp, false)
+		_restart_attack_timer(ion_timer, debug_enable_ion, false)
+		_restart_attack_timer(fighter_timer, debug_enable_fighters, false)
+		_restart_attack_timer(bomber_timer, debug_enable_bombers, false)
 
 	if debug_enable_laser and laser_phase:
 		laser_timer.wait_time = _phase_value_float(laser_base_interval_by_phase, p)
-		if force_restart_timers:
-			_restart_laser_cooldown()
-		elif not laser_charge_active and laser_timer.is_stopped():
-			_restart_laser_cooldown()
+		if not laser_charge_active:
+			_restart_laser_cooldown(force_restart_timers)
 	else:
 		laser_timer.stop()
 
 
-func _restart_laser_cooldown() -> void:
+func _restart_attack_timer(timer: Timer, enabled: bool, randomize_initial_delay: bool = false) -> void:
+	timer.stop()
+
+	if not enabled:
+		return
+
+	var delay: float = max(0.01, timer.wait_time)
+	if randomize_initial_delay:
+		delay = randf_range(0.25, delay)
+
+	timer.start(delay)
+
+
+func _restart_laser_cooldown(randomize_initial_delay: bool = false) -> void:
 	if is_dead:
 		return
 	if not debug_enable_laser:
@@ -319,7 +310,12 @@ func _restart_laser_cooldown() -> void:
 	var p: int = _phase_index()
 	laser_timer.stop()
 	laser_timer.wait_time = _phase_value_float(laser_base_interval_by_phase, p)
-	laser_timer.start()
+
+	var delay: float = max(0.01, laser_timer.wait_time)
+	if randomize_initial_delay:
+		delay = randf_range(0.5, delay)
+
+	laser_timer.start(delay)
 
 
 func _update_linear_movement(delta: float) -> void:
@@ -337,7 +333,6 @@ func _on_shield_timer_timeout() -> void:
 	if is_dead or laser_charge_active or not debug_enable_shield_cycle:
 		return
 
-	# Phase 3+ no longer uses the normal shield cycle.
 	if _is_laser_phase_active():
 		return
 
@@ -359,6 +354,7 @@ func _on_missile_timer_timeout() -> void:
 	if is_dead or not debug_enable_normal_missiles:
 		return
 	_spawn_targeted_missile(missile_scene, global_position + Vector2(0, 30))
+	_restart_attack_timer(missile_timer, debug_enable_normal_missiles, false)
 
 
 func _on_scatter_timer_timeout() -> void:
@@ -380,12 +376,15 @@ func _on_scatter_timer_timeout() -> void:
 	scatter.velocity = (target - scatter.global_position).normalized()
 	_add_to_scene(scatter)
 
+	_restart_attack_timer(scatter_timer, debug_enable_scatter_missiles, false)
+
 
 func _on_emp_timer_timeout() -> void:
 	if is_dead or not debug_enable_emp:
 		return
 	var active_cannons: Array = EmpAttackUtils.get_active_cannons(get_tree())
 	if active_cannons.is_empty():
+		_restart_attack_timer(emp_timer, debug_enable_emp, false)
 		return
 	EmpAttackUtils.spawn_emp_volley(
 		self,
@@ -394,6 +393,7 @@ func _on_emp_timer_timeout() -> void:
 		active_cannons,
 		Callable(GameManager, "_on_enemy_died")
 	)
+	_restart_attack_timer(emp_timer, debug_enable_emp, false)
 
 
 func _on_ion_timer_timeout() -> void:
@@ -402,6 +402,7 @@ func _on_ion_timer_timeout() -> void:
 
 	var p: int = _phase_index()
 	if IonHazardController.get_active_zone_count() >= _phase_value_int(ion_max_active_zones_by_phase, p):
+		_restart_attack_timer(ion_timer, debug_enable_ion, false)
 		return
 
 	var missile: Area2D = ion_missile_scene.instantiate()
@@ -419,17 +420,21 @@ func _on_ion_timer_timeout() -> void:
 	missile.velocity = (target - missile.global_position).normalized()
 	_add_to_scene(missile)
 
+	_restart_attack_timer(ion_timer, debug_enable_ion, false)
+
 
 func _on_fighter_timer_timeout() -> void:
 	if not debug_enable_fighters:
 		return
 	_spawn_plane_if_possible("fighter")
+	_restart_attack_timer(fighter_timer, debug_enable_fighters, false)
 
 
 func _on_bomber_timer_timeout() -> void:
 	if not debug_enable_bombers:
 		return
 	_spawn_plane_if_possible("bomber")
+	_restart_attack_timer(bomber_timer, debug_enable_bombers, false)
 
 
 func _spawn_plane_if_possible(role: String) -> void:
@@ -470,6 +475,7 @@ func _on_laser_timer_timeout() -> void:
 
 	laser_target = _choose_laser_target()
 	if laser_target == null:
+		_restart_laser_cooldown(false)
 		return
 
 	laser_charge_active = true
@@ -513,7 +519,7 @@ func _on_laser_weak_point_destroyed() -> void:
 
 	_cleanup_laser_state()
 	_apply_phase_tuning(false)
-	_restart_laser_cooldown()
+	_restart_laser_cooldown(false)
 	_update_label()
 
 
@@ -530,7 +536,7 @@ func _on_laser_charge_timer_timeout() -> void:
 		_fire_laser_indicator(target_to_hit, target_name)
 
 	_cleanup_laser_state()
-	_restart_laser_cooldown()
+	_restart_laser_cooldown(false)
 
 
 func _fire_laser_indicator(target_to_hit: Node2D, target_name: String) -> void:

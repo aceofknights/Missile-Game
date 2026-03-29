@@ -11,7 +11,7 @@
 [ext_resource type="PackedScene" uid="uid://c8yifnhlddca2" path="res://Scene/laser_weak_point.tscn" id="9"]
 [ext_resource type="Texture2D" uid="uid://b26bwb2cdmmix" path="res://assets/Mothership.png" id="10_a2cpn"]
 [ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="11_wugop"]
-[ext_resource type="PackedScene" path="res://Scene/laser_strike_indicator.tscn" id="12_jvf3d"]
+[ext_resource type="PackedScene" uid="uid://shhfar6yui3i" path="res://Scene/laser_strike_indicator.tscn" id="12_jvf3d"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_am8nv"]
 radius = 47.0
@@ -28,9 +28,11 @@ plane_scene = ExtResource("7")
 fighter_projectile_scene = ExtResource("8")
 laser_weak_point_scene = ExtResource("9")
 laser_indicator_projectile_scene = ExtResource("12_jvf3d")
-debug_enable_fighters = false
-debug_enable_bombers = false
-max_health = 1
+debug_enable_normal_missiles = true
+debug_enable_scatter_missiles = true
+debug_enable_emp = true
+debug_enable_ion = true
+max_health = 9
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.980392, 1, 0, 1)
@@ -56,18 +58,25 @@ offset_bottom = -40.0
 one_shot = true
 
 [node name="MissileTimer" type="Timer" parent="."]
+one_shot = true
 
 [node name="ScatterTimer" type="Timer" parent="."]
+one_shot = true
 
 [node name="EmpTimer" type="Timer" parent="."]
+one_shot = true
 
 [node name="IonTimer" type="Timer" parent="."]
+one_shot = true
 
 [node name="FighterSpawnTimer" type="Timer" parent="."]
+one_shot = true
 
 [node name="BomberSpawnTimer" type="Timer" parent="."]
+one_shot = true
 
 [node name="LaserTimer" type="Timer" parent="."]
+one_shot = true
 
 [node name="LaserChargeTimer" type="Timer" parent="."]
 one_shot = true
