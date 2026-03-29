@@ -30,9 +30,11 @@ var _life_time: float = 0.0
 var _hit: Dictionary = {}
 var _base_sprite_radius: float = 1.0
 
+
 func _ready() -> void:
 	monitoring = true
 	monitorable = true
+	add_to_group("player_explosion")
 
 	if col.shape:
 		col.shape = col.shape.duplicate(true)
@@ -51,7 +53,6 @@ func _ready() -> void:
 
 	if grow_time <= 0.0:
 		_t = 1.0
-		_apply_t()
 	else:
 		tween.tween_property(self, "_t", 1.0, grow_time) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
@@ -61,16 +62,20 @@ func _ready() -> void:
 
 	if shrink_time <= 0.0:
 		_t = 0.0
-		_apply_t()
 	else:
 		tween.tween_property(self, "_t", 0.0, shrink_time) \
 			.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 
 	tween.tween_callback(queue_free)
 
+
 func _process(delta: float) -> void:
 	_life_time += delta
+
+
+func _physics_process(_delta: float) -> void:
 	_apply_t()
+
 
 func _cache_base_sprite_radius() -> void:
 	if vis == null or vis.texture == null:
@@ -83,6 +88,7 @@ func _cache_base_sprite_radius() -> void:
 	if _base_sprite_radius <= 0.0:
 		_base_sprite_radius = 1.0
 
+
 func _play_sound(sound: AudioStream) -> void:
 	if sound == null:
 		return
@@ -93,6 +99,7 @@ func _play_sound(sound: AudioStream) -> void:
 	player.bus = "SFX"
 	player.play()
 	player.finished.connect(player.queue_free)
+
 
 func _apply_t() -> void:
 	_t = clamp(_t, 0.0, 1.0)
@@ -114,6 +121,7 @@ func _apply_t() -> void:
 		radius_from_sprite += GameManager.get_explosion_radius_bonus() * _t
 		circle_shape.radius = radius_from_sprite
 
+
 func _get_blended_flash_color() -> Color:
 	if flash_colors.size() == 1:
 		return flash_colors[0]
@@ -126,14 +134,18 @@ func _get_blended_flash_color() -> Color:
 
 	return flash_colors[base_index].lerp(flash_colors[next_index], blend_t)
 
-func _on_area_entered(area: Area2D) -> void:
-	if not area.is_in_group("enemy"):
-		return
 
+func _on_area_entered(area: Area2D) -> void:
 	var id: int = area.get_instance_id()
 	if _hit.has(id):
 		return
 	_hit[id] = true
 
-	if area.has_method("die"):
-		area.die(not gives_reward)
+	if area.is_in_group("enemy"):
+		if area.has_method("die"):
+			area.die(not gives_reward)
+		return
+
+	if area.is_in_group("weak_point"):
+		if area.has_method("apply_explosion_damage"):
+			area.apply_explosion_damage()

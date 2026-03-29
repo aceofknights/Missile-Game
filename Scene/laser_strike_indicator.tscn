@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://shhfar6yui3i"]
+
+[ext_resource type="Script" path="res://Scripts/LaserStrikeIndicator.gd" id="1_p53de"]
+[ext_resource type="Texture2D" uid="uid://bin3nvp7wu8im" path="res://assets/Ellipse 1.png" id="2_qsn26"]
+
+[node name="LaserStrikeIndicator" type="Node2D"]
+script = ExtResource("1_p53de")
+flash_colors = Array[Color]([Color(1, 0.1, 0.1, 1), Color(1, 1, 1, 1), Color(1, 0.9, 0.2, 1)])
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(1, 0.235294, 0.235294, 1)
+rotation = 1.5708
+scale = Vector2(0.191231, 0.191231)
+texture = ExtResource("2_qsn26")
