@@ -31,15 +31,17 @@ func _on_area_entered(area):
 	if destroyed:
 		return
 	if area.is_in_group("enemy"):
+		if handle_enemy_impact(area):
+			return
 		print("Building destroyed by Enemy")
 		area.call_deferred("die", false)
 		die()
 
 
 func _setup_temp_shield_sprite() -> void:
-	shield_sprite.texture = preload("res://circle.png")
+	shield_sprite.texture = preload("res://assets/ShieldUfo.png")
 	shield_sprite.modulate = Color(0.4, 0.95, 1.0, 0.35)
-	shield_sprite.scale = Vector2(0.2, 0.12)
+	shield_sprite.scale = Vector2(0.13, 0.1)
 	shield_sprite.visible = false
 	add_child(shield_sprite)
 
