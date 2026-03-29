@@ -21,6 +21,9 @@ extends Node2D
 
 
 const EXPLOSION_SCENE := preload("res://Scene/explosion.tscn")
+const AUTO_CANNON_SHOT_SCENE := preload("res://Scene/fighter_intercept_shot.tscn")
+const TEMP_SHIELD_TEXTURE := preload("res://assets/ShieldUfo.png")
+const ION_WAVE_TEXTURE := preload("res://assets/Ion Zone.png")
 const BOSS_DEATH_EXPLOSION_COUNT := 16
 const PLAYER_DEATH_EXPLOSION_COUNT := 14
 const BOSS_DEATH_EXPLOSION_INTERVAL := 0.07
@@ -43,6 +46,21 @@ var _end_flow_in_progress := false
 
 const REPAIR_HINT_LINGER_SECONDS := 1.0
 var _repair_hint_linger_remaining := 0.0
+var _auto_cannon_timer := 0.0
+var _active_shield_sprite: Sprite2D
+var _w_was_down := false
+var _e_was_down := false
+var _active_shield_hitbox: Area2D
+var _active_shield_collision: CollisionShape2D
+var _auto_cannon_label: Label
+var _auto_cannon_bar: ProgressBar
+var _ion_label: Label
+var _ion_bar: ProgressBar
+var _lure_label: Label
+var _lure_bar: ProgressBar
+var _shield_energy_label: Label
+var _shield_energy_bar: ProgressBar
+var _shield_emp_warn_cooldown := 0.0
 
 
 func get_building_count() -> int:
@@ -96,6 +114,8 @@ func _ready() -> void:
 		GameManager.player_defeat_requested.connect(_on_player_defeat_requested)
 	GameManager.start_wave()
 	_apply_building_unlocks()
+	_create_active_shield_sprite()
+	_create_ability_status_ui()
 
 	# Connect to any boss already present in the scene.
 	for node in get_tree().get_nodes_in_group("enemy"):
@@ -237,6 +257,12 @@ func _process(delta: float) -> void:
 		return
 
 	GameManager.update_ammo_factory(delta)
+	GameManager.update_active_shield(delta)
+	_handle_upgrade_hotkeys()
+	_update_auto_cannon(delta)
+	_update_active_shield_visual()
+	_update_ability_status_ui()
+	_shield_emp_warn_cooldown = maxf(0.0, _shield_emp_warn_cooldown - delta)
 	AmmoLabel.text = "Ammo: %s" % GameManager.get_total_ammo_status()
 	wave_label.text = "🌊 Wave %d / 🌍 World %d" % [GameManager.current_wave, GameManager.current_world]
 	ResourceLabel.text = "Resources: %d" % GameManager.player_resources
@@ -246,6 +272,277 @@ func _process(delta: float) -> void:
 	if _count_surviving_buildings() == 0 and not _end_flow_in_progress:
 		print("🏚️ All buildings destroyed — returning to upgrade screen")
 		GameManager.player_died()
+
+
+func _create_active_shield_sprite() -> void:
+	_active_shield_hitbox = Area2D.new()
+	_active_shield_hitbox.collision_layer = 4
+	_active_shield_hitbox.collision_mask = 1
+	_active_shield_hitbox.monitoring = true
+	_active_shield_hitbox.monitorable = true
+	_active_shield_hitbox.position = Vector2(576, 560)
+	_active_shield_hitbox.add_to_group("active_base_shield")
+	add_child(_active_shield_hitbox)
+
+	_active_shield_sprite = Sprite2D.new()
+	_active_shield_sprite.texture = TEMP_SHIELD_TEXTURE
+	_active_shield_sprite.modulate = Color(0.3, 0.9, 1.0, 0.35)
+	_active_shield_sprite.visible = false
+	_active_shield_sprite.z_index = 500
+	_active_shield_sprite.scale = Vector2(2.8, 0.8)
+	_active_shield_hitbox.add_child(_active_shield_sprite)
+
+	_active_shield_collision = CollisionShape2D.new()
+	var shield_shape := EllipseShape2D.new()
+	shield_shape.radius = Vector2(220, 88)
+	_active_shield_collision.shape = shield_shape
+	_active_shield_collision.disabled = true
+	_active_shield_hitbox.add_child(_active_shield_collision)
+
+
+func _handle_upgrade_hotkeys() -> void:
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	var hold_space := Input.is_key_pressed(KEY_SPACE)
+	if hold_space and GameManager.is_active_shield_emp_disabled(now_seconds) and _shield_emp_warn_cooldown <= 0.0:
+		announce("⚠ Shield disabled by EMP!", 0.6)
+		_shield_emp_warn_cooldown = 0.8
+	GameManager.set_active_shield_held(hold_space)
+	var w_down := Input.is_key_pressed(KEY_W)
+	if w_down and not _w_was_down:
+		_w_was_down = true
+		if GameManager.can_trigger_ion_wave(now_seconds):
+			GameManager.trigger_ion_wave(now_seconds)
+			_spawn_ion_wave_animation()
+			announce("⚡ Ion Wave Activated!", 1.2)
+	if not w_down:
+		_w_was_down = false
+
+	var e_down := Input.is_key_pressed(KEY_E)
+	if e_down and not _e_was_down:
+		_e_was_down = true
+		if GameManager.can_trigger_lure(now_seconds):
+			GameManager.trigger_lure(get_global_mouse_position(), now_seconds)
+			announce("🎯 Lure Deployed!", 1.0)
+	if not e_down:
+		_e_was_down = false
+
+
+func _update_auto_cannon(delta: float) -> void:
+	var level := GameManager.get_upgrade_level("auto_cannon")
+	if level <= 0:
+		return
+
+	_auto_cannon_timer -= delta
+	if _auto_cannon_timer > 0.0:
+		return
+
+	var fire_interval := maxf(2.0, 20.0 - (2.0 * float(level)))
+
+	var best_enemy: Area2D = null
+	var best_dist_sq := INF
+	for node in get_tree().get_nodes_in_group("enemy"):
+		if not (node is Area2D):
+			continue
+		if _is_boss_enemy(node):
+			continue
+		var as_area := node as Area2D
+		var dist_sq := as_area.global_position.distance_squared_to(middle_cannon.global_position)
+		if dist_sq < best_dist_sq:
+			best_dist_sq = dist_sq
+			best_enemy = as_area
+
+	if best_enemy == null:
+		return
+
+	var shot := AUTO_CANNON_SHOT_SCENE.instantiate()
+	if shot == null:
+		return
+	_auto_cannon_timer = fire_interval
+	shot.global_position = middle_cannon.global_position
+	shot.target_node = best_enemy
+	shot.target_position = best_enemy.global_position
+	add_child(shot)
+
+
+func _is_boss_enemy(node: Node) -> bool:
+	if node == null:
+		return false
+	if node.is_in_group("boss"):
+		return true
+	if node.has_signal("boss_defeated"):
+		return true
+	return String(node.name).to_lower().begins_with("boss")
+
+
+func _update_active_shield_visual() -> void:
+	if _active_shield_sprite == null:
+		return
+	var active := GameManager.is_active_shield_up()
+	_active_shield_sprite.visible = active
+	if _active_shield_collision:
+		_active_shield_collision.disabled = not active
+
+
+func _create_ability_status_ui() -> void:
+	var ui := get_node_or_null("UI") as CanvasLayer
+	if ui == null:
+		return
+
+	_auto_cannon_label = Label.new()
+	_auto_cannon_label.text = "Auto Cannon"
+	_auto_cannon_label.offset_left = 20
+	_auto_cannon_label.offset_top = 60
+	_auto_cannon_label.offset_right = 220
+	_auto_cannon_label.offset_bottom = 80
+	ui.add_child(_auto_cannon_label)
+
+	_auto_cannon_bar = ProgressBar.new()
+	_auto_cannon_bar.min_value = 0.0
+	_auto_cannon_bar.max_value = 1.0
+	_auto_cannon_bar.show_percentage = false
+	_auto_cannon_bar.offset_left = 20
+	_auto_cannon_bar.offset_top = 82
+	_auto_cannon_bar.offset_right = 220
+	_auto_cannon_bar.offset_bottom = 100
+	ui.add_child(_auto_cannon_bar)
+
+	_ion_label = Label.new()
+	_ion_label.text = "Ion Wave Cooldown"
+	_ion_label.offset_left = 20
+	_ion_label.offset_top = 106
+	_ion_label.offset_right = 220
+	_ion_label.offset_bottom = 126
+	ui.add_child(_ion_label)
+
+	_ion_bar = ProgressBar.new()
+	_ion_bar.min_value = 0.0
+	_ion_bar.max_value = 1.0
+	_ion_bar.show_percentage = false
+	_ion_bar.offset_left = 20
+	_ion_bar.offset_top = 128
+	_ion_bar.offset_right = 220
+	_ion_bar.offset_bottom = 146
+	ui.add_child(_ion_bar)
+
+	_lure_label = Label.new()
+	_lure_label.text = "Lure Cooldown"
+	_lure_label.offset_left = 20
+	_lure_label.offset_top = 152
+	_lure_label.offset_right = 220
+	_lure_label.offset_bottom = 172
+	ui.add_child(_lure_label)
+
+	_lure_bar = ProgressBar.new()
+	_lure_bar.min_value = 0.0
+	_lure_bar.max_value = 1.0
+	_lure_bar.show_percentage = false
+	_lure_bar.offset_left = 20
+	_lure_bar.offset_top = 174
+	_lure_bar.offset_right = 220
+	_lure_bar.offset_bottom = 192
+	ui.add_child(_lure_bar)
+
+	_shield_energy_label = Label.new()
+	_shield_energy_label.text = "Active Shield Energy"
+	_shield_energy_label.offset_left = 20
+	_shield_energy_label.offset_top = 198
+	_shield_energy_label.offset_right = 260
+	_shield_energy_label.offset_bottom = 218
+	ui.add_child(_shield_energy_label)
+
+	_shield_energy_bar = ProgressBar.new()
+	_shield_energy_bar.min_value = 0.0
+	_shield_energy_bar.max_value = 1.0
+	_shield_energy_bar.show_percentage = false
+	_shield_energy_bar.offset_left = 20
+	_shield_energy_bar.offset_top = 220
+	_shield_energy_bar.offset_right = 260
+	_shield_energy_bar.offset_bottom = 238
+	ui.add_child(_shield_energy_bar)
+
+
+func _update_ability_status_ui() -> void:
+	var auto_level := GameManager.get_upgrade_level("auto_cannon")
+	var auto_interval := maxf(2.0, 20.0 - (2.0 * float(auto_level)))
+	var auto_ready_ratio := 1.0
+	if auto_level > 0:
+		auto_ready_ratio = clampf(1.0 - (_auto_cannon_timer / auto_interval), 0.0, 1.0)
+
+	if _auto_cannon_label:
+		_auto_cannon_label.visible = auto_level > 0
+		_auto_cannon_label.text = "Auto Cannon: %s" % ("READY" if _auto_cannon_timer <= 0.0 and auto_level > 0 else "Charging")
+	if _auto_cannon_bar:
+		_auto_cannon_bar.visible = auto_level > 0
+		_auto_cannon_bar.value = auto_ready_ratio
+
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	var ion_level := GameManager.get_upgrade_level("ion_wave")
+	var ion_cd := GameManager.get_ion_wave_cooldown_remaining(now_seconds)
+	var ion_max_cd := GameManager.get_ion_wave_recharge_time()
+	var ion_ready_ratio := 1.0
+	if ion_level > 0:
+		ion_ready_ratio = clampf(1.0 - (ion_cd / maxf(0.01, ion_max_cd)), 0.0, 1.0)
+		if GameManager.is_ion_wave_active(now_seconds):
+			ion_ready_ratio = 1.0
+
+	if _ion_label:
+		_ion_label.visible = ion_level > 0
+		if ion_level > 0 and GameManager.is_ion_wave_active(now_seconds):
+			_ion_label.text = "Ion Wave: ACTIVE %.1fs" % maxf(0.0, GameManager.ion_wave_end_time - now_seconds)
+		else:
+			_ion_label.text = "Ion Wave: %s" % ("READY" if ion_cd <= 0.0 and ion_level > 0 else "%.1fs" % ion_cd)
+	if _ion_bar:
+		_ion_bar.visible = ion_level > 0
+		_ion_bar.value = ion_ready_ratio
+
+	var lure_level := GameManager.get_upgrade_level("lure")
+	var lure_cd := GameManager.get_lure_cooldown_remaining(now_seconds)
+	var lure_max_cd := GameManager.get_lure_recharge_time()
+	var lure_ready_ratio := 1.0
+	if lure_level > 0:
+		lure_ready_ratio = clampf(1.0 - (lure_cd / maxf(0.01, lure_max_cd)), 0.0, 1.0)
+
+	if _lure_label:
+		_lure_label.visible = lure_level > 0
+		if lure_level > 0 and GameManager.is_lure_active(now_seconds):
+			_lure_label.text = "Lure: ACTIVE %.1fs" % maxf(0.0, GameManager.lure_end_time - now_seconds)
+		else:
+			_lure_label.text = "Lure: %s" % ("READY" if lure_cd <= 0.0 and lure_level > 0 else "%.1fs" % lure_cd)
+	if _lure_bar:
+		_lure_bar.visible = lure_level > 0
+		_lure_bar.value = lure_ready_ratio
+
+	var active_shield_level := GameManager.get_upgrade_level("active_shields")
+	var shield_ratio := 0.0
+	if GameManager.active_shield_max_charge > 0.0:
+		shield_ratio = clampf(GameManager.active_shield_charge / GameManager.active_shield_max_charge, 0.0, 1.0)
+
+	if _shield_energy_label:
+		_shield_energy_label.visible = active_shield_level > 0
+		if GameManager.is_active_shield_emp_disabled(now_seconds):
+			_shield_energy_label.text = "Active Shield: EMP %.1fs" % GameManager.get_active_shield_emp_disabled_remaining(now_seconds)
+		else:
+			_shield_energy_label.text = "Active Shield Energy: %d%%" % int(round(shield_ratio * 100.0))
+	if _shield_energy_bar:
+		_shield_energy_bar.visible = active_shield_level > 0
+		_shield_energy_bar.value = shield_ratio
+
+
+func _spawn_ion_wave_animation() -> void:
+	var wave := Sprite2D.new()
+	wave.texture = ION_WAVE_TEXTURE
+	wave.position = Vector2(576, 640)
+	wave.modulate = Color(0.6, 0.95, 1.0, 0.55)
+	wave.scale = Vector2(0.25, 0.05)
+	wave.z_index = 450
+	add_child(wave)
+
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(wave, "scale", Vector2(4.5, 1.5), 0.8)
+	tween.tween_property(wave, "position", Vector2(576, 280), 0.8)
+	tween.tween_property(wave, "modulate:a", 0.0, 1.2)
+	tween.finished.connect(func(): wave.queue_free())
 
 
 func _update_repair_hint(delta: float) -> void:
