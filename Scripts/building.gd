@@ -41,7 +41,7 @@ func _on_area_entered(area):
 func _setup_temp_shield_sprite() -> void:
 	shield_sprite.texture = preload("res://assets/ShieldUfo.png")
 	shield_sprite.modulate = Color(0.4, 0.95, 1.0, 0.35)
-	shield_sprite.scale = Vector2(0.112, 0.112)
+	shield_sprite.scale = Vector2(0.13, 0.1)
 	shield_sprite.visible = false
 	add_child(shield_sprite)
 
@@ -66,11 +66,6 @@ func _update_shield_state(delta: float) -> void:
 
 
 func handle_enemy_impact(enemy: Area2D) -> bool:
-	if GameManager.is_active_shield_up():
-		if enemy:
-			enemy.call_deferred("die", true)
-		return true
-
 	if destroyed:
 		return false
 

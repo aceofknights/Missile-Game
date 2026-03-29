@@ -31,6 +31,7 @@ func _process(delta: float) -> void:
 	var zone_multiplier := IonFieldUtils.get_speed_multiplier_at(global_position, false)
 	var global_multiplier := GameManager.get_enemy_global_speed_multiplier(now_seconds)
 	position += velocity * speed * zone_multiplier * global_multiplier * delta
+	rotation = velocity.angle()
 	_update_trail()
 
 	if position.y >= get_viewport_rect().size.y:
@@ -38,7 +39,7 @@ func _process(delta: float) -> void:
 
 
 func _on_area_entered(area: Area2D) -> void:
-	if GameManager.is_active_shield_up():
+	if area.is_in_group("active_base_shield"):
 		die(true)
 		return
 

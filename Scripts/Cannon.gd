@@ -211,11 +211,6 @@ func _update_shield_state(delta: float) -> void:
 
 
 func handle_enemy_impact(enemy: Area2D) -> bool:
-	if GameManager.is_active_shield_up():
-		if enemy:
-			enemy.call_deferred("die", true)
-		return true
-
 	_update_shield_state(0.0)
 	if shield_hits_remaining > 0:
 		shield_hits_remaining -= 1

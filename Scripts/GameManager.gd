@@ -320,6 +320,10 @@ func trigger_ion_wave(now_seconds: float) -> void:
 	ion_wave_next_ready_time = now_seconds + get_ion_wave_recharge_time()
 
 
+func get_ion_wave_cooldown_remaining(now_seconds: float) -> float:
+	return maxf(0.0, ion_wave_next_ready_time - now_seconds)
+
+
 func is_ion_wave_active(now_seconds: float) -> bool:
 	return now_seconds < ion_wave_end_time
 
