@@ -12,6 +12,7 @@ position = Vector2(36, 13)
 collision_layer = 2
 script = ExtResource("1_2oxmq")
 explosion_scene = ExtResource("2_y2y6o")
+trail_color = Color(1, 1, 0.0117647, 1)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_h4p2n")
