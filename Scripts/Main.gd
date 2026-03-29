@@ -21,6 +21,8 @@ extends Node2D
 
 
 const EXPLOSION_SCENE := preload("res://Scene/explosion.tscn")
+const AUTO_CANNON_SHOT_SCENE := preload("res://Scene/fighter_intercept_shot.tscn")
+const TEMP_SHIELD_TEXTURE := preload("res://circle.png")
 const BOSS_DEATH_EXPLOSION_COUNT := 16
 const PLAYER_DEATH_EXPLOSION_COUNT := 14
 const BOSS_DEATH_EXPLOSION_INTERVAL := 0.07
@@ -43,6 +45,9 @@ var _end_flow_in_progress := false
 
 const REPAIR_HINT_LINGER_SECONDS := 1.0
 var _repair_hint_linger_remaining := 0.0
+var _auto_cannon_timer := 0.0
+var _active_shield_sprite: Sprite2D
+var _e_was_down := false
 
 
 func get_building_count() -> int:
@@ -96,6 +101,7 @@ func _ready() -> void:
 		GameManager.player_defeat_requested.connect(_on_player_defeat_requested)
 	GameManager.start_wave()
 	_apply_building_unlocks()
+	_create_active_shield_sprite()
 
 	# Connect to any boss already present in the scene.
 	for node in get_tree().get_nodes_in_group("enemy"):
@@ -237,6 +243,10 @@ func _process(delta: float) -> void:
 		return
 
 	GameManager.update_ammo_factory(delta)
+	GameManager.update_active_shield(delta)
+	_handle_upgrade_hotkeys()
+	_update_auto_cannon(delta)
+	_update_active_shield_visual()
 	AmmoLabel.text = "Ammo: %s" % GameManager.get_total_ammo_status()
 	wave_label.text = "🌊 Wave %d / 🌍 World %d" % [GameManager.current_wave, GameManager.current_world]
 	ResourceLabel.text = "Resources: %d" % GameManager.player_resources
@@ -246,6 +256,82 @@ func _process(delta: float) -> void:
 	if _count_surviving_buildings() == 0 and not _end_flow_in_progress:
 		print("🏚️ All buildings destroyed — returning to upgrade screen")
 		GameManager.player_died()
+
+
+func _create_active_shield_sprite() -> void:
+	_active_shield_sprite = Sprite2D.new()
+	_active_shield_sprite.texture = TEMP_SHIELD_TEXTURE
+	_active_shield_sprite.modulate = Color(0.3, 0.9, 1.0, 0.35)
+	_active_shield_sprite.visible = false
+	_active_shield_sprite.z_index = 500
+	_active_shield_sprite.scale = Vector2(2.8, 0.8)
+	_active_shield_sprite.position = Vector2(576, 560)
+	add_child(_active_shield_sprite)
+
+
+func _handle_upgrade_hotkeys() -> void:
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	var hold_space := Input.is_key_pressed(KEY_SPACE)
+	GameManager.set_active_shield_held(hold_space)
+	var e_down := Input.is_key_pressed(KEY_E)
+	if not e_down:
+		_e_was_down = false
+		return
+	if _e_was_down:
+		return
+	_e_was_down = true
+
+	if GameManager.can_trigger_ion_wave(now_seconds):
+		GameManager.trigger_ion_wave(now_seconds)
+		announce("⚡ Ion Wave Activated!", 1.2)
+		return
+
+	if GameManager.can_trigger_lure():
+		GameManager.trigger_lure(get_global_mouse_position(), now_seconds)
+		announce("🎯 Lure Deployed!", 1.0)
+
+
+func _update_auto_cannon(delta: float) -> void:
+	var level := GameManager.get_upgrade_level("auto_cannon")
+	if level <= 0:
+		return
+
+	_auto_cannon_timer -= delta
+	if _auto_cannon_timer > 0.0:
+		return
+
+	var fire_interval := maxf(2.0, 20.0 - (2.0 * float(level)))
+	_auto_cannon_timer = fire_interval
+
+	var best_enemy: Area2D = null
+	var best_dist_sq := INF
+	for node in get_tree().get_nodes_in_group("enemy"):
+		if not (node is Area2D):
+			continue
+		if node.is_in_group("boss"):
+			continue
+		var as_area := node as Area2D
+		var dist_sq := as_area.global_position.distance_squared_to(middle_cannon.global_position)
+		if dist_sq < best_dist_sq:
+			best_dist_sq = dist_sq
+			best_enemy = as_area
+
+	if best_enemy == null:
+		return
+
+	var shot := AUTO_CANNON_SHOT_SCENE.instantiate()
+	if shot == null:
+		return
+	shot.global_position = middle_cannon.global_position
+	shot.target_node = best_enemy
+	shot.target_position = best_enemy.global_position
+	add_child(shot)
+
+
+func _update_active_shield_visual() -> void:
+	if _active_shield_sprite == null:
+		return
+	_active_shield_sprite.visible = GameManager.is_active_shield_up()
 
 
 func _update_repair_hint(delta: float) -> void:
