@@ -22,6 +22,9 @@ func _process(delta: float) -> void:
 		return
 
 	if is_instance_valid(target_node):
+		if target_node.is_in_group("boss") or target_node.has_signal("boss_defeated"):
+			queue_free()
+			return
 		target_position = target_node.global_position
 		if global_position.distance_to(target_node.global_position) <= hit_radius:
 			if target_node.has_method("die"):

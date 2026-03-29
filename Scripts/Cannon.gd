@@ -18,6 +18,7 @@ var shield_cooldown_remaining := 0.0
 @onready var repair_label: Label = get_node_or_null("RepairLabel") as Label
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var shield_sprite: Sprite2D = Sprite2D.new()
+@onready var shield_hits_label: Label = Label.new()
 
 
 func _ready() -> void:
@@ -31,6 +32,7 @@ func _ready() -> void:
 	if repair_label:
 		repair_label.top_level = true
 	_setup_temp_shield_sprite()
+	_setup_shield_hits_label()
 	_refresh_visibility_state()
 	_update_overlay_positions()
 	_update_ui()
@@ -50,6 +52,7 @@ func _process(delta: float) -> void:
 
 	_update_overlay_positions()
 	_update_shield_state(delta)
+	_update_shield_hits_label()
 	_update_ui()
 	_refresh_visibility_state()
 
@@ -196,6 +199,25 @@ func _setup_temp_shield_sprite() -> void:
 	add_child(shield_sprite)
 
 
+func _setup_shield_hits_label() -> void:
+	shield_hits_label.top_level = true
+	shield_hits_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	shield_hits_label.visible = false
+	add_child(shield_hits_label)
+
+
+func _update_shield_hits_label() -> void:
+	if shield_hits_label == null:
+		return
+	shield_hits_label.global_position = global_position + Vector2(-42, 76)
+	var max_hits := GameManager.get_shield_generator_hit_capacity()
+	var show := max_hits > 0 and _can_operate()
+	shield_hits_label.visible = show
+	if not show:
+		return
+	shield_hits_label.text = "🛡 %d" % max(0, shield_hits_remaining)
+
+
 func _update_shield_state(delta: float) -> void:
 	var max_hits := GameManager.get_shield_generator_hit_capacity()
 	if max_hits <= 0 or not _can_operate():
@@ -271,3 +293,5 @@ func repair() -> void:
 func destroy_permanently() -> void:
 	permanently_destroyed = true
 	die()
+	if is_instance_valid(sprite):
+		sprite.queue_free()

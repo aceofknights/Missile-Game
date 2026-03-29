@@ -338,7 +338,7 @@ func _update_auto_cannon(delta: float) -> void:
 	for node in get_tree().get_nodes_in_group("enemy"):
 		if not (node is Area2D):
 			continue
-		if node.is_in_group("boss"):
+		if _is_boss_enemy(node):
 			continue
 		var as_area := node as Area2D
 		var dist_sq := as_area.global_position.distance_squared_to(middle_cannon.global_position)
@@ -357,6 +357,16 @@ func _update_auto_cannon(delta: float) -> void:
 	shot.target_node = best_enemy
 	shot.target_position = best_enemy.global_position
 	add_child(shot)
+
+
+func _is_boss_enemy(node: Node) -> bool:
+	if node == null:
+		return false
+	if node.is_in_group("boss"):
+		return true
+	if node.has_signal("boss_defeated"):
+		return true
+	return String(node.name).to_lower().begins_with("boss")
 
 
 func _update_active_shield_visual() -> void:
