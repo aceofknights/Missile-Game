@@ -43,6 +43,14 @@ var enemies_alive := 0
 var is_boss_wave := false
 var wave_active := false
 var spawner: Node = null
+var active_shield_is_held := false
+var active_shield_charge := 0.0
+var active_shield_max_charge := 0.0
+var ion_wave_end_time := 0.0
+var ion_wave_next_ready_time := 0.0
+var lure_end_time := 0.0
+var lure_position := Vector2.ZERO
+var lure_next_ready_time := 0.0
 
 signal announce_wave(message: String, duration: float)
 signal world_victory_requested
@@ -229,6 +237,129 @@ func get_upgrade_cost(base_cost: int, level: int, path_rate: String) -> int:
 	var multiplier = float(COST_MULTIPLIER.get(path_rate, COST_MULTIPLIER[PATH_MEDIUM]))
 	return int(round(base_cost * pow(multiplier, level)))
 
+
+func get_shield_generator_hit_capacity() -> int:
+	var level := get_upgrade_level("shield_generator")
+	if level <= 0:
+		return 0
+	return 1 + level
+
+
+func get_shield_generator_cooldown_seconds() -> float:
+	var level := get_upgrade_level("shield_generator")
+	if level <= 0:
+		return 9999.0
+	return maxf(5.0, 30.0 - (3.0 * float(level)))
+
+
+func has_active_shields_upgrade() -> bool:
+	return get_upgrade_level("active_shields") > 0
+
+
+func get_active_shield_max_charge() -> float:
+	var level := get_upgrade_level("active_shields")
+	if level <= 0:
+		return 0.0
+	return 10.0 + float(level)
+
+
+func get_active_shield_recharge_interval() -> float:
+	var level := get_upgrade_level("active_shields")
+	if level <= 0:
+		return 9999.0
+	return maxf(3.0, 20.0 - float(level))
+
+
+func set_active_shield_held(is_held: bool) -> void:
+	active_shield_is_held = is_held
+
+
+func is_active_shield_up() -> bool:
+	return has_active_shields_upgrade() and active_shield_is_held and active_shield_charge > 0.0
+
+
+func update_active_shield(delta: float) -> void:
+	if not has_active_shields_upgrade():
+		active_shield_charge = 0.0
+		active_shield_max_charge = 0.0
+		active_shield_is_held = false
+		return
+
+	var previous_max := active_shield_max_charge
+	active_shield_max_charge = get_active_shield_max_charge()
+	if previous_max <= 0.0:
+		active_shield_charge = active_shield_max_charge
+
+	if active_shield_is_held and active_shield_charge > 0.0:
+		active_shield_charge = maxf(0.0, active_shield_charge - delta)
+	else:
+		var recharge_per_second := 1.0 / get_active_shield_recharge_interval()
+		active_shield_charge = minf(active_shield_max_charge, active_shield_charge + (recharge_per_second * delta))
+
+
+func get_ion_wave_duration() -> float:
+	var level := get_upgrade_level("ion_wave")
+	if level <= 0:
+		return 0.0
+	return 10.0 + float(level)
+
+
+func get_ion_wave_recharge_time() -> float:
+	var level := get_upgrade_level("ion_wave")
+	if level <= 0:
+		return 9999.0
+	return maxf(10.0, 45.0 - (2.0 * float(level)))
+
+
+func can_trigger_ion_wave(now_seconds: float) -> bool:
+	return get_upgrade_level("ion_wave") > 0 and now_seconds >= ion_wave_next_ready_time
+
+
+func trigger_ion_wave(now_seconds: float) -> void:
+	ion_wave_end_time = now_seconds + get_ion_wave_duration()
+	ion_wave_next_ready_time = now_seconds + get_ion_wave_recharge_time()
+
+
+func get_ion_wave_cooldown_remaining(now_seconds: float) -> float:
+	return maxf(0.0, ion_wave_next_ready_time - now_seconds)
+
+
+func is_ion_wave_active(now_seconds: float) -> bool:
+	return now_seconds < ion_wave_end_time
+
+
+func get_enemy_global_speed_multiplier(now_seconds: float) -> float:
+	if is_ion_wave_active(now_seconds):
+		return 0.2
+	return 1.0
+
+
+func get_lure_recharge_time() -> float:
+	var level := get_upgrade_level("lure")
+	if level <= 0:
+		return 9999.0
+	return maxf(4.0, 12.0 - float(level))
+
+
+func can_trigger_lure(now_seconds: float) -> bool:
+	return get_upgrade_level("lure") > 0 and now_seconds >= lure_next_ready_time
+
+
+func trigger_lure(pos: Vector2, now_seconds: float) -> void:
+	if not can_trigger_lure(now_seconds):
+		return
+	lure_position = pos
+	lure_end_time = now_seconds + (2.0 + float(get_upgrade_level("lure")))
+	lure_next_ready_time = now_seconds + get_lure_recharge_time()
+
+
+func is_lure_active(now_seconds: float) -> bool:
+	return now_seconds < lure_end_time
+
+
+func get_lure_cooldown_remaining(now_seconds: float) -> float:
+	return maxf(0.0, lure_next_ready_time - now_seconds)
+
 func is_upgrade_available_in_world(upgrade_key: String, world: int) -> bool:
 	var defs = get_upgrade_definitions_world_1()
 	if not defs.has(upgrade_key):
@@ -250,15 +381,6 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"requires": []
 		},
 		
-		"shield": {
-			"display_name": "Shield Generator",
-			"max_level": 1,
-			"base_cost": 100,
-			"path_rate": PATH_EXPENSIVE,
-			"requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}],
-			"min_world": 2,	
-		},
-		
 		"ammo_factory_1": {
 			"display_name": "Ammo Factory 1",
 			"max_level": 10,
@@ -277,6 +399,10 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"max_ammo_middle_2": {"display_name": "Max Ammo 2 (Middle)", "max_level": 10, "base_cost": 3, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
 		"max_ammo_middle_3": {"display_name": "Max Ammo 3 (Middle)", "max_level": 10, "base_cost": 5, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "max_ammo_middle_2", "min_level": 10}]},
+		"max_ammo_left_2": {"display_name": "Max Ammo 2 (Left)", "max_level": 10, "base_cost": 3, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "unlock_left_cannon", "min_level": 1}]},
+		"max_ammo_left_3": {"display_name": "Max Ammo 3 (Left)", "max_level": 10, "base_cost": 5, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "max_ammo_left_2", "min_level": 10}]},
+		"max_ammo_right_2": {"display_name": "Max Ammo 2 (Right)", "max_level": 10, "base_cost": 3, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "unlock_right_cannon", "min_level": 1}]},
+		"max_ammo_right_3": {"display_name": "Max Ammo 3 (Right)", "max_level": 10, "base_cost": 5, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "max_ammo_right_2", "min_level": 10}]},
 		"starting_ammo_middle_2": {"display_name": "Starting Ammo 2 (Middle)", "max_level": 10, "base_cost": 3, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
 		"starting_ammo_middle_3": {"display_name": "Starting Ammo 3 (Middle)", "max_level": 10, "base_cost": 5, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_middle_2", "min_level": 10}]},
 		"unlock_left_cannon": {
@@ -307,13 +433,18 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		"fire_rate_middle": {"display_name": "Fire Rate (Middle)", "max_level": 5, "base_cost": 10, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
 		"fire_rate_left": {"display_name": "Fire Rate (Left)", "max_level": 5, "base_cost": 10, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "unlock_left_cannon", "min_level": 1}]},
 		"fire_rate_right": {"display_name": "Fire Rate (Right)", "max_level": 5, "base_cost": 10, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "unlock_right_cannon", "min_level": 1}]},
-		"explosion_size": {"display_name": "Explosion Size", "max_level": 10, "base_cost": 10, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"explosion_duration": {"display_name": "Explosion Duration", "max_level": 10, "base_cost": 12, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"explosion_size": {"display_name": "Explosion Size", "description": "+1 explosion size per level.", "max_level": 3, "base_cost": 30, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"explosion_duration": {"display_name": "Explosion Duration", "description": "+0.2s max-size explosion hold per level.", "max_level": 5, "base_cost": 24, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
 		"missile_speed": {"display_name": "Missile Speed", "max_level": 10, "base_cost": 15, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
 		"building_5": {"display_name": "Building 5", "max_level": 1, "base_cost": 25, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
 		"building_6": {"display_name": "Building 6", "max_level": 1, "base_cost": 75, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "building_5", "min_level": 1}]},
 		"repair_shop": {"display_name": "Repair Shop", "description": "Unlocks R repairs for destroyed buildings/cannons and lowers repair cost per level.", "max_level": 10, "base_cost": 20, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"resource_gain": {"display_name": "Resource Gain", "max_level": 10, "base_cost": 20, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]}
+		"shield_generator": {"display_name": "Shield Generator", "description": "Each building shield blocks 1 hit, +1 hit per level. Cooldown 30s, -3s per level.", "max_level": 5, "base_cost": 40, "path_rate": PATH_EXPENSIVE, "min_world": 2, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"active_shields": {"display_name": "Active Shields", "description": "Hold Space for full-base shield. Battery +1s/level, recharge +1s/level faster.", "max_level": 5, "base_cost": 50, "path_rate": PATH_EXPENSIVE, "min_world": 2, "requires": [{"upgrade": "shield_generator", "min_level": 1}]},
+		"auto_cannon": {"display_name": "Auto Cannon", "description": "Auto-targets enemy missiles. Fire interval starts at 20s and improves by 2s/level.", "max_level": 5, "base_cost": 50, "path_rate": PATH_EXPENSIVE, "min_world": 3, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"lure": {"display_name": "Lure", "description": "Press E to deploy lure. Lasts 2s +1s per level.", "max_level": 3, "base_cost": 60, "path_rate": PATH_MEDIUM, "min_world": 4, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"ion_wave": {"display_name": "Ion Wave", "description": "Press E to slow all missiles. Slow duration +1s/level, recharge -2s/level.", "max_level": 5, "base_cost": 65, "path_rate": PATH_MEDIUM, "min_world": 5, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
+		"resource_gain": {"display_name": "Resource Gain", "description": "+1 resource per kill per level.", "max_level": 5, "base_cost": 50, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]}
 	}
 
 
@@ -357,11 +488,11 @@ func try_buy_upgrade(upgrade_key: String) -> bool:
 		_sync_cannon_ammo_caps(CANNON_MIDDLE)
 	elif upgrade_key == "unlock_left_cannon":
 		_sync_cannon_ammo_caps(CANNON_LEFT)
-	elif upgrade_key in ["starting_ammo_left_2", "starting_ammo_left_3"]:
+	elif upgrade_key in ["starting_ammo_left_2", "starting_ammo_left_3", "max_ammo_left_2", "max_ammo_left_3"]:
 		_sync_cannon_ammo_caps(CANNON_LEFT)
 	elif upgrade_key == "unlock_right_cannon":
 		_sync_cannon_ammo_caps(CANNON_RIGHT)
-	elif upgrade_key in ["starting_ammo_right_2", "starting_ammo_right_3"]:
+	elif upgrade_key in ["starting_ammo_right_2", "starting_ammo_right_3", "max_ammo_right_2", "max_ammo_right_3"]:
 		_sync_cannon_ammo_caps(CANNON_RIGHT)
 	elif upgrade_key == "building_5":
 		set_extra_buildings(1)
@@ -372,8 +503,8 @@ func try_buy_upgrade(upgrade_key: String) -> bool:
 
 
 func add_resources(amount: int):
-	var scaled_amount = amount * (1.0 + (0.2 * get_upgrade_level("resource_gain")))
-	player_resources += int(round(scaled_amount))
+	var scaled_amount = amount + (amount * get_upgrade_level("resource_gain"))
+	player_resources += scaled_amount
 	print("💰 Gained %d resource(s). Total: %d" % [amount, player_resources])
 
 
@@ -421,9 +552,9 @@ func get_cannon_max_ammo(cannon_id: String) -> int:
 		CANNON_MIDDLE:
 			return 10 + (get_upgrade_level("starting_ammo_middle_1") * 2) + (get_upgrade_level("max_ammo_middle_2") * 2) + (get_upgrade_level("max_ammo_middle_3") * 2)
 		CANNON_LEFT:
-			return 10
+			return 10 + (get_upgrade_level("max_ammo_left_2") * 2) + (get_upgrade_level("max_ammo_left_3") * 2)
 		CANNON_RIGHT:
-			return 10
+			return 10 + (get_upgrade_level("max_ammo_right_2") * 2) + (get_upgrade_level("max_ammo_right_3") * 2)
 		_:
 			return 0
 
@@ -437,9 +568,9 @@ func _get_cannon_max_ammo_from_state(state: Dictionary, cannon_id: String) -> in
 		CANNON_MIDDLE:
 			return 10 + (_get_upgrade_level_from_state(state, "starting_ammo_middle_1") * 2) + (_get_upgrade_level_from_state(state, "max_ammo_middle_2") * 2) + (_get_upgrade_level_from_state(state, "max_ammo_middle_3") * 2)
 		CANNON_LEFT:
-			return 10
+			return 10 + (_get_upgrade_level_from_state(state, "max_ammo_left_2") * 2) + (_get_upgrade_level_from_state(state, "max_ammo_left_3") * 2)
 		CANNON_RIGHT:
-			return 10
+			return 10 + (_get_upgrade_level_from_state(state, "max_ammo_right_2") * 2) + (_get_upgrade_level_from_state(state, "max_ammo_right_3") * 2)
 		_:
 			return 0
 
@@ -670,6 +801,7 @@ func reset_cannons_for_new_run() -> void:
 func continue_from_upgrades():
 	current_wave = 1
 	reset_cannons_for_new_run()
+	_reset_temporary_upgrade_runtime_state()
 	get_tree().change_scene_to_file("res://Scene/Main.tscn")
 
 
@@ -684,7 +816,18 @@ func select_world(world: int) -> void:
 	current_wave = 1
 	_ensure_world_upgrade_data(current_world)
 	reset_cannons_for_new_run()
+	_reset_temporary_upgrade_runtime_state()
 	get_tree().change_scene_to_file("res://Scene/Main.tscn")
+
+
+func _reset_temporary_upgrade_runtime_state() -> void:
+	active_shield_is_held = false
+	active_shield_charge = 0.0
+	active_shield_max_charge = 0.0
+	ion_wave_end_time = 0.0
+	ion_wave_next_ready_time = 0.0
+	lure_end_time = 0.0
+	lure_next_ready_time = 0.0
 
 
 func start_wave():

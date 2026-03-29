@@ -24,8 +24,11 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	var now_seconds := Time.get_ticks_msec() / 1000.0
 	var zone_multiplier := IonFieldUtils.get_speed_multiplier_at(global_position, false)
-	position += velocity * speed * zone_multiplier * delta
+	var global_multiplier := GameManager.get_enemy_global_speed_multiplier(now_seconds)
+	position += velocity * speed * zone_multiplier * global_multiplier * delta
+	rotation = velocity.angle()
 	_update_trail()
 
 	if position.y >= get_viewport_rect().size.y:
