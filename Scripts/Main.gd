@@ -21,6 +21,8 @@ extends Node2D
 
 
 const EXPLOSION_SCENE := preload("res://Scene/explosion.tscn")
+const AUTO_CANNON_SHOT_SCENE := preload("res://Scene/fighter_intercept_shot.tscn")
+const TEMP_SHIELD_TEXTURE := preload("res://assets/ShieldUfo.png")
 const BOSS_DEATH_EXPLOSION_COUNT := 16
 const PLAYER_DEATH_EXPLOSION_COUNT := 14
 const BOSS_DEATH_EXPLOSION_INTERVAL := 0.07
@@ -43,6 +45,13 @@ var _end_flow_in_progress := false
 
 const REPAIR_HINT_LINGER_SECONDS := 1.0
 var _repair_hint_linger_remaining := 0.0
+var _auto_cannon_timer := 0.0
+var _active_shield_sprite: Sprite2D
+var _w_was_down := false
+var _auto_cannon_label: Label
+var _auto_cannon_bar: ProgressBar
+var _lure_label: Label
+var _lure_bar: ProgressBar
 
 
 func get_building_count() -> int:
@@ -96,6 +105,8 @@ func _ready() -> void:
 		GameManager.player_defeat_requested.connect(_on_player_defeat_requested)
 	GameManager.start_wave()
 	_apply_building_unlocks()
+	_create_active_shield_sprite()
+	_create_ability_status_ui()
 
 	# Connect to any boss already present in the scene.
 	for node in get_tree().get_nodes_in_group("enemy"):
@@ -237,6 +248,11 @@ func _process(delta: float) -> void:
 		return
 
 	GameManager.update_ammo_factory(delta)
+	GameManager.update_active_shield(delta)
+	_handle_upgrade_hotkeys()
+	_update_auto_cannon(delta)
+	_update_active_shield_visual()
+	_update_ability_status_ui()
 	AmmoLabel.text = "Ammo: %s" % GameManager.get_total_ammo_status()
 	wave_label.text = "🌊 Wave %d / 🌍 World %d" % [GameManager.current_wave, GameManager.current_world]
 	ResourceLabel.text = "Resources: %d" % GameManager.player_resources
@@ -246,6 +262,154 @@ func _process(delta: float) -> void:
 	if _count_surviving_buildings() == 0 and not _end_flow_in_progress:
 		print("🏚️ All buildings destroyed — returning to upgrade screen")
 		GameManager.player_died()
+
+
+func _create_active_shield_sprite() -> void:
+	_active_shield_sprite = Sprite2D.new()
+	_active_shield_sprite.texture = TEMP_SHIELD_TEXTURE
+	_active_shield_sprite.modulate = Color(0.3, 0.9, 1.0, 0.35)
+	_active_shield_sprite.visible = false
+	_active_shield_sprite.z_index = 500
+	_active_shield_sprite.scale = Vector2(2.8, 0.8)
+	_active_shield_sprite.position = Vector2(576, 560)
+	add_child(_active_shield_sprite)
+
+
+func _handle_upgrade_hotkeys() -> void:
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	var hold_space := Input.is_key_pressed(KEY_SPACE)
+	GameManager.set_active_shield_held(hold_space)
+	var w_down := Input.is_key_pressed(KEY_W)
+	if not w_down:
+		_w_was_down = false
+		return
+	if _w_was_down:
+		return
+	_w_was_down = true
+
+	if GameManager.can_trigger_ion_wave(now_seconds):
+		GameManager.trigger_ion_wave(now_seconds)
+		announce("⚡ Ion Wave Activated!", 1.2)
+		return
+
+	if GameManager.can_trigger_lure(now_seconds):
+		GameManager.trigger_lure(get_global_mouse_position(), now_seconds)
+		announce("🎯 Lure Deployed!", 1.0)
+
+
+func _update_auto_cannon(delta: float) -> void:
+	var level := GameManager.get_upgrade_level("auto_cannon")
+	if level <= 0:
+		return
+
+	_auto_cannon_timer -= delta
+	if _auto_cannon_timer > 0.0:
+		return
+
+	var fire_interval := maxf(2.0, 20.0 - (2.0 * float(level)))
+	_auto_cannon_timer = fire_interval
+
+	var best_enemy: Area2D = null
+	var best_dist_sq := INF
+	for node in get_tree().get_nodes_in_group("enemy"):
+		if not (node is Area2D):
+			continue
+		if node.is_in_group("boss"):
+			continue
+		var as_area := node as Area2D
+		var dist_sq := as_area.global_position.distance_squared_to(middle_cannon.global_position)
+		if dist_sq < best_dist_sq:
+			best_dist_sq = dist_sq
+			best_enemy = as_area
+
+	if best_enemy == null:
+		return
+
+	var shot := AUTO_CANNON_SHOT_SCENE.instantiate()
+	if shot == null:
+		return
+	shot.global_position = middle_cannon.global_position
+	shot.target_node = best_enemy
+	shot.target_position = best_enemy.global_position
+	add_child(shot)
+
+
+func _update_active_shield_visual() -> void:
+	if _active_shield_sprite == null:
+		return
+	_active_shield_sprite.visible = GameManager.is_active_shield_up()
+
+
+func _create_ability_status_ui() -> void:
+	var ui := get_node_or_null("UI") as CanvasLayer
+	if ui == null:
+		return
+
+	_auto_cannon_label = Label.new()
+	_auto_cannon_label.text = "Auto Cannon"
+	_auto_cannon_label.offset_left = 20
+	_auto_cannon_label.offset_top = 60
+	_auto_cannon_label.offset_right = 220
+	_auto_cannon_label.offset_bottom = 80
+	ui.add_child(_auto_cannon_label)
+
+	_auto_cannon_bar = ProgressBar.new()
+	_auto_cannon_bar.min_value = 0.0
+	_auto_cannon_bar.max_value = 1.0
+	_auto_cannon_bar.show_percentage = false
+	_auto_cannon_bar.offset_left = 20
+	_auto_cannon_bar.offset_top = 82
+	_auto_cannon_bar.offset_right = 220
+	_auto_cannon_bar.offset_bottom = 100
+	ui.add_child(_auto_cannon_bar)
+
+	_lure_label = Label.new()
+	_lure_label.text = "Lure Cooldown"
+	_lure_label.offset_left = 20
+	_lure_label.offset_top = 106
+	_lure_label.offset_right = 220
+	_lure_label.offset_bottom = 126
+	ui.add_child(_lure_label)
+
+	_lure_bar = ProgressBar.new()
+	_lure_bar.min_value = 0.0
+	_lure_bar.max_value = 1.0
+	_lure_bar.show_percentage = false
+	_lure_bar.offset_left = 20
+	_lure_bar.offset_top = 128
+	_lure_bar.offset_right = 220
+	_lure_bar.offset_bottom = 146
+	ui.add_child(_lure_bar)
+
+
+func _update_ability_status_ui() -> void:
+	var auto_level := GameManager.get_upgrade_level("auto_cannon")
+	var auto_interval := maxf(2.0, 20.0 - (2.0 * float(auto_level)))
+	var auto_ready_ratio := 1.0
+	if auto_level > 0:
+		auto_ready_ratio = clampf(1.0 - (_auto_cannon_timer / auto_interval), 0.0, 1.0)
+
+	if _auto_cannon_label:
+		_auto_cannon_label.visible = auto_level > 0
+		_auto_cannon_label.text = "Auto Cannon: %s" % ("READY" if _auto_cannon_timer <= 0.0 and auto_level > 0 else "Charging")
+	if _auto_cannon_bar:
+		_auto_cannon_bar.visible = auto_level > 0
+		_auto_cannon_bar.value = auto_ready_ratio
+
+	var lure_level := GameManager.get_upgrade_level("lure")
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	var lure_cd := GameManager.get_lure_cooldown_remaining(now_seconds)
+	var lure_max_cd := GameManager.get_lure_recharge_time()
+	var lure_ready_ratio := 1.0
+	if lure_level > 0:
+		lure_ready_ratio = clampf(1.0 - (lure_cd / maxf(0.01, lure_max_cd)), 0.0, 1.0)
+
+	if _lure_label:
+		_lure_label.visible = lure_level > 0
+		_lure_label.text = "Lure: %s" % ("READY" if lure_cd <= 0.0 and lure_level > 0 else "%.1fs" % lure_cd)
+	if _lure_bar:
+		_lure_bar.visible = lure_level > 0
+		_lure_bar.value = lure_ready_ratio
 
 
 func _update_repair_hint(delta: float) -> void:
