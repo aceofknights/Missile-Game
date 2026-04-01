@@ -13,6 +13,13 @@ const PATH_CHEAP := "cheap"
 const PATH_MEDIUM := "medium"
 const PATH_EXPENSIVE := "expensive"
 
+const NEON_OUTER_ALPHA := 0.2
+const NEON_OUTER_WIDTH_MULTIPLIER := 6.0
+const NEON_MID_ALPHA := 0.3
+const NEON_MID_WIDTH_MULTIPLIER := 3.0
+const NEON_CORE_ALPHA := 1.0
+const NEON_BASE_TRAIL_WIDTH := 2.0
+
 const COST_MULTIPLIER := {
 	PATH_CHEAP: 1.5,
 	PATH_MEDIUM: 2.0,

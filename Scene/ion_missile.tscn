@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://Scripts/ion_missile.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://bgajgpd0rd0m" path="res://Scene/ion_zone.tscn" id="2"]
-[ext_resource type="Texture2D" uid="uid://d2wo0oumwktd6" path="res://assets/missile_white.png" id="3_2x7lo"]
+[ext_resource type="Texture2D" uid="uid://wcpetjq0mc77" path="res://assets/Curved missile.png" id="3_1lg31"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_j8ntg"]
 size = Vector2(22, 16)
@@ -10,14 +10,14 @@ size = Vector2(22, 16)
 [node name="IonMissile" type="Area2D"]
 collision_mask = 3
 script = ExtResource("1")
-trail_color = Color(1, 1, 0, 1)
+trail_color = Color(0.4, 0.85098, 1, 1)
 ion_zone_scene = ExtResource("2")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.4, 0.85, 1, 1)
 rotation = 1.5708
-scale = Vector2(0.408837, 0.4)
-texture = ExtResource("3_2x7lo")
+scale = Vector2(0.462815, 0.545433)
+texture = ExtResource("3_1lg31")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_j8ntg")

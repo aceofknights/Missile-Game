@@ -5,7 +5,15 @@ var permanently_destroyed := false
 var shield_hits_remaining := 0
 var shield_cooldown_remaining := 0.0
 
+const WORLD_1_BUILDING_COLOR := Color(0.15, 0.45, 0.35, 1.0) # dark teal-green
+const WORLD_2_BUILDING_COLOR := Color(0.45, 0.22, 0.18, 1.0) # dark rust
+const WORLD_3_BUILDING_COLOR := Color(0.28, 0.18, 0.45, 1.0) # dark purple
+const WORLD_4_BUILDING_COLOR := Color(0.18, 0.28, 0.42, 1.0) # dark blue
+const WORLD_5_BUILDING_COLOR := Color(0.32, 0.45, 0.18, 1.0) # toxic green
+const DEFAULT_BUILDING_COLOR := Color(0.35, 0.35, 0.35, 1.0)
+
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var destroyed_sprite: Sprite2D = get_node_or_null("Destroyed") as Sprite2D
 @onready var repair_label: Label = get_node_or_null("RepairLabel") as Label
 @onready var shield_sprite: Sprite2D = Sprite2D.new()
 @onready var shield_hits_label: Label = Label.new()
@@ -152,8 +160,32 @@ func die() -> void:
 
 
 func _update_visual_state() -> void:
+	var world_color := _get_world_building_color()
+
 	if sprite:
-		sprite.modulate = Color(0.25, 0.25, 0.25, 1.0) if destroyed else Color(0.0823529, 0.0784314, 0.960784, 1)
+		sprite.modulate = world_color
+		sprite.visible = not destroyed
+
+	if destroyed_sprite:
+		destroyed_sprite.visible = destroyed
+		if not destroyed:
+			destroyed_sprite.modulate = world_color
+
+
+func _get_world_building_color() -> Color:
+	match GameManager.current_world:
+		1:
+			return WORLD_1_BUILDING_COLOR
+		2:
+			return WORLD_2_BUILDING_COLOR
+		3:
+			return WORLD_3_BUILDING_COLOR
+		4:
+			return WORLD_4_BUILDING_COLOR
+		5:
+			return WORLD_5_BUILDING_COLOR
+		_:
+			return DEFAULT_BUILDING_COLOR
 
 
 func is_destroyed() -> bool:
@@ -171,9 +203,10 @@ func is_hovered_any_state(global_mouse_position: Vector2) -> bool:
 
 
 func _is_mouse_over_defense(global_mouse_position: Vector2) -> bool:
-	if sprite and sprite.texture:
-		var local_mouse := sprite.to_local(global_mouse_position)
-		if sprite.get_rect().has_point(local_mouse):
+	var target_sprite: Sprite2D = destroyed_sprite if destroyed and destroyed_sprite else sprite
+	if target_sprite and target_sprite.texture:
+		var local_mouse := target_sprite.to_local(global_mouse_position)
+		if target_sprite.get_rect().has_point(local_mouse):
 			return true
 	return global_position.distance_to(global_mouse_position) <= 52.0
 

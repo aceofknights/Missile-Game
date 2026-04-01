@@ -18,7 +18,7 @@ extends Node2D
 @onready var end_state_overlay: Control = $UI/EndStateOverlay
 @onready var end_state_label: Label = $UI/EndStateOverlay/CenterContainer/Panel/VBoxContainer/EndStateLabel
 @onready var end_state_continue_button: Button = $UI/EndStateOverlay/CenterContainer/Panel/VBoxContainer/ContinueButton
-
+@onready var ground_area: Area2D = get_node_or_null("GroundArea") as Area2D
 
 const EXPLOSION_SCENE := preload("res://Scene/explosion.tscn")
 const AUTO_CANNON_SHOT_SCENE := preload("res://Scene/fighter_intercept_shot.tscn")
@@ -78,7 +78,7 @@ func _on_child_entered_tree(node: Node) -> void:
 func _ready() -> void:
 	_ensure_repair_hint_label()
 	_apply_ground_color()
-
+	_setup_ground_area()
 	NodeContracts.require_nodes_with_types(self, {
 		"Cannon": "Area2D",
 		"LeftCannon": "Area2D",
@@ -120,6 +120,25 @@ func _ready() -> void:
 	# Connect to any boss already present in the scene.
 	for node in get_tree().get_nodes_in_group("enemy"):
 		_connect_boss_signals(node)
+
+func _setup_ground_area() -> void:
+	if ground_area == null:
+		return
+
+	if not ground_area.is_in_group("ground_killzone"):
+		ground_area.add_to_group("ground_killzone")
+
+	ground_area.monitoring = true
+	ground_area.monitorable = true
+
+	# Put ground on layer 5, for example.
+	ground_area.collision_layer = 1 << 4
+	ground_area.collision_mask = 0
+
+	var cs := ground_area.get_node_or_null("GroundCol")
+	if cs is CollisionShape2D:
+		cs.disabled = false
+
 
 func _apply_ground_color() -> void:
 	if ground == null:

@@ -1,10 +1,11 @@
-[gd_scene load_steps=4 format=3 uid="uid://vug46xq86s6a"]
+[gd_scene load_steps=5 format=3 uid="uid://vug46xq86s6a"]
 
 [ext_resource type="Script" path="res://Scripts/building.gd" id="1_158o7"]
-[ext_resource type="Texture2D" uid="uid://dylfru1gt8h5i" path="res://assets/Building.png" id="2_h47om"]
+[ext_resource type="Texture2D" uid="uid://c1y6xverljf2d" path="res://assets/building 10.png" id="2_afq0v"]
+[ext_resource type="Texture2D" uid="uid://dxx1rciyoc4ch" path="res://assets/destroyed 4.png" id="3_6x7so"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ot00v"]
-size = Vector2(42, 14)
+size = Vector2(48, 21)
 
 [node name="Building" type="Area2D" groups=["building"]]
 collision_layer = 4
@@ -12,9 +13,14 @@ collision_mask = 5
 script = ExtResource("1_158o7")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-modulate = Color(0.0823529, 0.0784314, 0.960784, 1)
-scale = Vector2(0.326, 0.326)
-texture = ExtResource("2_h47om")
+scale = Vector2(0.193851, 0.193851)
+texture = ExtResource("2_afq0v")
+
+[node name="Destroyed" type="Sprite2D" parent="."]
+position = Vector2(8.34465e-07, 3.28657)
+scale = Vector2(0.189189, 0.225016)
+texture = ExtResource("3_6x7so")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
 shape = SubResource("RectangleShape2D_ot00v")
