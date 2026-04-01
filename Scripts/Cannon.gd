@@ -94,7 +94,7 @@ func _refresh_visibility_state() -> void:
 		elif jammed:
 			sprite.modulate = Color(0.8, 1.0, 1.0, 1.0)
 		else:
-			sprite.modulate = Color(1, 1, 1, 1)
+			sprite.modulate = Color(3, 4, 255, 255)
 
 	if shield_sprite:
 		shield_sprite.visible = active and shield_hits_remaining > 0
