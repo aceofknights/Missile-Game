@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://Scripts/scatter_missile.gd" id="1_w11d7"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2_wm8xk"]
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="3_rfi34"]
-[ext_resource type="Texture2D" uid="uid://d2wo0oumwktd6" path="res://assets/missile_white.png" id="4_ag2f5"]
+[ext_resource type="Texture2D" uid="uid://wcpetjq0mc77" path="res://assets/Curved missile.png" id="4_1gidi"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lm6dg"]
 size = Vector2(28, 17)
@@ -12,14 +12,13 @@ size = Vector2(28, 17)
 script = ExtResource("1_w11d7")
 explosion_scene = ExtResource("2_wm8xk")
 child_missile_scene = ExtResource("3_rfi34")
-trail_color = Color(1, 1, 0, 1)
+trail_color = Color(0.443137, 0.247059, 1, 1)
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.442695, 0.245888, 1, 1)
-position = Vector2(4.76837e-07, 0)
 rotation = 1.5708
-scale = Vector2(0.497777, 0.523115)
-texture = ExtResource("4_ag2f5")
+scale = Vector2(0.575471, 0.698255)
+texture = ExtResource("4_1gidi")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_lm6dg")

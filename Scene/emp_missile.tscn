@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://dqofihdy7ehf8"]
 
 [ext_resource type="Script" path="res://Scripts/emp_missile.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://d2wo0oumwktd6" path="res://assets/missile_white.png" id="2_yikig"]
+[ext_resource type="Texture2D" uid="uid://wcpetjq0mc77" path="res://assets/Curved missile.png" id="2_1s3p8"]
 
 [sub_resource type="RectangleShape2D" id="1"]
 size = Vector2(14, 8)
@@ -9,13 +9,13 @@ size = Vector2(14, 8)
 [node name="EmpMissile" type="Area2D"]
 collision_mask = 5
 script = ExtResource("1")
-trail_color = Color(1, 1, 0, 1)
+trail_color = Color(0.741176, 0.796078, 0.101961, 1)
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.741556, 0.797745, 0.102614, 1)
 rotation = 1.5708
-scale = Vector2(0.2, 0.24)
-texture = ExtResource("2_yikig")
+scale = Vector2(0.256766, 0.346475)
+texture = ExtResource("2_1s3p8")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("1")

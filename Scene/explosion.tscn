@@ -1,8 +1,8 @@
 [gd_scene load_steps=6 format=3 uid="uid://g0r4peps31qo"]
 
 [ext_resource type="Script" path="res://Scripts/explosion.gd" id="1_08i34"]
-[ext_resource type="Texture2D" uid="uid://bin3nvp7wu8im" path="res://assets/Ellipse 1.png" id="2_am2h8"]
 [ext_resource type="AudioStream" uid="uid://dslifnhmxcjlw" path="res://sounds/zapsplat_explosion_large_distant_heavy_001_62161.mp3" id="2_y3suc"]
+[ext_resource type="Texture2D" uid="uid://m81kbwqj7ddw" path="res://assets/Explosion.png" id="3_eup4b"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_ouckh"]
 
@@ -23,7 +23,7 @@ autostart = true
 material = SubResource("ShaderMaterial_ouckh")
 position = Vector2(7.62939e-06, -7.62939e-06)
 scale = Vector2(0.384, 0.384)
-texture = ExtResource("2_am2h8")
+texture = ExtResource("3_eup4b")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_bxo0u")

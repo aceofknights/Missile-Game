@@ -1,9 +1,10 @@
-[gd_scene load_steps=11 format=3 uid="uid://ctxqd2rutxxdu"]
+[gd_scene load_steps=13 format=3 uid="uid://ctxqd2rutxxdu"]
 
 [ext_resource type="Script" path="res://Scripts/Main.gd" id="1_7l10b"]
-[ext_resource type="Texture2D" uid="uid://vtmbpawopp0o" path="res://assets/Space Background.png" id="2_6dmxf"]
+[ext_resource type="Texture2D" uid="uid://kpt2l8totdw" path="res://assets/Group 1.png" id="2_0otvt"]
 [ext_resource type="PackedScene" uid="uid://vt8afrux1ojd" path="res://Scene/cannon.tscn" id="2_oj5qe"]
-[ext_resource type="Texture2D" uid="uid://co4qnodl0l4fb" path="res://assets/NewGround.png" id="3_111y2"]
+[ext_resource type="Texture2D" uid="uid://cmf8xd3bw00v8" path="res://assets/black square.png" id="2_qwm4p"]
+[ext_resource type="Texture2D" uid="uid://ptnqqpabr8ai" path="res://assets/Ground line.png" id="3_icrwo"]
 [ext_resource type="Script" path="res://Scripts/Spawner.gd" id="3_k5sqb"]
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="4_mjkuo"]
 [ext_resource type="PackedScene" uid="uid://imc4shtg5sg6" path="res://Scene/boss_ufo.tscn" id="5_pxfj6"]
@@ -11,28 +12,42 @@
 [ext_resource type="PackedScene" uid="uid://vug46xq86s6a" path="res://Scene/building.tscn" id="6_ldoyd"]
 [ext_resource type="AudioStream" uid="uid://7md30sih7d62" path="res://sounds/Mrs. Lamb's Meltdown v2.mp3" id="10_ef283"]
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fjo3f"]
+size = Vector2(1159, 37)
+
 [node name="Main" type="Node2D"]
 script = ExtResource("1_7l10b")
 
+[node name="BlackSquare" type="Sprite2D" parent="."]
+position = Vector2(581, 631.75)
+scale = Vector2(0.615625, 0.0393517)
+texture = ExtResource("2_qwm4p")
+
 [node name="SpaceBackground" type="Sprite2D" parent="."]
-position = Vector2(576, 324)
-scale = Vector2(0.6, 0.6)
-texture = ExtResource("2_6dmxf")
+position = Vector2(576, 305)
+scale = Vector2(0.6, 0.564815)
+texture = ExtResource("2_0otvt")
 
 [node name="Ground" type="Sprite2D" parent="."]
-position = Vector2(576, 600.5)
-scale = Vector2(0.6, 0.558824)
-texture = ExtResource("3_111y2")
+position = Vector2(560.5, 612)
+scale = Vector2(1.2175, 0.839024)
+texture = ExtResource("3_icrwo")
+
+[node name="GroundArea" type="Area2D" parent="."]
+
+[node name="GroundCol" type="CollisionShape2D" parent="GroundArea"]
+position = Vector2(569.5, 629.5)
+shape = SubResource("RectangleShape2D_fjo3f")
 
 [node name="Cannon" parent="." instance=ExtResource("2_oj5qe")]
-position = Vector2(608, 573)
+position = Vector2(590, 596)
 
 [node name="LeftCannon" parent="." instance=ExtResource("2_oj5qe")]
-position = Vector2(64, 573)
+position = Vector2(64, 596)
 cannon_id = "left"
 
 [node name="RightCannon" parent="." instance=ExtResource("2_oj5qe")]
-position = Vector2(1091.03, 573)
+position = Vector2(1091.03, 596)
 cannon_id = "right"
 
 [node name="Spawner" type="Node2D" parent="."]
@@ -148,22 +163,22 @@ layout_mode = 2
 text = "Continue"
 
 [node name="Building" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(215, 610)
+position = Vector2(215, 600)
 
 [node name="Building2" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(458, 610)
+position = Vector2(458, 600)
 
 [node name="Building3" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(754, 610)
+position = Vector2(734, 600)
 
 [node name="Building4" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(951, 610)
+position = Vector2(951, 600)
 
 [node name="Building5" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(856, 610)
+position = Vector2(846, 600)
 
 [node name="Building6" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(332.67, 610)
+position = Vector2(332.67, 600)
 
 [node name="PauseMenu" parent="." instance=ExtResource("5_u4f7x")]
 

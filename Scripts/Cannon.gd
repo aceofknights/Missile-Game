@@ -4,6 +4,13 @@ extends Area2D
 @export var cannon_id := GameManager.CANNON_MIDDLE
 @export var fire_rate := 0.5
 
+const WORLD_1_CANNON_COLOR := Color(0.15, 0.45, 0.35, 1.0) # dark teal-green
+const WORLD_2_CANNON_COLOR := Color(0.45, 0.22, 0.18, 1.0) # dark rust
+const WORLD_3_CANNON_COLOR := Color(0.28, 0.18, 0.45, 1.0) # dark purple
+const WORLD_4_CANNON_COLOR := Color(0.18, 0.28, 0.42, 1.0) # dark blue
+const WORLD_5_CANNON_COLOR := Color(0.32, 0.45, 0.18, 1.0) # toxic green
+const DEFAULT_CANNON_COLOR := Color(0.35, 0.35, 0.35, 1.0)
+
 var cooldown := 0.0
 var shots_in_cycle := 0
 var emp_disabled_remaining := 0.0
@@ -12,11 +19,13 @@ var jam_misfire_radius: float = 0.0
 var permanently_destroyed: bool = false
 var shield_hits_remaining := 0
 var shield_cooldown_remaining := 0.0
-
+@onready var muzzle: Marker2D = get_node_or_null("CannonGun/Muzzle") as Marker2D
 @onready var ammo_label: Label = $AmmoLabel
 @onready var fire_rate_bar: ProgressBar = $FireRateBar
 @onready var repair_label: Label = get_node_or_null("RepairLabel") as Label
-@onready var sprite: Sprite2D = $Sprite2D
+@onready var cannon_gun: Sprite2D = get_node_or_null("CannonGun") as Sprite2D
+@onready var cannon_base: Sprite2D = get_node_or_null("CannonBase") as Sprite2D
+@onready var cannon_destroyed: Sprite2D = get_node_or_null("CannonDestroyed") as Sprite2D
 @onready var shield_sprite: Sprite2D = Sprite2D.new()
 @onready var shield_hits_label: Label = Label.new()
 
@@ -27,15 +36,19 @@ func _ready() -> void:
 	monitoring = true
 	monitorable = true
 	connect("area_entered", Callable(self, "_on_area_entered"))
+
 	ammo_label.top_level = true
 	fire_rate_bar.top_level = true
 	if repair_label:
 		repair_label.top_level = true
+
+	_setup_cannon_gun_pivot()
 	_setup_temp_shield_sprite()
 	_setup_shield_hits_label()
 	_refresh_visibility_state()
 	_update_overlay_positions()
 	_update_ui()
+
 	print(name, " monitoring=", monitoring, " monitorable=", monitorable)
 	print(name, " layer=", collision_layer, " mask=", collision_mask)
 	print(name, " groups=", get_groups())
@@ -46,7 +59,7 @@ func _process(delta: float) -> void:
 		emp_disabled_remaining = maxf(0.0, emp_disabled_remaining - delta)
 
 	if _can_operate():
-		look_at(get_global_mouse_position())
+		_rotate_gun_to_mouse()
 		if cooldown > 0.0:
 			cooldown = maxf(0.0, cooldown - delta)
 
@@ -66,6 +79,7 @@ func _refresh_visibility_state() -> void:
 	var destroyed: bool = GameManager.is_cannon_destroyed(cannon_id)
 	var active: bool = unlocked and not destroyed
 	var jammed: bool = is_targeting_jammed()
+	var world_color: Color = _get_world_cannon_color()
 
 	visible = unlocked
 	monitorable = active
@@ -86,15 +100,31 @@ func _refresh_visibility_state() -> void:
 		if emp_disabled_remaining > 0.0:
 			repair_label.text = "EMP %.1fs" % emp_disabled_remaining
 
-	if sprite:
+	if cannon_base:
+		cannon_base.visible = active
 		if destroyed:
-			sprite.modulate = Color(0.35, 0.35, 0.35, 1.0)
+			cannon_base.modulate = Color(0.35, 0.35, 0.35, 1.0)
 		elif emp_disabled_remaining > 0.0:
-			sprite.modulate = Color(0.55, 0.9, 1.0, 1.0)
+			cannon_base.modulate = Color(0.55, 0.9, 1.0, 1.0)
 		elif jammed:
-			sprite.modulate = Color(0.8, 1.0, 1.0, 1.0)
+			cannon_base.modulate = Color(0.8, 1.0, 1.0, 1.0)
 		else:
-			sprite.modulate = Color(3, 4, 255, 255)
+			cannon_base.modulate = world_color
+
+	if cannon_gun:
+		cannon_gun.visible = active
+		if destroyed:
+			cannon_gun.modulate = Color(0.35, 0.35, 0.35, 1.0)
+		elif emp_disabled_remaining > 0.0:
+			cannon_gun.modulate = Color(0.55, 0.9, 1.0, 1.0)
+		elif jammed:
+			cannon_gun.modulate = Color(0.8, 1.0, 1.0, 1.0)
+		else:
+			cannon_gun.modulate = world_color
+
+	if cannon_destroyed:
+		cannon_destroyed.visible = unlocked and destroyed
+		cannon_destroyed.modulate = world_color
 
 	if shield_sprite:
 		shield_sprite.visible = active and shield_hits_remaining > 0
@@ -102,7 +132,10 @@ func _refresh_visibility_state() -> void:
 
 func _update_ui() -> void:
 	if ammo_label:
-		ammo_label.text = "%d/%d" % [GameManager.get_cannon_current_ammo(cannon_id), GameManager.get_cannon_max_ammo(cannon_id)]
+		ammo_label.text = "%d/%d" % [
+			GameManager.get_cannon_current_ammo(cannon_id),
+			GameManager.get_cannon_max_ammo(cannon_id)
+		]
 
 	if fire_rate_bar:
 		var delay: float = maxf(0.001, GameManager.get_cannon_fire_rate(cannon_id, fire_rate))
@@ -111,8 +144,8 @@ func _update_ui() -> void:
 
 
 func _update_overlay_positions() -> void:
-	ammo_label.global_position = global_position + Vector2(-45, 32)
-	fire_rate_bar.global_position = global_position + Vector2(-45, 56)
+	ammo_label.global_position = global_position + Vector2(-45, 14)
+	fire_rate_bar.global_position = global_position + Vector2(-45, 35)
 	if repair_label:
 		repair_label.global_position = global_position + Vector2(-70, -68)
 
@@ -143,7 +176,7 @@ func fire(target_position: Vector2) -> bool:
 	var final_target: Vector2 = _apply_jam_to_target(target_position)
 
 	var projectile = projectile_scene.instantiate()
-	projectile.global_position = global_position
+	projectile.global_position = muzzle.global_position if muzzle else global_position
 	projectile.target = final_target
 	get_tree().current_scene.add_child(projectile)
 
@@ -252,6 +285,7 @@ func handle_enemy_impact(enemy: Area2D) -> bool:
 	var now_seconds := Time.get_ticks_msec() / 1000.0
 	if GameManager.is_passive_shield_emp_disabled(now_seconds):
 		return false
+
 	_update_shield_state(0.0)
 	if shield_hits_remaining > 0:
 		shield_hits_remaining -= 1
@@ -290,9 +324,10 @@ func is_hovered_any_state(global_mouse_position: Vector2) -> bool:
 
 
 func _is_mouse_over_cannon(global_mouse_position: Vector2) -> bool:
-	if sprite and sprite.texture:
-		var local_mouse: Vector2 = sprite.to_local(global_mouse_position)
-		if sprite.get_rect().has_point(local_mouse):
+	var hover_sprite: Sprite2D = cannon_destroyed if is_destroyed() and cannon_destroyed else cannon_base
+	if hover_sprite and hover_sprite.texture:
+		var local_mouse: Vector2 = hover_sprite.to_local(global_mouse_position)
+		if hover_sprite.get_rect().has_point(local_mouse):
 			return true
 	return global_position.distance_to(global_mouse_position) <= 70.0
 
@@ -312,5 +347,44 @@ func repair() -> void:
 func destroy_permanently() -> void:
 	permanently_destroyed = true
 	die()
-	if is_instance_valid(sprite):
-		sprite.queue_free()
+	if is_instance_valid(cannon_base):
+		cannon_base.queue_free()
+	if is_instance_valid(cannon_gun):
+		cannon_gun.queue_free()
+	if is_instance_valid(cannon_destroyed):
+		cannon_destroyed.queue_free()
+
+
+func _rotate_gun_to_mouse() -> void:
+	if cannon_gun == null:
+		return
+
+	var target_angle := global_position.angle_to_point(get_global_mouse_position())
+	cannon_gun.global_rotation = target_angle + deg_to_rad(90.0)
+
+
+func _setup_cannon_gun_pivot() -> void:
+	if cannon_gun == null or cannon_gun.texture == null:
+		return
+
+	cannon_gun.centered = false
+	var tex_size: Vector2 = cannon_gun.texture.get_size()
+
+	# Places the texture so the node origin is at the bottom-center of the gun.
+	cannon_gun.offset = Vector2(-tex_size.x * 0.5, -tex_size.y)
+
+
+func _get_world_cannon_color() -> Color:
+	match GameManager.current_world:
+		1:
+			return WORLD_1_CANNON_COLOR
+		2:
+			return WORLD_2_CANNON_COLOR
+		3:
+			return WORLD_3_CANNON_COLOR
+		4:
+			return WORLD_4_CANNON_COLOR
+		5:
+			return WORLD_5_CANNON_COLOR
+		_:
+			return DEFAULT_CANNON_COLOR
