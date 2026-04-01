@@ -25,6 +25,9 @@ var direction := Vector2.RIGHT
 var speed_multiplier := 1.0
 var accuracy_multiplier := 1.0
 var _is_dead := false
+var _entry_active := false
+var _entry_target := Vector2.ZERO
+var _entry_speed_multiplier := 1.4
 
 
 func _ready() -> void:
@@ -58,6 +61,14 @@ func _process(delta: float) -> void:
 	if _is_dead:
 		return
 
+	if _entry_active:
+		var step := base_speed * maxf(0.4, _entry_speed_multiplier) * delta
+		position = position.move_toward(_entry_target, step)
+		if position.distance_to(_entry_target) <= 6.0:
+			_entry_active = false
+			_set_random_patrol_direction()
+		return
+
 	if role == "fighter":
 		accuracy_multiplier = max(min_accuracy, accuracy_multiplier - (accuracy_decay_per_second * delta))
 
@@ -77,6 +88,21 @@ func _process(delta: float) -> void:
 	elif position.y > viewport.y * 0.45:
 		position.y = viewport.y * 0.45
 		direction.y = -abs(direction.y)
+
+
+func configure_side_entry(target: Vector2, speed_multiplier_override := 1.4) -> void:
+	_entry_target = target
+	_entry_active = true
+	_entry_speed_multiplier = speed_multiplier_override
+	direction = (target - global_position).normalized()
+
+
+func _set_random_patrol_direction() -> void:
+	var x_dir := 1.0
+	if randf() < 0.5:
+		x_dir = -1.0
+	var y_dir := randf_range(-0.45, 0.45)
+	direction = Vector2(x_dir, y_dir).normalized()
 
 
 func set_speed_multiplier(multiplier: float) -> void:

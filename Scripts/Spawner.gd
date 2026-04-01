@@ -15,6 +15,10 @@ const WORLD_BOSS_SCENES := {
 	4: "res://Scene/boss_world4.tscn",
 	5: "res://Scene/boss_world5.tscn"
 }
+const SCATTER_MISSILE_SCENE := preload("res://Scene/scatter_missile.tscn")
+const EMP_MISSILE_SCENE := preload("res://Scene/emp_missile.tscn")
+const ION_MISSILE_SCENE := preload("res://Scene/ion_missile.tscn")
+const BOSS_PLANE_SCENE := preload("res://Scene/boss_plane.tscn")
 
 
 # ✅ Safe add_child helper (prevents current_scene null crash during scene transitions)
@@ -96,3 +100,64 @@ func spawn_enemy():
 	enemy.velocity = direction
 
 	_add_to_scene(enemy)
+
+
+func spawn_scatter_missile() -> void:
+	_spawn_special_missile(SCATTER_MISSILE_SCENE)
+
+
+func spawn_emp_missile() -> void:
+	_spawn_special_missile(EMP_MISSILE_SCENE)
+
+
+func spawn_ion_missile() -> void:
+	_spawn_special_missile(ION_MISSILE_SCENE)
+
+
+func _spawn_special_missile(scene: PackedScene) -> void:
+	if scene == null:
+		return
+	var missile := scene.instantiate()
+	if missile == null:
+		return
+
+	GameManager.enemies_alive += 1
+	missile.enemy_died.connect(Callable(GameManager, "_on_enemy_died"))
+
+	var x_pos := randf_range(60.0, screen_size.x - 60.0)
+	missile.global_position = Vector2(x_pos, position.y)
+
+	var target_x := randf_range(80.0, screen_size.x - 80.0)
+	var direction := (Vector2(target_x, screen_size.y) - missile.global_position).normalized()
+	missile.velocity = direction
+	_add_to_scene(missile)
+
+
+func spawn_side_plane(role: String = "fighter") -> void:
+	if BOSS_PLANE_SCENE == null:
+		return
+	var plane := BOSS_PLANE_SCENE.instantiate()
+	if plane == null:
+		return
+	if not plane.has_signal("plane_removed"):
+		return
+
+	GameManager.enemies_alive += 1
+	plane.role = role
+	plane.base_speed = randf_range(110.0, 155.0)
+	plane.action_interval = randf_range(1.8, 2.8)
+	plane.plane_removed.connect(_on_side_plane_removed)
+
+	var from_left := randf() < 0.5
+	var start_x := -70.0 if from_left else screen_size.x + 70.0
+	var start_y := randf_range(80.0, screen_size.y * 0.3)
+	var entry_x := randf_range(140.0, screen_size.x - 140.0)
+	var entry_y := randf_range(90.0, screen_size.y * 0.32)
+
+	plane.global_position = Vector2(start_x, start_y)
+	plane.configure_side_entry(Vector2(entry_x, entry_y), randf_range(1.3, 1.8))
+	_add_to_scene(plane)
+
+
+func _on_side_plane_removed(_plane: Area2D) -> void:
+	GameManager._on_enemy_died()
