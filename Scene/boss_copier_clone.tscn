@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://dhkwvxqueco7b"]
 
 [ext_resource type="Script" path="res://Scripts/BossCopierClone.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://cayjhrt8kghi8" path="res://assets/Copier_white.png" id="2_g2fnq"]
+[ext_resource type="Texture2D" uid="uid://cayjhrt8kghi8" path="res://assets/Bosses/Copier_white.png" id="2_g2fnq"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_6wgmp"]
 radius = 33.0

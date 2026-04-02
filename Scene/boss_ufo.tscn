@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2_7m3fu"]
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="3_4pr0n"]
 [ext_resource type="PackedScene" uid="uid://cvsqtfppxjfw0" path="res://Scene/scatter_missile.tscn" id="4_gub2l"]
-[ext_resource type="Texture2D" uid="uid://blud7jokmmiyu" path="res://assets/UFO2.png" id="5_ihlgo"]
+[ext_resource type="Texture2D" uid="uid://xsbejy6t8nof" path="res://assets/Bosses/UFO White.png" id="5_eitwd"]
 [ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="6_ckns8"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4dkh0"]
@@ -17,16 +17,18 @@ missile_scene = ExtResource("3_4pr0n")
 scatter_missile_scene = ExtResource("4_gub2l")
 
 [node name="BossSprite" type="Sprite2D" parent="."]
-modulate = Color(0.490196, 0.847059, 1, 1)
+modulate = Color(1, 0, 0, 1)
 scale = Vector2(0.44527, 0.305435)
-texture = ExtResource("5_ihlgo")
+texture = ExtResource("5_eitwd")
 
 [node name="ShieldSprite" type="Sprite2D" parent="."]
+visible = false
 position = Vector2(-1.90735e-06, 9.53674e-07)
 scale = Vector2(0.492299, 0.244076)
 texture = ExtResource("6_ckns8")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
 position = Vector2(0.5, 0)
 shape = SubResource("RectangleShape2D_4dkh0")
 

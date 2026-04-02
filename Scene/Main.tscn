@@ -4,7 +4,6 @@
 [ext_resource type="Texture2D" uid="uid://kpt2l8totdw" path="res://assets/Group 1.png" id="2_0otvt"]
 [ext_resource type="PackedScene" uid="uid://vt8afrux1ojd" path="res://Scene/cannon.tscn" id="2_oj5qe"]
 [ext_resource type="Texture2D" uid="uid://cmf8xd3bw00v8" path="res://assets/black square.png" id="2_qwm4p"]
-[ext_resource type="Texture2D" uid="uid://ptnqqpabr8ai" path="res://assets/Ground line.png" id="3_icrwo"]
 [ext_resource type="Script" path="res://Scripts/Spawner.gd" id="3_k5sqb"]
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="4_mjkuo"]
 [ext_resource type="PackedScene" uid="uid://imc4shtg5sg6" path="res://Scene/boss_ufo.tscn" id="5_pxfj6"]
@@ -21,6 +20,9 @@
 [ext_resource type="AudioStream" uid="uid://b6rd1hmdqb3a5" path="res://sounds/Music/Orbital Lockdown.mp3" id="19_7iq8k"]
 [ext_resource type="AudioStream" uid="uid://h2rtt1331jr6" path="res://sounds/Music/Star Scream.mp3" id="20_5hq4y"]
 [ext_resource type="AudioStream" uid="uid://fnhb2i7eeylo" path="res://sounds/Music/Worlds End.mp3" id="21_c2vsc"]
+
+[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_h3hy6"]
+load_path = "res://.godot/imported/Ground line.png-90b625a852ac1b2820d8e4c620ea8458.ctex"
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fjo3f"]
 size = Vector2(1159, 37)
@@ -41,7 +43,7 @@ texture = ExtResource("2_0otvt")
 [node name="Ground" type="Sprite2D" parent="."]
 position = Vector2(560.5, 612)
 scale = Vector2(1.2175, 0.839024)
-texture = ExtResource("3_icrwo")
+texture = SubResource("CompressedTexture2D_h3hy6")
 
 [node name="GroundArea" type="Area2D" parent="."]
 

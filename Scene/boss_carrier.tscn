@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="3"]
 [ext_resource type="PackedScene" uid="uid://c3c4anmiybcym" path="res://Scene/boss_plane.tscn" id="4"]
 [ext_resource type="PackedScene" uid="uid://b2ws5gk4are15" path="res://Scene/fighter_intercept_shot.tscn" id="6"]
-[ext_resource type="Texture2D" uid="uid://blkfjyi54nbn" path="res://assets/Carrier white.png" id="6_s08g8"]
+[ext_resource type="Texture2D" uid="uid://blkfjyi54nbn" path="res://assets/Bosses/Carrier white.png" id="6_s08g8"]
 [ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="7_xuvln"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_gg44e"]

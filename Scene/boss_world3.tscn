@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="3"]
 [ext_resource type="PackedScene" uid="uid://dqofihdy7ehf8" path="res://Scene/emp_missile.tscn" id="4"]
-[ext_resource type="Texture2D" uid="uid://du3p1u2m5ejgl" path="res://assets/Cyber_drone_white.png" id="5_n4ncd"]
+[ext_resource type="Texture2D" uid="uid://du3p1u2m5ejgl" path="res://assets/Bosses/Cyber_drone_white.png" id="5_n4ncd"]
 [ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="6_50x62"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_4u6xy"]
