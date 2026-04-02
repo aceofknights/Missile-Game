@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://ctxqd2rutxxdu"]
+[gd_scene load_steps=23 format=3 uid="uid://ctxqd2rutxxdu"]
 
 [ext_resource type="Script" path="res://Scripts/Main.gd" id="1_7l10b"]
 [ext_resource type="Texture2D" uid="uid://kpt2l8totdw" path="res://assets/Group 1.png" id="2_0otvt"]
@@ -10,7 +10,17 @@
 [ext_resource type="PackedScene" uid="uid://imc4shtg5sg6" path="res://Scene/boss_ufo.tscn" id="5_pxfj6"]
 [ext_resource type="PackedScene" uid="uid://dfts4hlsrshmv" path="res://Scene/PauseMenu.tscn" id="5_u4f7x"]
 [ext_resource type="PackedScene" uid="uid://vug46xq86s6a" path="res://Scene/building.tscn" id="6_ldoyd"]
-[ext_resource type="AudioStream" uid="uid://7md30sih7d62" path="res://sounds/Mrs. Lamb's Meltdown v2.mp3" id="10_ef283"]
+[ext_resource type="Script" path="res://Scene/MusicManager.gd" id="11_78y1e"]
+[ext_resource type="AudioStream" uid="uid://dmuuhxfingj3s" path="res://sounds/Music/Hold the Line.mp3" id="12_bpthy"]
+[ext_resource type="AudioStream" uid="uid://xn0kkhh36l7g" path="res://sounds/Music/Hopeless Stars Burning.mp3" id="13_qfxec"]
+[ext_resource type="AudioStream" uid="uid://doyglpxguja87" path="res://sounds/Music/Last Line of Orbit.mp3" id="14_awnpp"]
+[ext_resource type="AudioStream" uid="uid://bpjxjtinl1fog" path="res://sounds/Music/Last Perimeter.mp3" id="15_7kjus"]
+[ext_resource type="AudioStream" uid="uid://dfsko3bwe5a77" path="res://sounds/Music/Lights Out.mp3" id="16_7dcpl"]
+[ext_resource type="AudioStream" uid="uid://dwwj106dgt7s8" path="res://sounds/Music/One for All.mp3" id="17_m310t"]
+[ext_resource type="AudioStream" uid="uid://c3e5ux4k5tgu7" path="res://sounds/Music/Orbital Last Stand.mp3" id="18_u82mm"]
+[ext_resource type="AudioStream" uid="uid://b6rd1hmdqb3a5" path="res://sounds/Music/Orbital Lockdown.mp3" id="19_7iq8k"]
+[ext_resource type="AudioStream" uid="uid://h2rtt1331jr6" path="res://sounds/Music/Star Scream.mp3" id="20_5hq4y"]
+[ext_resource type="AudioStream" uid="uid://fnhb2i7eeylo" path="res://sounds/Music/Worlds End.mp3" id="21_c2vsc"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fjo3f"]
 size = Vector2(1159, 37)
@@ -182,6 +192,9 @@ position = Vector2(332.67, 600)
 
 [node name="PauseMenu" parent="." instance=ExtResource("5_u4f7x")]
 
-[node name="Music" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("10_ef283")
+[node name="MusicManager" type="Node2D" parent="."]
+script = ExtResource("11_78y1e")
+playlist = Array[AudioStream]([ExtResource("12_bpthy"), ExtResource("13_qfxec"), ExtResource("14_awnpp"), ExtResource("15_7kjus"), ExtResource("16_7dcpl"), ExtResource("17_m310t"), ExtResource("18_u82mm"), ExtResource("19_7iq8k"), ExtResource("20_5hq4y"), ExtResource("21_c2vsc")])
+
+[node name="MusicPlayer" type="AudioStreamPlayer" parent="MusicManager"]
 volume_db = -7.429

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dwwj106dgt7s8"
+path="res://.godot/imported/One for All.mp3-af82f6bffa94a77745cf238ca194a08f.mp3str"
+
+[deps]
+
+source_file="res://sounds/Music/One for All.mp3"
+dest_files=["res://.godot/imported/One for All.mp3-af82f6bffa94a77745cf238ca194a08f.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

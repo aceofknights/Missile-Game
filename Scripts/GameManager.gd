@@ -60,6 +60,7 @@ var lure_position := Vector2.ZERO
 var lure_next_ready_time := 0.0
 var active_shield_emp_disabled_until := 0.0
 var passive_shield_emp_disabled_until := 0.0
+var world_special_state: Dictionary = {}
 
 signal announce_wave(message: String, duration: float)
 signal world_victory_requested
@@ -865,6 +866,7 @@ func _reset_temporary_upgrade_runtime_state() -> void:
 	lure_next_ready_time = 0.0
 	active_shield_emp_disabled_until = 0.0
 	passive_shield_emp_disabled_until = 0.0
+	world_special_state = {}
 
 
 func start_wave():
@@ -894,6 +896,7 @@ func start_wave():
 	else:
 		enemies_to_spawn = current_wave * 2
 		await spawn_enemies_gradually(enemies_to_spawn)
+		_spawn_world_special_attacks()
 
 
 func spawn_enemies_gradually(count):
@@ -909,6 +912,124 @@ func spawn_enemies_gradually(count):
 		spawner.spawn_enemy()
 
 		await get_tree().create_timer(delay).timeout
+
+
+func _special_state() -> Dictionary:
+	if world_special_state.is_empty():
+		world_special_state = {
+			"scatter_last_wave": -99,
+			"emp_last_wave": -99,
+			"ion_target_total": randi_range(2, 5),
+			"ion_spawned_total": 0,
+			"plane_target_total": randi_range(4, 8),
+			"plane_spawned_total": 0
+		}
+	return world_special_state
+
+
+func _spawn_world_special_attacks() -> void:
+	if spawner == null or not is_instance_valid(spawner):
+		return
+	var state := _special_state()
+
+	match current_world:
+		2:
+			_try_spawn_scatter(state)
+		3:
+			_try_spawn_side_planes(state)
+		4:
+			_try_spawn_emp(state)
+			_try_spawn_side_planes(state)
+		5:
+			_try_spawn_ion(state)
+			_try_spawn_side_planes(state)
+
+
+func _try_spawn_scatter(state: Dictionary) -> void:
+	if current_wave < 5:
+		return
+
+	var min_gap := 3
+	if current_wave >= 12:
+		min_gap = 2
+	if current_wave - int(state["scatter_last_wave"]) < min_gap:
+		return
+
+	var base_chance := 0.18
+	var extra := clampf((float(current_wave) - 5.0) * 0.02, 0.0, 0.25)
+	var chance := base_chance + extra
+	if randf() <= chance:
+		if spawner.has_method("spawn_scatter_missile"):
+			spawner.spawn_scatter_missile()
+			state["scatter_last_wave"] = current_wave
+
+
+func _try_spawn_emp(state: Dictionary) -> void:
+	if current_wave < 5:
+		return
+	if current_wave - int(state["emp_last_wave"]) < 3:
+		return
+
+	if randf() <= 0.24:
+		if spawner.has_method("spawn_emp_missile"):
+			spawner.spawn_emp_missile()
+			state["emp_last_wave"] = current_wave
+
+
+func _try_spawn_ion(state: Dictionary) -> void:
+	var target_total := int(state["ion_target_total"])
+	var spawned_total := int(state["ion_spawned_total"])
+	if spawned_total >= target_total:
+		return
+	if current_wave < 5:
+		return
+
+	var waves_left: int = max(1, 50 - current_wave)
+	var remaining: int = max(1, target_total - spawned_total)
+	var chance := clampf(float(remaining) / float(waves_left), 0.04, 0.16)
+	if randf() <= chance:
+		if spawner.has_method("spawn_ion_missile"):
+			spawner.spawn_ion_missile()
+			state["ion_spawned_total"] = spawned_total + 1
+
+
+func _try_spawn_side_planes(state: Dictionary) -> void:
+	var target_total := int(state["plane_target_total"])
+	var spawned_total := int(state["plane_spawned_total"])
+	if spawned_total >= target_total:
+		return
+	if current_wave < 5:
+		return
+
+	var max_wave := 20
+	if current_world == 4:
+		max_wave = 35
+	elif current_world == 5:
+		max_wave = 50
+
+	var waves_left: int = max(1, max_wave - current_wave)
+	var remaining: int = max(1, target_total - spawned_total)
+	var spawn_chance := clampf(float(remaining) / float(waves_left), 0.12, 0.35)
+	if randf() > spawn_chance:
+		return
+
+	var burst_count := 1
+	if remaining >= 3 and randf() < 0.22:
+		burst_count = 2
+
+	var spawned_now := 0
+	for _i in range(burst_count):
+		if int(state["plane_spawned_total"]) >= target_total:
+			break
+		var role := "fighter"
+		if randf() < 0.35:
+			role = "bomber"
+		if spawner.has_method("spawn_side_plane"):
+			spawner.spawn_side_plane(role)
+			state["plane_spawned_total"] = int(state["plane_spawned_total"]) + 1
+			spawned_now += 1
+		if spawned_now > 0:
+			await get_tree().create_timer(randf_range(0.2, 0.8)).timeout
 
 
 func _clear_active_enemies() -> void:

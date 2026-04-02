@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://b6rd1hmdqb3a5"
+path="res://.godot/imported/Orbital Lockdown.mp3-7a8c04fda149e58aea0b4b5b3e5ac51c.mp3str"
+
+[deps]
+
+source_file="res://sounds/Music/Orbital Lockdown.mp3"
+dest_files=["res://.godot/imported/Orbital Lockdown.mp3-7a8c04fda149e58aea0b4b5b3e5ac51c.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
