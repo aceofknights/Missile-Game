@@ -2,41 +2,39 @@
 
 [ext_resource type="Script" path="res://Scripts/Cannon.gd" id="1_riktf"]
 [ext_resource type="PackedScene" uid="uid://d3kinnbojuaxp" path="res://Scene/projectile.tscn" id="2_w50be"]
-[ext_resource type="Texture2D" uid="uid://bpv01mrwejrly" path="res://assets/cannon gun.png" id="3_mebrg"]
-[ext_resource type="Texture2D" uid="uid://d05gayxi8topw" path="res://assets/cannon base.png" id="4_7k6aj"]
-[ext_resource type="Texture2D" uid="uid://b0nm856hc28wk" path="res://assets/Destroyed cannon.png" id="5_bpkuy"]
+[ext_resource type="Texture2D" uid="uid://cbasc3fwp2y0p" path="res://assets/Cannon/Union.png" id="3_cluce"]
+[ext_resource type="Texture2D" uid="uid://clgmy5af1j6kx" path="res://assets/Cannon/Union-1.png" id="4_okrer"]
+[ext_resource type="Texture2D" uid="uid://b0nm856hc28wk" path="res://assets/Cannon/Destroyed cannon.png" id="5_1uwdr"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_w28l3"]
-size = Vector2(60, 94)
+size = Vector2(60, 77)
 
 [node name="Cannon" type="Area2D"]
 script = ExtResource("1_riktf")
 projectile_scene = ExtResource("2_w50be")
 
 [node name="CannonGun" type="Sprite2D" parent="."]
-position = Vector2(9.53674e-07, -7)
+position = Vector2(9.53674e-07, -3)
 scale = Vector2(0.238982, 0.238982)
-texture = ExtResource("3_mebrg")
+texture = ExtResource("3_cluce")
 
 [node name="Muzzle" type="Marker2D" parent="CannonGun"]
-position = Vector2(-1.90735e-06, -167.377)
+position = Vector2(-1.90735e-06, -184.115)
 
 [node name="CannonBase" type="Sprite2D" parent="."]
 position = Vector2(-0.0281361, -0.0282341)
-rotation = 1.5708
 scale = Vector2(0.220088, 0.220088)
-texture = ExtResource("4_7k6aj")
+texture = ExtResource("4_okrer")
 
 [node name="CannonDestroyed" type="Sprite2D" parent="."]
 position = Vector2(9.68575e-08, 8.43)
 scale = Vector2(0.220588, 0.29907)
-texture = ExtResource("5_bpkuy")
+texture = ExtResource("5_1uwdr")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, -8)
+position = Vector2(0, -3.75)
 scale = Vector2(0.5, 0.5)
 shape = SubResource("RectangleShape2D_w28l3")
-disabled = true
 
 [node name="AmmoLabel" type="Label" parent="."]
 offset_left = -45.0
