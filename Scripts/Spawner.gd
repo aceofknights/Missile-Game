@@ -128,7 +128,7 @@ func _spawn_special_missile(scene: PackedScene) -> void:
 	missile.global_position = Vector2(x_pos, position.y)
 
 	var target_x := randf_range(80.0, screen_size.x - 80.0)
-	var direction := (Vector2(target_x, screen_size.y) - missile.global_position).normalized()
+	var direction: Vector2 = (Vector2(target_x, screen_size.y) - missile.global_position).normalized()
 	missile.velocity = direction
 	_add_to_scene(missile)
 
@@ -149,7 +149,7 @@ func spawn_side_plane(role: String = "fighter") -> void:
 	plane.plane_removed.connect(_on_side_plane_removed)
 
 	var from_left := randf() < 0.5
-	var start_x := -70.0 if from_left else screen_size.x + 70.0
+	var start_x: float = -70.0 if from_left else screen_size.x + 70.0
 	var start_y := randf_range(80.0, screen_size.y * 0.3)
 	var entry_x := randf_range(140.0, screen_size.x - 140.0)
 	var entry_y := randf_range(90.0, screen_size.y * 0.32)

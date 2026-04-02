@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://xn0kkhh36l7g"
+path="res://.godot/imported/Hopeless Stars Burning.mp3-d3c8035e66fd6ca1d1d1857fa49f9e72.mp3str"
+
+[deps]
+
+source_file="res://sounds/Music/Hopeless Stars Burning.mp3"
+dest_files=["res://.godot/imported/Hopeless Stars Burning.mp3-d3c8035e66fd6ca1d1d1857fa49f9e72.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

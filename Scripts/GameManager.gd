@@ -984,8 +984,8 @@ func _try_spawn_ion(state: Dictionary) -> void:
 	if current_wave < 5:
 		return
 
-	var waves_left := max(1, 50 - current_wave)
-	var remaining := max(1, target_total - spawned_total)
+	var waves_left: int = max(1, 50 - current_wave)
+	var remaining: int = max(1, target_total - spawned_total)
 	var chance := clampf(float(remaining) / float(waves_left), 0.04, 0.16)
 	if randf() <= chance:
 		if spawner.has_method("spawn_ion_missile"):
@@ -1007,8 +1007,8 @@ func _try_spawn_side_planes(state: Dictionary) -> void:
 	elif current_world == 5:
 		max_wave = 50
 
-	var waves_left := max(1, max_wave - current_wave)
-	var remaining := max(1, target_total - spawned_total)
+	var waves_left: int = max(1, max_wave - current_wave)
+	var remaining: int = max(1, target_total - spawned_total)
 	var spawn_chance := clampf(float(remaining) / float(waves_left), 0.12, 0.35)
 	if randf() > spawn_chance:
 		return
