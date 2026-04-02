@@ -5,7 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="3"]
 [ext_resource type="PackedScene" uid="uid://dvi5mtwyi0k1x" path="res://Scene/ion_missile.tscn" id="4"]
 [ext_resource type="PackedScene" uid="uid://dhkwvxqueco7b" path="res://Scene/boss_copier_clone.tscn" id="5"]
-[ext_resource type="Texture2D" uid="uid://cayjhrt8kghi8" path="res://assets/Bosses/Copier_white.png" id="6_pqqjt"]
+[ext_resource type="Texture2D" uid="uid://21od4arbkvuv" path="res://assets/Bosses/Copier (2).png" id="6_pcxc3"]
 [ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="7_cjnsd"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1tpqk"]
@@ -23,7 +23,7 @@ max_health = 1
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.165503, 0.976426, 0.473841, 1)
 scale = Vector2(0.299676, 0.290397)
-texture = ExtResource("6_pqqjt")
+texture = ExtResource("6_pcxc3")
 
 [node name="ShieldSprite" type="Sprite2D" parent="."]
 visible = false

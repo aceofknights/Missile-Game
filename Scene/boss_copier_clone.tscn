@@ -1,7 +1,7 @@
 [gd_scene load_steps=4 format=3 uid="uid://dhkwvxqueco7b"]
 
 [ext_resource type="Script" path="res://Scripts/BossCopierClone.gd" id="1"]
-[ext_resource type="Texture2D" uid="uid://cayjhrt8kghi8" path="res://assets/Bosses/Copier_white.png" id="2_g2fnq"]
+[ext_resource type="Texture2D" uid="uid://21od4arbkvuv" path="res://assets/Bosses/Copier (2).png" id="2_qchje"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_6wgmp"]
 radius = 33.0
@@ -14,7 +14,7 @@ script = ExtResource("1")
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.164706, 0.976471, 0.47451, 1)
 scale = Vector2(0.3, 0.29)
-texture = ExtResource("2_g2fnq")
+texture = ExtResource("2_qchje")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 rotation = 1.5708
