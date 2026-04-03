@@ -542,7 +542,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 				{"upgrade": "unlock_left_cannon", "min_level": 1}
 			]
 		},
-		"fire_rate_right": {
+		"Fire_rate_right": {
 			"display_name": "Fire Rate (Right)",
 			"max_level": 5,
 			"base_cost": 10,
