@@ -3,6 +3,7 @@ extends Control
 @export var game_scene: PackedScene
 
 @onready var resource_label: Label = $RootMargin/MainVBox/HeaderRow/ResourceLabel
+@onready var debug_buy_all_button: Button = $RootMargin/MainVBox/HeaderRow/DebugBuyAllButton
 @onready var tech_tree_area: Control = $RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea
 @onready var continue_button: Button = $RootMargin/MainVBox/FooterRow/ContinueButton
 @onready var save_quit_button: Button = $RootMargin/MainVBox/FooterRow/SaveQuitButton
@@ -18,6 +19,9 @@ func _ready() -> void:
 	continue_button.pressed.connect(continue_game)
 	save_quit_button.pressed.connect(_on_save_and_quit_pressed)
 	world_select_button.pressed.connect(_on_back_to_world_select_pressed)
+
+	if debug_buy_all_button:
+		debug_buy_all_button.pressed.connect(_on_debug_buy_all_pressed)
 
 	if tech_tree_area != null:
 		tech_tree_area.owner_screen = self
@@ -35,7 +39,6 @@ func _build_tree() -> void:
 
 	var defs: Dictionary = GameManager.get_upgrade_definitions_world_1()
 
-	# Scan manually placed children instead of generating them.
 	for child in tech_tree_area.get_children():
 		if not is_instance_valid(child):
 			continue
@@ -161,12 +164,54 @@ func _buy_upgrade(upgrade_key: String) -> void:
 	GameManager.try_buy_upgrade(upgrade_key)
 	_refresh_view()
 
-	# Refresh tooltip immediately after buying if we are still hovering this icon.
 	if _hovered_upgrade_key == upgrade_key:
 		if _upgrade_buttons.has(upgrade_key):
 			var node: Node = _upgrade_buttons[upgrade_key]
 			if node is CanvasItem and (node as CanvasItem).visible:
 				_show_tooltip_for_upgrade(upgrade_key)
+			else:
+				_on_upgrade_hover_ended()
+		else:
+			_on_upgrade_hover_ended()
+
+
+func _on_debug_buy_all_pressed() -> void:
+	_debug_buy_all_upgrades()
+
+
+func _debug_buy_all_upgrades() -> void:
+	var defs: Dictionary = GameManager.get_upgrade_definitions_world_1()
+	var real_resources: int = GameManager.player_resources
+	var fake_resources: int = 999999999
+	var bought_any := true
+
+	while bought_any:
+		bought_any = false
+
+		for key in defs.keys():
+			var upgrade_key: String = String(key)
+
+			if not GameManager.is_upgrade_available_in_world(upgrade_key, GameManager.current_world):
+				continue
+
+			while GameManager.can_buy_upgrade(upgrade_key):
+				GameManager.player_resources = fake_resources
+				var bought := GameManager.try_buy_upgrade(upgrade_key)
+				GameManager.player_resources = real_resources
+
+				if not bought:
+					break
+
+				bought_any = true
+
+	GameManager.player_resources = real_resources
+	_refresh_view()
+
+	if _hovered_upgrade_key != "":
+		if _upgrade_buttons.has(_hovered_upgrade_key):
+			var hovered_node: Node = _upgrade_buttons[_hovered_upgrade_key]
+			if hovered_node is CanvasItem and (hovered_node as CanvasItem).visible:
+				_show_tooltip_for_upgrade(_hovered_upgrade_key)
 			else:
 				_on_upgrade_hover_ended()
 		else:
@@ -207,23 +252,23 @@ func _show_tooltip_for_upgrade(upgrade_key: String) -> void:
 	if "icon_texture" in node:
 		icon = node.icon_texture
 
-	# Fixed tooltip position slightly above the icon.
 	var icon_top_center_global := node.global_position + Vector2(node.size.x * 0.5, 0.0)
-	
+
 	if hover_tooltip.has_method("show_upgrade_tooltip"):
-			hover_tooltip.show_upgrade_tooltip(
-				display_name,
-				description,
-				level,
-				max_level,
-				cost_text,
-				icon_top_center_global,
-				icon,
-				node.size
-			)
+		hover_tooltip.show_upgrade_tooltip(
+			display_name,
+			description,
+			level,
+			max_level,
+			cost_text,
+			icon_top_center_global,
+			icon,
+			node.size
+		)
 	else:
-			hover_tooltip.visible = true
-			hover_tooltip.global_position = icon_top_center_global
+		hover_tooltip.visible = true
+		hover_tooltip.global_position = icon_top_center_global
+
 
 func _on_upgrade_hover_ended() -> void:
 	_hovered_upgrade_key = ""
