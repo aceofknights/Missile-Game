@@ -530,7 +530,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"base_cost": 10,
 			"path_rate": PATH_MEDIUM,
 			"requires": [
-				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+				{"upgrade": "starting_ammo_middle_1", "min_level": 10}
 			]
 		},
 		"fire_rate_left": {
@@ -542,7 +542,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 				{"upgrade": "unlock_left_cannon", "min_level": 1}
 			]
 		},
-		"Fire_rate_right": {
+		"fire_rate_right": {
 			"display_name": "Fire Rate (Right)",
 			"max_level": 5,
 			"base_cost": 10,

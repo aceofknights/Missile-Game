@@ -34,15 +34,11 @@ func _draw() -> void:
 		if not from_node.visible or not to_node.visible:
 			continue
 
-		# True visual center of each icon, converted into TechTreeArea local space.
 		var start := from_node.get_global_rect().get_center() - global_position
 		var finish := to_node.get_global_rect().get_center() - global_position
-		var mid_x := (start.x + finish.x) * 0.5
 
 		var color := line_color_locked
 		if owner_screen.has_method("_is_connection_active") and owner_screen._is_connection_active(from_key, to_key):
 			color = line_color_active
 
-		draw_line(start, Vector2(mid_x, start.y), color, line_width, true)
-		draw_line(Vector2(mid_x, start.y), Vector2(mid_x, finish.y), color, line_width, true)
-		draw_line(Vector2(mid_x, finish.y), finish, color, line_width, true)
+		draw_line(start, finish, color, line_width, true)
