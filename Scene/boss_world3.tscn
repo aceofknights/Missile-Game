@@ -4,12 +4,12 @@
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://evjxma2qlnwx" path="res://Scene/enemy.tscn" id="3"]
 [ext_resource type="PackedScene" uid="uid://dqofihdy7ehf8" path="res://Scene/emp_missile.tscn" id="4"]
-[ext_resource type="Texture2D" uid="uid://du3p1u2m5ejgl" path="res://assets/Bosses/Cyber_drone_white.png" id="5_n4ncd"]
+[ext_resource type="Texture2D" uid="uid://5or3ydgen4hj" path="res://assets/Bosses/Drone_N.png" id="5_rol6x"]
 [ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="6_50x62"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_4u6xy"]
-radius = 45.0
-height = 200.0
+radius = 30.0
+height = 184.0
 
 [node name="BossPlaceholder" type="Area2D"]
 script = ExtResource("1")
@@ -20,7 +20,7 @@ emp_missile_scene = ExtResource("4")
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.619424, 0.267317, 0.947765, 1)
 scale = Vector2(0.343235, 0.265007)
-texture = ExtResource("5_n4ncd")
+texture = ExtResource("5_rol6x")
 
 [node name="ShieldSprite" type="Sprite2D" parent="."]
 scale = Vector2(0.618483, 0.332346)

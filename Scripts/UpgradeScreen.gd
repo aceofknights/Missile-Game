@@ -1,122 +1,244 @@
 extends Control
 
 @export var game_scene: PackedScene
-@onready var resource_label: Label = $MarginContainer/VBoxContainer/ResourceLabel
-@onready var tree_vbox: VBoxContainer = $MarginContainer/VBoxContainer/ScrollContainer/TreeVBox
+
+@onready var resource_label: Label = $RootMargin/MainVBox/HeaderRow/ResourceLabel
+@onready var tech_tree_area: Control = $RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea
+@onready var continue_button: Button = $RootMargin/MainVBox/FooterRow/ContinueButton
+@onready var save_quit_button: Button = $RootMargin/MainVBox/FooterRow/SaveQuitButton
+@onready var world_select_button: Button = $RootMargin/MainVBox/FooterRow/WorldSelectButton
+@onready var hover_tooltip: Control = get_node_or_null("HoverTooltip")
 
 var _upgrade_buttons: Dictionary = {}
+var _connections: Array = []
+var _hovered_upgrade_key: String = ""
+var _hovered_mouse_pos: Vector2 = Vector2.ZERO
 
-const TREE_ORDER := [
-	{"label": "First Upgrade", "indent": 0},
-	{"key": "starting_ammo_middle_1", "indent": 1},
-	{"label": "Offensive > Ammo", "indent": 0},
-	{"key": "ammo_factory_1", "indent": 1},
-	{"key": "ammo_factory_2", "indent": 2},
-	{"key": "max_ammo_middle_2", "indent": 1},
-	{"key": "max_ammo_middle_3", "indent": 2},
-	{"key": "max_ammo_left_2", "indent": 2},
-	{"key": "max_ammo_left_3", "indent": 3},
-	{"key": "max_ammo_right_2", "indent": 2},
-	{"key": "max_ammo_right_3", "indent": 3},
-	{"key": "starting_ammo_middle_2", "indent": 1},
-	{"key": "starting_ammo_middle_3", "indent": 2},
-	{"key": "starting_ammo_left_2", "indent": 2},
-	{"key": "starting_ammo_left_3", "indent": 3},
-	{"key": "starting_ammo_right_2", "indent": 2},
-	{"key": "starting_ammo_right_3", "indent": 3},
-	{"label": "Offensive > Cannon", "indent": 0},
-	{"key": "double_turret_middle", "indent": 1},
-	{"key": "fire_rate_middle", "indent": 1},
-	{"key": "unlock_left_cannon", "indent": 1},
-	{"key": "double_turret_left", "indent": 2},
-	{"key": "fire_rate_left", "indent": 2},
-	{"key": "unlock_right_cannon", "indent": 1},
-	{"key": "double_turret_right", "indent": 2},
-	{"key": "fire_rate_right", "indent": 2},
-	{"label": "Offensive > Missile", "indent": 0},
-	{"key": "explosion_size", "indent": 1},
-	{"key": "explosion_duration", "indent": 1},
-	{"key": "missile_speed", "indent": 1},
-	{"label": "Defensive", "indent": 0},
-	{"key": "building_5", "indent": 1},
-	{"key": "building_6", "indent": 2},
-	{"key": "repair_shop", "indent": 1},
-	{"label": "Defensive > Shield (World 2+)", "indent": 1},
-	{"key": "shield_generator", "indent": 2},
-	{"key": "active_shields", "indent": 2},
-	{"label": "Defensive > Auto Cannon (World 3+)", "indent": 1},
-	{"key": "auto_cannon", "indent": 2},
-	{"label": "Defensive > Lure (World 4+)", "indent": 1},
-	{"key": "lure", "indent": 2},
-	{"label": "Defensive > Ion Wave (World 5+)", "indent": 1},
-	{"key": "ion_wave", "indent": 2},
-	{"label": "Economy", "indent": 0},
-	{"key": "resource_gain", "indent": 1}
-]
+func _ready() -> void:
+	continue_button.pressed.connect(continue_game)
+	save_quit_button.pressed.connect(_on_save_and_quit_pressed)
+	world_select_button.pressed.connect(_on_back_to_world_select_pressed)
 
+	if tech_tree_area != null:
+		tech_tree_area.owner_screen = self
 
-func _ready():
-	$MarginContainer/VBoxContainer/ContinueButton.pressed.connect(continue_game)
-	$MarginContainer/VBoxContainer/SaveQuitButton.pressed.connect(_on_save_and_quit_pressed)
-	$MarginContainer/VBoxContainer/WorldSelectButton.pressed.connect(_on_back_to_world_select_pressed)
+	if hover_tooltip:
+		hover_tooltip.visible = false
+
 	_build_tree()
 	_refresh_view()
 
 
 func _build_tree() -> void:
-	for child in tree_vbox.get_children():
-		child.queue_free()
 	_upgrade_buttons.clear()
+	_connections.clear()
 
-	var defs = GameManager.get_upgrade_definitions_world_1()
-	for item in TREE_ORDER:
-		if item.has("label"):
-			var section := Label.new()
-			section.text = "%s%s" % ["  ".repeat(int(item.get("indent", 0))), String(item["label"])]
-			tree_vbox.add_child(section)
+	var defs: Dictionary = GameManager.get_upgrade_definitions_world_1()
+
+	# Scan manually placed children instead of generating them.
+	for child in tech_tree_area.get_children():
+		if not is_instance_valid(child):
+			continue
+		if not child.has_method("set_state"):
+			continue
+		if not ("upgrade_key" in child):
 			continue
 
-		var key := String(item.get("key", ""))
-		if key == "":
+		var upgrade_key: String = String(child.upgrade_key)
+		if upgrade_key == "":
 			continue
+		if not defs.has(upgrade_key):
+			continue
+		if not GameManager.is_upgrade_available_in_world(upgrade_key, GameManager.current_world):
+			if child is CanvasItem:
+				(child as CanvasItem).visible = false
+			continue
+
+		if _upgrade_buttons.has(upgrade_key):
+			push_warning("Duplicate upgrade_key found in TechTreeArea: %s" % upgrade_key)
+			continue
+
+		_upgrade_buttons[upgrade_key] = child
+
+		if child.has_signal("pressed"):
+			var pressed_callable := Callable(self, "_buy_upgrade")
+			if not child.pressed.is_connected(pressed_callable):
+				child.pressed.connect(pressed_callable)
+
+		if child.has_signal("hover_started"):
+			var hover_start_callable := Callable(self, "_on_upgrade_hover_started")
+			if not child.hover_started.is_connected(hover_start_callable):
+				child.hover_started.connect(hover_start_callable)
+
+		if child.has_signal("hover_ended"):
+			var hover_end_callable := Callable(self, "_on_upgrade_hover_ended")
+			if not child.hover_ended.is_connected(hover_end_callable):
+				child.hover_ended.connect(hover_end_callable)
+
+	for key in _upgrade_buttons.keys():
+		var upgrade_key: String = String(key)
+		var def: Dictionary = defs[upgrade_key]
+		var requires: Array = def.get("requires", [])
+
+		for req in requires:
+			var req_key: String = String(req.get("upgrade", ""))
+			if req_key == "":
+				continue
+			if _upgrade_buttons.has(req_key):
+				_connections.append({
+					"from": req_key,
+					"to": upgrade_key
+				})
+
+	tech_tree_area.queue_redraw()
+
+
+func _refresh_view() -> void:
+	resource_label.text = "Resources: %d" % GameManager.player_resources
+
+	var defs: Dictionary = GameManager.get_upgrade_definitions_world_1()
+
+	for key in _upgrade_buttons.keys():
+		var node: Node = _upgrade_buttons[key]
 		if not defs.has(key):
-			continue
-		if not GameManager.is_upgrade_available_in_world(key, GameManager.current_world):
+			if node is CanvasItem:
+				(node as CanvasItem).visible = false
 			continue
 
-		var btn := Button.new()
-		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		btn.pressed.connect(func(): _buy_upgrade(key))
-		_upgrade_buttons[key] = {
-			"button": btn,
-			"indent": int(item.get("indent", 0))
-		}
-		tree_vbox.add_child(btn)
+		var def: Dictionary = defs[key]
+		var level: int = GameManager.get_upgrade_level(key)
+		var max_level: int = int(def.get("max_level", 1))
+		var is_hidden: bool = _should_hide_upgrade(key, defs)
+
+		if node is CanvasItem:
+			(node as CanvasItem).visible = not is_hidden
+
+		if is_hidden:
+			continue
+
+		var can_buy: bool = GameManager.can_buy_upgrade(key)
+		var is_maxed: bool = level >= max_level
+		var is_purchased: bool = level > 0
+
+		var state := "locked"
+		if is_maxed:
+			state = "maxed"
+		elif is_purchased:
+			state = "purchased"
+		elif can_buy:
+			state = "available"
+
+		if node.has_method("set_state"):
+			node.set_state(state)
+		if node.has_method("set_disabled_state"):
+			node.set_disabled_state(not can_buy)
+
+	tech_tree_area.queue_redraw()
+
+
+func _should_hide_upgrade(key: String, defs: Dictionary) -> bool:
+	if not defs.has(key):
+		return true
+
+	var def: Dictionary = defs[key]
+	var requires: Array = def.get("requires", [])
+
+	if requires.is_empty():
+		return false
+
+	for req in requires:
+		var req_key: String = String(req.get("upgrade", ""))
+		var min_level: int = int(req.get("min_level", 1))
+		if req_key == "":
+			continue
+		if GameManager.get_upgrade_level(req_key) >= min_level:
+			return false
+
+	return true
+
 
 func _buy_upgrade(upgrade_key: String) -> void:
 	GameManager.try_buy_upgrade(upgrade_key)
 	_refresh_view()
 
-
-func _refresh_view() -> void:
-	resource_label.text = "Resources: %d" % GameManager.player_resources
-	var defs = GameManager.get_upgrade_definitions_world_1()
-	for key in _upgrade_buttons.keys():
-		var meta: Dictionary = _upgrade_buttons[key]
-		var btn: Button = meta["button"]
-		var indent: int = meta["indent"]
-		var def: Dictionary = defs[key]
-		var level = GameManager.get_upgrade_level(key)
-		var max_level = int(def.get("max_level", 1))
-		var cost = GameManager.get_upgrade_cost(int(def.get("base_cost", 1)), level, String(def.get("path_rate", GameManager.PATH_MEDIUM)))
-		var description := String(def.get("description", ""))
-		btn.text = "%s%s L%d/%d - Cost %d" % ["  ".repeat(indent), String(def.get("display_name", key)), level, max_level, cost]
-		if description != "":
-			btn.text += "\n%s%s" % ["  ".repeat(indent + 1), description]
-		btn.disabled = not GameManager.can_buy_upgrade(key)
+	# Refresh tooltip immediately after buying if we are still hovering this icon.
+	if _hovered_upgrade_key == upgrade_key:
+		if _upgrade_buttons.has(upgrade_key):
+			var node: Node = _upgrade_buttons[upgrade_key]
+			if node is CanvasItem and (node as CanvasItem).visible:
+				_show_tooltip_for_upgrade(upgrade_key)
+			else:
+				_on_upgrade_hover_ended()
+		else:
+			_on_upgrade_hover_ended()
 
 
-func continue_game():
+func _on_upgrade_hover_started(upgrade_key: String, global_mouse_pos: Vector2) -> void:
+	_hovered_upgrade_key = upgrade_key
+	_hovered_mouse_pos = global_mouse_pos
+	_show_tooltip_for_upgrade(upgrade_key)
+
+
+func _show_tooltip_for_upgrade(upgrade_key: String) -> void:
+	if hover_tooltip == null:
+		return
+
+	var defs: Dictionary = GameManager.get_upgrade_definitions_world_1()
+	if not defs.has(upgrade_key):
+		return
+	if not _upgrade_buttons.has(upgrade_key):
+		return
+
+	var def: Dictionary = defs[upgrade_key]
+	var level: int = GameManager.get_upgrade_level(upgrade_key)
+	var max_level: int = int(def.get("max_level", 1))
+	var base_cost: int = int(def.get("base_cost", 1))
+	var path_rate: String = String(def.get("path_rate", GameManager.PATH_MEDIUM))
+	var cost: int = GameManager.get_upgrade_cost(base_cost, level, path_rate)
+	var display_name: String = String(def.get("display_name", upgrade_key))
+	var description: String = String(def.get("description", ""))
+
+	var cost_text := "Cost %d" % cost
+	if level >= max_level:
+		cost_text = "MAX"
+
+	var node: Control = _upgrade_buttons[upgrade_key] as Control
+	var icon: Texture2D = null
+	if "icon_texture" in node:
+		icon = node.icon_texture
+
+	# Fixed tooltip position slightly above the icon.
+	var icon_top_center_global := node.global_position + Vector2(node.size.x * 0.5, 0.0)
+	
+	if hover_tooltip.has_method("show_upgrade_tooltip"):
+			hover_tooltip.show_upgrade_tooltip(
+				display_name,
+				description,
+				level,
+				max_level,
+				cost_text,
+				icon_top_center_global,
+				icon,
+				node.size
+			)
+	else:
+			hover_tooltip.visible = true
+			hover_tooltip.global_position = icon_top_center_global
+
+func _on_upgrade_hover_ended() -> void:
+	_hovered_upgrade_key = ""
+	_hovered_mouse_pos = Vector2.ZERO
+
+	if hover_tooltip == null:
+		return
+
+	if hover_tooltip.has_method("hide_tooltip"):
+		hover_tooltip.hide_tooltip()
+	else:
+		hover_tooltip.visible = false
+
+
+func continue_game() -> void:
 	GameManager.continue_from_upgrades()
 
 
@@ -128,3 +250,25 @@ func _on_save_and_quit_pressed() -> void:
 func _on_back_to_world_select_pressed() -> void:
 	GameManager.save_game()
 	get_tree().change_scene_to_file("res://Scene/WorldSelect.tscn")
+
+
+func _get_tree_connections() -> Array:
+	return _connections
+
+
+func _get_tree_buttons() -> Dictionary:
+	return _upgrade_buttons
+
+
+func _is_connection_active(from_key: String, to_key: String) -> bool:
+	if not _upgrade_buttons.has(from_key) or not _upgrade_buttons.has(to_key):
+		return false
+
+	var from_level: int = GameManager.get_upgrade_level(from_key)
+	var to_node: Node = _upgrade_buttons[to_key]
+	var to_visible: bool = true
+
+	if to_node is CanvasItem:
+		to_visible = (to_node as CanvasItem).visible
+
+	return from_level > 0 and to_visible

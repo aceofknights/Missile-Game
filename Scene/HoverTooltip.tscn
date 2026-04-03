@@ -1,0 +1,39 @@
+[gd_scene load_steps=2 format=3 uid="uid://dmb8v2y7c1w5t"]
+
+[ext_resource type="Script" path="res://Scene/HoverTooltip.gd" id="1_cpb5q"]
+
+[node name="HoverTooltip" type="PanelContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_cpb5q")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="TopRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="IconTexture" type="TextureRect" parent="MarginContainer/VBoxContainer/TopRow"]
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow"]
+layout_mode = 2
+
+[node name="DescLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="LevelLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="CostLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2

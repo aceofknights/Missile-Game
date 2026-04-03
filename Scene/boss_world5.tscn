@@ -9,7 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://c3c4anmiybcym" path="res://Scene/boss_plane.tscn" id="7"]
 [ext_resource type="PackedScene" uid="uid://b2ws5gk4are15" path="res://Scene/fighter_intercept_shot.tscn" id="8"]
 [ext_resource type="PackedScene" uid="uid://c8yifnhlddca2" path="res://Scene/laser_weak_point.tscn" id="9"]
-[ext_resource type="Texture2D" uid="uid://b26bwb2cdmmix" path="res://assets/Bosses/Mothership.png" id="10_a2cpn"]
+[ext_resource type="Texture2D" uid="uid://c1tdnirnapmbo" path="res://assets/Bosses/Mothership 23.png" id="11_bh27k"]
 [ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="11_wugop"]
 [ext_resource type="PackedScene" uid="uid://shhfar6yui3i" path="res://Scene/laser_strike_indicator.tscn" id="12_jvf3d"]
 
@@ -37,7 +37,7 @@ max_health = 9
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.980392, 1, 0, 1)
 scale = Vector2(0.227195, 0.251843)
-texture = ExtResource("10_a2cpn")
+texture = ExtResource("11_bh27k")
 
 [node name="ShieldSprite" type="Sprite2D" parent="."]
 scale = Vector2(0.336493, 0.251843)
