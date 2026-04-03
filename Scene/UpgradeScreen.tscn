@@ -1,7 +1,359 @@
-[gd_scene load_steps=3 format=3 uid="uid://b3e7embvdmr0h"]
+[gd_scene load_steps=36 format=3 uid="uid://b3e7embvdmr0h"]
 
 [ext_resource type="Script" path="res://Scripts/UpgradeScreen.gd" id="1_e3852"]
 [ext_resource type="PackedScene" uid="uid://ctxqd2rutxxdu" path="res://Scene/Main.tscn" id="2_l4qgl"]
+[ext_resource type="Script" path="res://Scripts/TechTreeArea.gd" id="3_tree"]
+[ext_resource type="PackedScene" uid="uid://dsk0iiih2c6ij" path="res://Scene/UpgradeTechNode.tscn" id="4_node"]
+[ext_resource type="Texture2D" uid="uid://bes7xhivmyej7" path="res://assets/UpgradeIcons/Bullet.png" id="5_q7fg5"]
+[ext_resource type="PackedScene" uid="uid://dmb8v2y7c1w5t" path="res://Scene/HoverTooltip.tscn" id="5_tooltip"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y676u"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_g13j1"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jkyyr"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dsdta"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nprpr"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2hlfp"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w5q7b"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_easq0"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8b4qr"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c1a14"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pbr6k"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tc6fc"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bub8g"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2gpuq"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rfln7"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_og0fc"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jv08y"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cc55g"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5foyr"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q8wag"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kdbp5"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fbetl"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hmidl"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8pxq6"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lk0ff"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hqnga"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dwcsq"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bx6ne"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kmcf3"]
+bg_color = Color(0.1, 0.12, 0.16, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.75, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="UpgradeScreen" type="Control"]
 layout_mode = 3
@@ -13,40 +365,382 @@ grow_vertical = 2
 script = ExtResource("1_e3852")
 game_scene = ExtResource("2_l4qgl")
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
-layout_mode = 0
-offset_right = 1152.0
-offset_bottom = 719.0
-scale = Vector2(1, 0.9)
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.04, 0.05, 0.08, 1)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+[node name="RootMargin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 18.0
+offset_top = 18.0
+offset_right = -18.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MainVBox" type="VBoxContainer" parent="RootMargin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="HeaderRow" type="HBoxContainer" parent="RootMargin/MainVBox"]
 layout_mode = 2
 
-[node name="Text" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="RootMargin/MainVBox/HeaderRow"]
 layout_mode = 2
+size_flags_horizontal = 3
 text = "UPGRADES"
 
-[node name="ResourceLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+[node name="ResourceLabel" type="Label" parent="RootMargin/MainVBox/HeaderRow"]
 layout_mode = 2
 text = "Resources: 0"
+horizontal_alignment = 2
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 560)
+[node name="CenterRow" type="HBoxContainer" parent="RootMargin/MainVBox"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="TreeVBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer/ScrollContainer"]
+[node name="TechTreePanel" type="PanelContainer" parent="RootMargin/MainVBox/CenterRow"]
+custom_minimum_size = Vector2(0, 500)
 layout_mode = 2
 size_flags_horizontal = 3
+size_flags_vertical = 3
 
-[node name="ContinueButton" type="Button" parent="MarginContainer/VBoxContainer"]
+[node name="TechTreeArea" type="Control" parent="RootMargin/MainVBox/CenterRow/TechTreePanel"]
+layout_mode = 2
+script = ExtResource("3_tree")
+
+[node name="starting_ammo_middle_1" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 520.0
+offset_top = 230.0
+offset_right = 584.0
+offset_bottom = 294.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_y676u")
+upgrade_key = "starting_ammo_middle_1"
+icon_texture = ExtResource("5_q7fg5")
+
+[node name="ammo_factory_1" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 410.0
+offset_top = 120.0
+offset_right = 474.0
+offset_bottom = 184.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_g13j1")
+upgrade_key = "ammo_factory_1"
+
+[node name="ammo_factory_2" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 320.0
+offset_top = 60.0
+offset_right = 384.0
+offset_bottom = 124.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_jkyyr")
+upgrade_key = "ammo_factory_2"
+
+[node name="starting_ammo_middle_2" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 520.0
+offset_top = 120.0
+offset_right = 584.0
+offset_bottom = 184.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_dsdta")
+upgrade_key = "starting_ammo_middle_2"
+icon_texture = ExtResource("5_q7fg5")
+
+[node name="starting_ammo_middle_3" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 520.0
+offset_top = 40.0
+offset_right = 584.0
+offset_bottom = 104.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_nprpr")
+upgrade_key = "starting_ammo_middle_3"
+icon_texture = ExtResource("5_q7fg5")
+
+[node name="unlock_left_cannon" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 260.0
+offset_top = 210.0
+offset_right = 324.0
+offset_bottom = 274.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_2hlfp")
+upgrade_key = "unlock_left_cannon"
+
+[node name="starting_ammo_left_2" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 150.0
+offset_right = 234.0
+offset_bottom = 214.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_w5q7b")
+upgrade_key = "starting_ammo_left_2"
+icon_texture = ExtResource("5_q7fg5")
+
+[node name="starting_ammo_left_3" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 80.0
+offset_top = 90.0
+offset_right = 144.0
+offset_bottom = 154.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_easq0")
+upgrade_key = "starting_ammo_left_3"
+icon_texture = ExtResource("5_q7fg5")
+
+[node name="double_turret_left" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 250.0
+offset_right = 234.0
+offset_bottom = 314.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_8b4qr")
+upgrade_key = "double_turret_left"
+
+[node name="fire_rate_left" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 170.0
+offset_top = 340.0
+offset_right = 234.0
+offset_bottom = 404.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_c1a14")
+upgrade_key = "fire_rate_left"
+
+[node name="unlock_right_cannon" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 780.0
+offset_top = 210.0
+offset_right = 844.0
+offset_bottom = 274.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_pbr6k")
+upgrade_key = "unlock_right_cannon"
+
+[node name="starting_ammo_right_2" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 870.0
+offset_top = 150.0
+offset_right = 934.0
+offset_bottom = 214.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_tc6fc")
+upgrade_key = "starting_ammo_right_2"
+icon_texture = ExtResource("5_q7fg5")
+
+[node name="starting_ammo_right_3" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 960.0
+offset_top = 90.0
+offset_right = 1024.0
+offset_bottom = 154.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_bub8g")
+upgrade_key = "starting_ammo_right_3"
+icon_texture = ExtResource("5_q7fg5")
+
+[node name="double_turret_right" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 870.0
+offset_top = 250.0
+offset_right = 934.0
+offset_bottom = 314.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_2gpuq")
+upgrade_key = "double_turret_right"
+
+[node name="fire_rate_right" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 870.0
+offset_top = 340.0
+offset_right = 934.0
+offset_bottom = 404.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_rfln7")
+upgrade_key = "fire_rate_right"
+
+[node name="double_turret_middle" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 390.0
+offset_top = 230.0
+offset_right = 454.0
+offset_bottom = 294.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_og0fc")
+upgrade_key = "double_turret_middle"
+
+[node name="fire_rate_middle" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 390.0
+offset_top = 320.0
+offset_right = 454.0
+offset_bottom = 384.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_jv08y")
+upgrade_key = "fire_rate_middle"
+
+[node name="explosion_size" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 650.0
+offset_top = 230.0
+offset_right = 714.0
+offset_bottom = 294.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_cc55g")
+upgrade_key = "explosion_size"
+
+[node name="explosion_duration" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 650.0
+offset_top = 320.0
+offset_right = 714.0
+offset_bottom = 384.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_5foyr")
+upgrade_key = "explosion_duration"
+
+[node name="missile_speed" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 650.0
+offset_top = 410.0
+offset_right = 714.0
+offset_bottom = 474.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_q8wag")
+upgrade_key = "missile_speed"
+
+[node name="building_5" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 500.0
+offset_top = 390.0
+offset_right = 564.0
+offset_bottom = 454.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_kdbp5")
+upgrade_key = "building_5"
+
+[node name="building_6" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 500.0
+offset_top = 480.0
+offset_right = 564.0
+offset_bottom = 544.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_fbetl")
+upgrade_key = "building_6"
+
+[node name="repair_shop" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 410.0
+offset_top = 480.0
+offset_right = 474.0
+offset_bottom = 544.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_hmidl")
+upgrade_key = "repair_shop"
+
+[node name="shield_generator" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 590.0
+offset_top = 480.0
+offset_right = 654.0
+offset_bottom = 544.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_8pxq6")
+upgrade_key = "shield_generator"
+
+[node name="active_shields" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 680.0
+offset_top = 480.0
+offset_right = 744.0
+offset_bottom = 544.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_lk0ff")
+upgrade_key = "active_shields"
+
+[node name="auto_cannon" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 770.0
+offset_top = 480.0
+offset_right = 834.0
+offset_bottom = 544.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_hqnga")
+upgrade_key = "auto_cannon"
+
+[node name="lure" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 860.0
+offset_top = 480.0
+offset_right = 924.0
+offset_bottom = 544.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_dwcsq")
+upgrade_key = "lure"
+
+[node name="ion_wave" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 950.0
+offset_top = 480.0
+offset_right = 1014.0
+offset_bottom = 544.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_bx6ne")
+upgrade_key = "ion_wave"
+
+[node name="resource_gain" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 590.0
+offset_top = 40.0
+offset_right = 654.0
+offset_bottom = 104.0
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxFlat_kmcf3")
+upgrade_key = "resource_gain"
+
+[node name="FooterRow" type="HBoxContainer" parent="RootMargin/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="ContinueButton" type="Button" parent="RootMargin/MainVBox/FooterRow"]
 layout_mode = 2
 text = "Continue"
 
-[node name="SaveQuitButton" type="Button" parent="MarginContainer/VBoxContainer"]
+[node name="SaveQuitButton" type="Button" parent="RootMargin/MainVBox/FooterRow"]
 layout_mode = 2
 text = "Save and Quit"
 
-[node name="WorldSelectButton" type="Button" parent="MarginContainer/VBoxContainer"]
+[node name="WorldSelectButton" type="Button" parent="RootMargin/MainVBox/FooterRow"]
 layout_mode = 2
 text = "Back to World Select"
+
+[node name="HoverTooltip" parent="." instance=ExtResource("5_tooltip")]
+visible = false
+z_index = 100
+layout_mode = 0
+anchors_preset = 0
+anchor_right = 0.0
+anchor_bottom = 0.0
+offset_left = 900.0
+offset_top = 160.0
+offset_right = 900.0
+offset_bottom = 160.0
+grow_horizontal = 1
+grow_vertical = 1

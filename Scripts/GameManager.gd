@@ -186,12 +186,10 @@ func _default_upgrade_state() -> Dictionary:
 	}
 
 
-# Replace _ensure_world_upgrade_data with this version
 func _ensure_world_upgrade_data(world: int) -> void:
 	if not world_upgrades.has(world):
 		world_upgrades[world] = _default_upgrade_state()
 
-	# IMPORTANT: use the local dictionary directly (no _world_state() calls)
 	if world == current_world:
 		var state: Dictionary = world_upgrades[world]
 		var cannons: Dictionary = state["cannons"]
@@ -200,7 +198,6 @@ func _ensure_world_upgrade_data(world: int) -> void:
 				_sync_cannon_ammo_caps_with_state(cannon_id, state)
 
 
-# Add this new helper (does NOT call _world_state)
 func _sync_cannon_ammo_caps_with_state(cannon_id: String, state: Dictionary) -> void:
 	var cannons: Dictionary = state["cannons"]
 	if not cannons.has(cannon_id):
@@ -210,14 +207,14 @@ func _sync_cannon_ammo_caps_with_state(cannon_id: String, state: Dictionary) -> 
 	if not bool(cannon_state["unlocked"]):
 		return
 
-	# Keep ammo bounded below zero only. Do not auto-refill here.
 	var current_ammo := int(cannon_state["current_ammo"])
 	cannon_state["current_ammo"] = max(0, current_ammo)
 
-# Keep your existing _sync_cannon_ammo_caps, but rewrite it as a wrapper:
+
 func _sync_cannon_ammo_caps(cannon_id: String) -> void:
 	var state := _world_state()
 	_sync_cannon_ammo_caps_with_state(cannon_id, state)
+
 
 func _world_state() -> Dictionary:
 	_ensure_world_upgrade_data(current_world)
@@ -234,7 +231,6 @@ func add_upgrade_level(upgrade_key: String, amount := 1) -> int:
 	var levels: Dictionary = state["upgrade_levels"]
 	levels[upgrade_key] = int(levels.get(upgrade_key, 0)) + amount
 
-	# Keep unlock upgrades in sync with cannon availability.
 	if upgrade_key == "unlock_left_cannon" and int(levels[upgrade_key]) > 0:
 		set_cannon_unlocked(CANNON_LEFT, true)
 	elif upgrade_key == "unlock_right_cannon" and int(levels[upgrade_key]) > 0:
@@ -396,6 +392,7 @@ func get_active_shield_emp_disabled_remaining(now_seconds: float) -> float:
 func is_passive_shield_emp_disabled(now_seconds: float) -> bool:
 	return now_seconds < passive_shield_emp_disabled_until
 
+
 func is_upgrade_available_in_world(upgrade_key: String, world: int) -> bool:
 	var defs = get_upgrade_definitions_world_1()
 	if not defs.has(upgrade_key):
@@ -406,17 +403,18 @@ func is_upgrade_available_in_world(upgrade_key: String, world: int) -> bool:
 
 	return world >= min_world
 
+
 func get_upgrade_definitions_world_1() -> Dictionary:
-	# World 1 base tree. Later worlds can extend this while preserving the keys.
 	return {
 		"starting_ammo_middle_1": {
-			"display_name": "Starting Ammo/Max Ammo (Middle)",
+			"display_name": "+2 Max Ammo (Middle)",
+			"description": "Adds 2 ammo to the cannon's max.",
 			"max_level": 10,
 			"base_cost": 2,
 			"path_rate": PATH_CHEAP,
 			"requires": []
 		},
-		
+
 		"ammo_factory_1": {
 			"display_name": "Ammo Factory 1",
 			"max_level": 10,
@@ -433,21 +431,29 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"path_rate": PATH_MEDIUM,
 			"requires": [{"upgrade": "ammo_factory_1", "min_level": 10}]
 		},
-		"max_ammo_middle_2": {"display_name": "Max Ammo 2 (Middle)", "max_level": 10, "base_cost": 3, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"max_ammo_middle_3": {"display_name": "Max Ammo 3 (Middle)", "max_level": 10, "base_cost": 5, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "max_ammo_middle_2", "min_level": 10}]},
-		"max_ammo_left_2": {"display_name": "Max Ammo 2 (Left)", "max_level": 10, "base_cost": 3, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "unlock_left_cannon", "min_level": 1}]},
-		"max_ammo_left_3": {"display_name": "Max Ammo 3 (Left)", "max_level": 10, "base_cost": 5, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "max_ammo_left_2", "min_level": 10}]},
-		"max_ammo_right_2": {"display_name": "Max Ammo 2 (Right)", "max_level": 10, "base_cost": 3, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "unlock_right_cannon", "min_level": 1}]},
-		"max_ammo_right_3": {"display_name": "Max Ammo 3 (Right)", "max_level": 10, "base_cost": 5, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "max_ammo_right_2", "min_level": 10}]},
-		"starting_ammo_middle_2": {"display_name": "Starting Ammo 2 (Middle)", "max_level": 10, "base_cost": 3, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"starting_ammo_middle_3": {"display_name": "Starting Ammo 3 (Middle)", "max_level": 10, "base_cost": 5, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_middle_2", "min_level": 10}]},
+		"starting_ammo_middle_2": {
+			"display_name": "+2 Max Ammo (Middle)",
+			"description": "Adds 2 ammo to the cannon's max.",
+			"max_level": 10,
+			"base_cost": 3,
+			"path_rate": PATH_CHEAP,
+			"requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 10}]
+		},
+		"starting_ammo_middle_3": {
+			"display_name": "+2 Max Ammo (Middle)",
+			"description": "Adds 2 ammo to the cannon's max.",
+			"max_level": 10,
+			"base_cost": 5,
+			"path_rate": PATH_CHEAP,
+			"requires": [{"upgrade": "starting_ammo_middle_2", "min_level": 10}]
+		},
 		"unlock_left_cannon": {
 			"display_name": "Unlock Left Cannon",
 			"max_level": 1,
 			"base_cost": 50,
 			"path_rate": PATH_MEDIUM,
 			"requires": [
-				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+				{"upgrade": "starting_ammo_middle_1", "min_level": 10}
 			]
 		},
 		"unlock_right_cannon": {
@@ -456,31 +462,217 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"base_cost": 50,
 			"path_rate": PATH_MEDIUM,
 			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 10}
+			]
+		},
+		"starting_ammo_left_2": {
+			"display_name": "+2 Max Ammo (Left)",
+			"description": "Adds 2 ammo to the cannon's max.",
+			"max_level": 10,
+			"base_cost": 3,
+			"path_rate": PATH_CHEAP,
+			"requires": [{"upgrade": "unlock_left_cannon", "min_level": 1}]
+		},
+		"starting_ammo_left_3": {
+			"display_name": "+2 Max Ammo (Left)",
+			"description": "Adds 2 ammo to the cannon's max.",
+			"max_level": 10,
+			"base_cost": 5,
+			"path_rate": PATH_CHEAP,
+			"requires": [{"upgrade": "starting_ammo_left_2", "min_level": 10}]
+		},
+		"starting_ammo_right_2": {
+			"display_name": "+2 Max Ammo (Right)",
+			"description": "Adds 2 ammo to the cannon's max.",
+			"max_level": 10,
+			"base_cost": 3,
+			"path_rate": PATH_CHEAP,
+			"requires": [{"upgrade": "unlock_right_cannon", "min_level": 1}]
+		},
+		"starting_ammo_right_3": {
+			"display_name": "+2 Max Ammo (Right)",
+			"description": "Adds 2 ammo to the cannon's max.",
+			"max_level": 10,
+			"base_cost": 5,
+			"path_rate": PATH_CHEAP,
+			"requires": [{"upgrade": "starting_ammo_right_2", "min_level": 10}]
+		},
+		"double_turret_middle": {
+			"display_name": "Double Turret (Middle)",
+			"max_level": 1,
+			"base_cost": 50,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 10}
+			]
+		},
+		"double_turret_left": {
+			"display_name": "Double Turret (Left)",
+			"max_level": 1,
+			"base_cost": 80,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "unlock_left_cannon", "min_level": 1}
+			]
+		},
+		"double_turret_right": {
+			"display_name": "Double Turret (Right)",
+			"max_level": 1,
+			"base_cost": 80,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "unlock_right_cannon", "min_level": 1}
+			]
+		},
+		"fire_rate_middle": {
+			"display_name": "Fire Rate (Middle)",
+			"max_level": 5,
+			"base_cost": 10,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
 				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
 			]
 		},
-		"starting_ammo_left_2": {"display_name": "Starting Ammo 2 (Left)", "max_level": 10, "base_cost": 3, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "unlock_left_cannon", "min_level": 1}]},
-		"starting_ammo_left_3": {"display_name": "Starting Ammo 3 (Left)", "max_level": 10, "base_cost": 5, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_left_2", "min_level": 10}]},
-		"starting_ammo_right_2": {"display_name": "Starting Ammo 2 (Right)", "max_level": 10, "base_cost": 3, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "unlock_right_cannon", "min_level": 1}]},
-		"starting_ammo_right_3": {"display_name": "Starting Ammo 3 (Right)", "max_level": 10, "base_cost": 5, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_right_2", "min_level": 10}]},
-		"double_turret_middle": {"display_name": "Double Turret (Middle)", "max_level": 1, "base_cost": 50, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"double_turret_left": {"display_name": "Double Turret (Left)", "max_level": 1, "base_cost": 80, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "unlock_left_cannon", "min_level": 1}]},
-		"double_turret_right": {"display_name": "Double Turret (Right)", "max_level": 1, "base_cost": 80, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "unlock_right_cannon", "min_level": 1}]},
-		"fire_rate_middle": {"display_name": "Fire Rate (Middle)", "max_level": 5, "base_cost": 10, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"fire_rate_left": {"display_name": "Fire Rate (Left)", "max_level": 5, "base_cost": 10, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "unlock_left_cannon", "min_level": 1}]},
-		"fire_rate_right": {"display_name": "Fire Rate (Right)", "max_level": 5, "base_cost": 10, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "unlock_right_cannon", "min_level": 1}]},
-		"explosion_size": {"display_name": "Explosion Size", "description": "+1 explosion size per level.", "max_level": 3, "base_cost": 30, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"explosion_duration": {"display_name": "Explosion Duration", "description": "+0.2s max-size explosion hold per level.", "max_level": 5, "base_cost": 24, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"missile_speed": {"display_name": "Missile Speed", "max_level": 10, "base_cost": 15, "path_rate": PATH_CHEAP, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"building_5": {"display_name": "Building 5", "max_level": 1, "base_cost": 25, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"building_6": {"display_name": "Building 6", "max_level": 1, "base_cost": 75, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "building_5", "min_level": 1}]},
-		"repair_shop": {"display_name": "Repair Shop", "description": "Unlocks R repairs for destroyed buildings/cannons and lowers repair cost per level.", "max_level": 10, "base_cost": 20, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"shield_generator": {"display_name": "Shield Generator", "description": "Each building shield blocks 1 hit, +1 hit per level. Cooldown 30s, -3s per level.", "max_level": 5, "base_cost": 40, "path_rate": PATH_EXPENSIVE, "min_world": 2, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"active_shields": {"display_name": "Active Shields", "description": "Hold Space for full-base shield. Battery +1s/level, recharge +1s/level faster.", "max_level": 5, "base_cost": 50, "path_rate": PATH_EXPENSIVE, "min_world": 2, "requires": [{"upgrade": "shield_generator", "min_level": 1}]},
-		"auto_cannon": {"display_name": "Auto Cannon", "description": "Auto-targets enemy missiles. Fire interval starts at 20s and improves by 2s/level.", "max_level": 5, "base_cost": 50, "path_rate": PATH_EXPENSIVE, "min_world": 3, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"lure": {"display_name": "Lure", "description": "Press E to deploy lure. Lasts 2s +1s per level.", "max_level": 3, "base_cost": 60, "path_rate": PATH_MEDIUM, "min_world": 4, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"ion_wave": {"display_name": "Ion Wave", "description": "Press E to slow all missiles. Slow duration +1s/level, recharge -2s/level.", "max_level": 5, "base_cost": 65, "path_rate": PATH_MEDIUM, "min_world": 5, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]},
-		"resource_gain": {"display_name": "Resource Gain", "description": "+1 resource per kill per level.", "max_level": 5, "base_cost": 50, "path_rate": PATH_MEDIUM, "requires": [{"upgrade": "starting_ammo_middle_1", "min_level": 1}]}
+		"fire_rate_left": {
+			"display_name": "Fire Rate (Left)",
+			"max_level": 5,
+			"base_cost": 10,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "unlock_left_cannon", "min_level": 1}
+			]
+		},
+		"fire_rate_right": {
+			"display_name": "Fire Rate (Right)",
+			"max_level": 5,
+			"base_cost": 10,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "unlock_right_cannon", "min_level": 1}
+			]
+		},
+		"explosion_size": {
+			"display_name": "Explosion Size",
+			"description": "+1 explosion size per level.",
+			"max_level": 3,
+			"base_cost": 30,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+			]
+		},
+		"explosion_duration": {
+			"display_name": "Explosion Duration",
+			"description": "+0.2s max-size explosion hold per level.",
+			"max_level": 5,
+			"base_cost": 24,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+			]
+		},
+		"missile_speed": {
+			"display_name": "Missile Speed",
+			"max_level": 10,
+			"base_cost": 15,
+			"path_rate": PATH_CHEAP,
+			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+			]
+		},
+		"building_5": {
+			"display_name": "Building 5",
+			"max_level": 1,
+			"base_cost": 25,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+			]
+		},
+		"building_6": {
+			"display_name": "Building 6",
+			"max_level": 1,
+			"base_cost": 75,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "building_5", "min_level": 1}
+			]
+		},
+		"repair_shop": {
+			"display_name": "Repair Shop",
+			"description": "Unlocks R repairs for destroyed buildings/cannons and lowers repair cost per level.",
+			"max_level": 10,
+			"base_cost": 20,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+			]
+		},
+		"shield_generator": {
+			"display_name": "Shield Generator",
+			"description": "Each building shield blocks 1 hit, +1 hit per level. Cooldown 30s, -3s per level.",
+			"max_level": 5,
+			"base_cost": 40,
+			"path_rate": PATH_EXPENSIVE,
+			"min_world": 2,
+			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+			]
+		},
+		"active_shields": {
+			"display_name": "Active Shields",
+			"description": "Hold Space for full-base shield. Battery +1s/level, recharge +1s/level faster.",
+			"max_level": 5,
+			"base_cost": 50,
+			"path_rate": PATH_EXPENSIVE,
+			"min_world": 2,
+			"requires": [
+				{"upgrade": "shield_generator", "min_level": 1}
+			]
+		},
+		"auto_cannon": {
+			"display_name": "Auto Cannon",
+			"description": "Auto-targets enemy missiles. Fire interval starts at 20s and improves by 2s/level.",
+			"max_level": 5,
+			"base_cost": 50,
+			"path_rate": PATH_EXPENSIVE,
+			"min_world": 3,
+			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+			]
+		},
+		"lure": {
+			"display_name": "Lure",
+			"description": "Press E to deploy lure. Lasts 2s +1s per level.",
+			"max_level": 3,
+			"base_cost": 60,
+			"path_rate": PATH_MEDIUM,
+			"min_world": 4,
+			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+			]
+		},
+		"ion_wave": {
+			"display_name": "Ion Wave",
+			"description": "Press E to slow all missiles. Slow duration +1s/level, recharge -2s/level.",
+			"max_level": 5,
+			"base_cost": 65,
+			"path_rate": PATH_MEDIUM,
+			"min_world": 5,
+			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+			]
+		},
+		"resource_gain": {
+			"display_name": "Resource Gain",
+			"description": "+1 resource per kill per level.",
+			"max_level": 5,
+			"base_cost": 50,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
+			]
+		}
 	}
 
 
@@ -520,15 +712,15 @@ func try_buy_upgrade(upgrade_key: String) -> bool:
 	player_resources -= cost
 	add_upgrade_level(upgrade_key)
 
-	if upgrade_key in ["starting_ammo_middle_1", "starting_ammo_middle_2", "starting_ammo_middle_3", "max_ammo_middle_2", "max_ammo_middle_3"]:
+	if upgrade_key in ["starting_ammo_middle_1", "starting_ammo_middle_2", "starting_ammo_middle_3"]:
 		_sync_cannon_ammo_caps(CANNON_MIDDLE)
 	elif upgrade_key == "unlock_left_cannon":
 		_sync_cannon_ammo_caps(CANNON_LEFT)
-	elif upgrade_key in ["starting_ammo_left_2", "starting_ammo_left_3", "max_ammo_left_2", "max_ammo_left_3"]:
+	elif upgrade_key in ["starting_ammo_left_2", "starting_ammo_left_3"]:
 		_sync_cannon_ammo_caps(CANNON_LEFT)
 	elif upgrade_key == "unlock_right_cannon":
 		_sync_cannon_ammo_caps(CANNON_RIGHT)
-	elif upgrade_key in ["starting_ammo_right_2", "starting_ammo_right_3", "max_ammo_right_2", "max_ammo_right_3"]:
+	elif upgrade_key in ["starting_ammo_right_2", "starting_ammo_right_3"]:
 		_sync_cannon_ammo_caps(CANNON_RIGHT)
 	elif upgrade_key == "building_5":
 		set_extra_buildings(1)
@@ -586,13 +778,21 @@ func destroy_cannon(cannon_id: String) -> void:
 func get_cannon_max_ammo(cannon_id: String) -> int:
 	match cannon_id:
 		CANNON_MIDDLE:
-			return 10 + (get_upgrade_level("starting_ammo_middle_1") * 2) + (get_upgrade_level("max_ammo_middle_2") * 2) + (get_upgrade_level("max_ammo_middle_3") * 2)
+			return 10 \
+				+ (get_upgrade_level("starting_ammo_middle_1") * 2) \
+				+ (get_upgrade_level("starting_ammo_middle_2") * 2) \
+				+ (get_upgrade_level("starting_ammo_middle_3") * 2)
 		CANNON_LEFT:
-			return 10 + (get_upgrade_level("max_ammo_left_2") * 2) + (get_upgrade_level("max_ammo_left_3") * 2)
+			return 10 \
+				+ (get_upgrade_level("starting_ammo_left_2") * 2) \
+				+ (get_upgrade_level("starting_ammo_left_3") * 2)
 		CANNON_RIGHT:
-			return 10 + (get_upgrade_level("max_ammo_right_2") * 2) + (get_upgrade_level("max_ammo_right_3") * 2)
+			return 10 \
+				+ (get_upgrade_level("starting_ammo_right_2") * 2) \
+				+ (get_upgrade_level("starting_ammo_right_3") * 2)
 		_:
 			return 0
+
 
 func _get_upgrade_level_from_state(state: Dictionary, upgrade_key: String) -> int:
 	var levels: Dictionary = state.get("upgrade_levels", {})
@@ -602,11 +802,18 @@ func _get_upgrade_level_from_state(state: Dictionary, upgrade_key: String) -> in
 func _get_cannon_max_ammo_from_state(state: Dictionary, cannon_id: String) -> int:
 	match cannon_id:
 		CANNON_MIDDLE:
-			return 10 + (_get_upgrade_level_from_state(state, "starting_ammo_middle_1") * 2) + (_get_upgrade_level_from_state(state, "max_ammo_middle_2") * 2) + (_get_upgrade_level_from_state(state, "max_ammo_middle_3") * 2)
+			return 10 \
+				+ (_get_upgrade_level_from_state(state, "starting_ammo_middle_1") * 2) \
+				+ (_get_upgrade_level_from_state(state, "starting_ammo_middle_2") * 2) \
+				+ (_get_upgrade_level_from_state(state, "starting_ammo_middle_3") * 2)
 		CANNON_LEFT:
-			return 10 + (_get_upgrade_level_from_state(state, "max_ammo_left_2") * 2) + (_get_upgrade_level_from_state(state, "max_ammo_left_3") * 2)
+			return 10 \
+				+ (_get_upgrade_level_from_state(state, "starting_ammo_left_2") * 2) \
+				+ (_get_upgrade_level_from_state(state, "starting_ammo_left_3") * 2)
 		CANNON_RIGHT:
-			return 10 + (_get_upgrade_level_from_state(state, "max_ammo_right_2") * 2) + (_get_upgrade_level_from_state(state, "max_ammo_right_3") * 2)
+			return 10 \
+				+ (_get_upgrade_level_from_state(state, "starting_ammo_right_2") * 2) \
+				+ (_get_upgrade_level_from_state(state, "starting_ammo_right_3") * 2)
 		_:
 			return 0
 
@@ -622,10 +829,9 @@ func _get_cannon_starting_ammo_from_state(state: Dictionary, cannon_id: String) 
 			bonus = (_get_upgrade_level_from_state(state, "starting_ammo_right_2") * 2) + (_get_upgrade_level_from_state(state, "starting_ammo_right_3") * 2)
 	return max(0, 10 + bonus)
 
+
 func get_cannon_starting_ammo(cannon_id: String) -> int:
 	return _get_cannon_starting_ammo_from_state(_world_state(), cannon_id)
-
-
 
 
 func get_cannon_current_ammo(cannon_id: String) -> int:
@@ -703,8 +909,6 @@ func update_ammo_factory(delta: float) -> void:
 			break
 
 
-
-
 func get_cannon_shots_per_cycle(cannon_id: String) -> int:
 	if cannon_id == CANNON_MIDDLE and get_upgrade_level("double_turret_middle") > 0:
 		return 2
@@ -745,6 +949,7 @@ func can_use_repair_shop() -> bool:
 func get_repair_shop_cost() -> int:
 	return max(10, 20 - get_upgrade_level("repair_shop"))
 
+
 func get_total_ammo_status() -> String:
 	var parts: Array[String] = []
 	for cannon_id in CANNON_IDS:
@@ -769,7 +974,6 @@ func set_extra_buildings(level: int) -> void:
 
 
 func get_player_upgrades() -> Dictionary:
-	# Compatibility with existing UI callers.
 	return _world_state()["upgrade_levels"]
 
 
@@ -782,7 +986,6 @@ func get_max_ammo() -> int:
 
 
 func get_reload_speed():
-	# Deprecated by ammo factory but still used in older scenes.
 	return null
 
 
@@ -821,8 +1024,6 @@ func player_died():
 	emit_signal("player_defeat_requested")
 
 
-
-
 func reset_cannons_for_new_run() -> void:
 	var state := _world_state()
 	var cannons: Dictionary = state["cannons"]
@@ -833,6 +1034,7 @@ func reset_cannons_for_new_run() -> void:
 		cannons[cannon_id]["current_ammo"] = _get_cannon_starting_ammo_from_state(state, cannon_id)
 	state["ammo_factory_distribution_index"] = 0
 	cannons[CANNON_MIDDLE]["ammo_factory_progress"] = 0.0
+
 
 func continue_from_upgrades():
 	current_wave = 1
@@ -874,7 +1076,7 @@ func start_wave():
 
 	print("📣 start_wave() called")
 	print("🌊 Starting Wave %d (World %d)" % [current_wave, current_world])
-	
+
 	if current_world == 1:
 		is_boss_wave = (current_wave % 10 == 0)
 	elif current_world == 2:
@@ -885,7 +1087,6 @@ func start_wave():
 		is_boss_wave = (current_wave % 35 == 0)
 	elif current_world == 5:
 		is_boss_wave = (current_wave % 50 == 0)
-
 
 	wave_active = true
 	enemies_alive = 0

@@ -1,7 +1,6 @@
-[gd_scene load_steps=259 format=3 uid="uid://d3boe8y64whft"]
+[gd_scene load_steps=258 format=3 uid="uid://d3boe8y64whft"]
 
 [ext_resource type="Script" path="res://Scripts/WorldSelect.gd" id="1_gv2n6"]
-[ext_resource type="Texture2D" uid="uid://uy57wpn2tav1" path="res://icon.svg" id="2_mdfnd"]
 [ext_resource type="Texture2D" uid="uid://75bmn8hrbv7m" path="res://assets/Planets/World 1/2411018794 (1).png" id="3_didx4"]
 [ext_resource type="Texture2D" uid="uid://djiyorc3faq2h" path="res://assets/Planets/World 2/World 2 sprite sheet.png" id="4_07dg6"]
 [ext_resource type="Texture2D" uid="uid://pxy1giv4p5c6" path="res://assets/Planets/World 3/world 3 sprite sheet.png" id="5_t138l"]
@@ -1815,48 +1814,6 @@ offset_bottom = 69.0
 theme_override_font_sizes/font_size = 30
 text = "Home Base - World Select"
 
-[node name="Ship" type="Sprite2D" parent="."]
-position = Vector2(607, 155)
-scale = Vector2(0.6, 0.6)
-texture = ExtResource("2_mdfnd")
-
-[node name="CenterContainer" type="CenterContainer" parent="."]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -80.0
-offset_right = 150.0
-offset_bottom = 120.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
-layout_mode = 2
-
-[node name="Old_World1Button" type="Button" parent="CenterContainer/VBoxContainer"]
-layout_mode = 2
-text = "World 1"
-
-[node name="World2Button" type="Button" parent="CenterContainer/VBoxContainer"]
-layout_mode = 2
-text = "World 2"
-
-[node name="World3Button" type="Button" parent="CenterContainer/VBoxContainer"]
-layout_mode = 2
-text = "World 3"
-
-[node name="World4Button" type="Button" parent="CenterContainer/VBoxContainer"]
-layout_mode = 2
-text = "World 4"
-
-[node name="World5Button" type="Button" parent="CenterContainer/VBoxContainer"]
-layout_mode = 2
-text = "World 5"
-
 [node name="StatusLabel" type="Label" parent="."]
 layout_mode = 0
 offset_left = 379.0
@@ -1904,7 +1861,7 @@ grow_vertical = 2
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="World1Holder/World1Button"]
 sprite_frames = SubResource("SpriteFrames_e5dnp")
 animation = &"World 1 Spin"
-frame_progress = 0.99393
+frame_progress = 0.27695
 centered = false
 
 [node name="World2Holder" type="Control" parent="."]
@@ -1931,7 +1888,7 @@ grow_vertical = 2
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="World2Holder/World2Button"]
 sprite_frames = SubResource("SpriteFrames_e5dnp")
 animation = &"World 2 Spin"
-frame_progress = 0.363855
+frame_progress = 0.646874
 centered = false
 
 [node name="World3Holder" type="Control" parent="."]
@@ -1958,7 +1915,7 @@ grow_vertical = 2
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="World3Holder/World3Button"]
 sprite_frames = SubResource("SpriteFrames_e5dnp")
 animation = &"World 3 Spin"
-frame_progress = 0.687408
+frame_progress = 0.970425
 centered = false
 
 [node name="World4Holder" type="Control" parent="."]
@@ -1985,7 +1942,7 @@ grow_vertical = 2
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="World4Holder/World4Button"]
 sprite_frames = SubResource("SpriteFrames_e5dnp")
 animation = &"World 4 Spin"
-frame_progress = 0.496004
+frame_progress = 0.779021
 centered = false
 
 [node name="World5Holder" type="Control" parent="."]
@@ -2012,5 +1969,5 @@ grow_vertical = 2
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="World5Holder/World5Button"]
 sprite_frames = SubResource("SpriteFrames_e5dnp")
 animation = &"World 5 Spin"
-frame_progress = 0.28504
+frame_progress = 0.56806
 centered = false
