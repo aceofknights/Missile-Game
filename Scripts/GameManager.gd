@@ -21,9 +21,9 @@ const NEON_CORE_ALPHA := 1.0
 const NEON_BASE_TRAIL_WIDTH := 2.0
 
 const COST_MULTIPLIER := {
-	PATH_CHEAP: 1.5,
-	PATH_MEDIUM: 2.0,
-	PATH_EXPENSIVE: 3.0
+	PATH_CHEAP: 1.2,
+	PATH_MEDIUM: 1.7,
+	PATH_EXPENSIVE: 2
 }
 
 var current_wave := 1
@@ -251,11 +251,11 @@ func get_shield_generator_hit_capacity() -> int:
 	return 1 + level
 
 
-func get_shield_generator_cooldown_seconds() -> float:
-	var level := get_upgrade_level("shield_generator")
-	if level <= 0:
-		return 9999.0
-	return maxf(5.0, 30.0 - (3.0 * float(level)))
+#func get_shield_generator_cooldown_seconds() -> float:
+	#var level := get_upgrade_level("shield_generator")
+	#if level <= 0:
+		#return 9999.0
+	#return maxf(5.0, 30.0 - (3.0 * float(level)))
 
 
 func has_active_shields_upgrade() -> bool:
@@ -408,15 +408,16 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 	return {
 		"starting_ammo_middle_1": {
 			"display_name": "+2 Max Ammo (Middle)",
-			"description": "Adds 2 ammo to the cannon's max.",
+			"description": "Adds 2 max ammo to the middle cannon per level.",
 			"max_level": 10,
-			"base_cost": 2,
+			"base_cost": 1,
 			"path_rate": PATH_CHEAP,
 			"requires": []
 		},
 
 		"ammo_factory_1": {
 			"display_name": "Ammo Factory 1",
+			"description": "Boosts ammo production for your base. Improves with each level.",
 			"max_level": 10,
 			"base_cost": 10,
 			"path_rate": PATH_MEDIUM,
@@ -426,6 +427,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"ammo_factory_2": {
 			"display_name": "Ammo Factory 2",
+			"description": "Further increases ammo production for sustained fights.",
 			"max_level": 10,
 			"base_cost": 20,
 			"path_rate": PATH_MEDIUM,
@@ -433,7 +435,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"starting_ammo_middle_2": {
 			"display_name": "+2 Max Ammo (Middle)",
-			"description": "Adds 2 ammo to the cannon's max.",
+			"description": "Adds 2 more max ammo to the middle cannon per level.",
 			"max_level": 10,
 			"base_cost": 3,
 			"path_rate": PATH_CHEAP,
@@ -441,7 +443,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"starting_ammo_middle_3": {
 			"display_name": "+2 Max Ammo (Middle)",
-			"description": "Adds 2 ammo to the cannon's max.",
+			"description": "Pushes the middle cannon's ammo capacity even higher.",
 			"max_level": 10,
 			"base_cost": 5,
 			"path_rate": PATH_CHEAP,
@@ -449,6 +451,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"unlock_left_cannon": {
 			"display_name": "Unlock Left Cannon",
+			"description": "Brings the left cannon online and expands your firing coverage.",
 			"max_level": 1,
 			"base_cost": 50,
 			"path_rate": PATH_MEDIUM,
@@ -458,6 +461,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"unlock_right_cannon": {
 			"display_name": "Unlock Right Cannon",
+			"description": "Brings the right cannon online and strengthens your defense line.",
 			"max_level": 1,
 			"base_cost": 50,
 			"path_rate": PATH_MEDIUM,
@@ -467,7 +471,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"starting_ammo_left_2": {
 			"display_name": "+2 Max Ammo (Left)",
-			"description": "Adds 2 ammo to the cannon's max.",
+			"description": "Adds 2 max ammo to the left cannon per level.",
 			"max_level": 10,
 			"base_cost": 3,
 			"path_rate": PATH_CHEAP,
@@ -475,7 +479,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"starting_ammo_left_3": {
 			"display_name": "+2 Max Ammo (Left)",
-			"description": "Adds 2 ammo to the cannon's max.",
+			"description": "Raises the left cannon's ammo capacity even further.",
 			"max_level": 10,
 			"base_cost": 5,
 			"path_rate": PATH_CHEAP,
@@ -483,7 +487,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"starting_ammo_right_2": {
 			"display_name": "+2 Max Ammo (Right)",
-			"description": "Adds 2 ammo to the cannon's max.",
+			"description": "Adds 2 max ammo to the right cannon per level.",
 			"max_level": 10,
 			"base_cost": 3,
 			"path_rate": PATH_CHEAP,
@@ -491,7 +495,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"starting_ammo_right_3": {
 			"display_name": "+2 Max Ammo (Right)",
-			"description": "Adds 2 ammo to the cannon's max.",
+			"description": "Raises the right cannon's ammo capacity even further.",
 			"max_level": 10,
 			"base_cost": 5,
 			"path_rate": PATH_CHEAP,
@@ -499,6 +503,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"double_turret_middle": {
 			"display_name": "Double Turret (Middle)",
+			"description": "Upgrades the middle cannon to fire two shots before reload.",
 			"max_level": 1,
 			"base_cost": 50,
 			"path_rate": PATH_MEDIUM,
@@ -508,6 +513,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"double_turret_left": {
 			"display_name": "Double Turret (Left)",
+			"description": "Upgrades the left cannon to fire two shots before reload.",
 			"max_level": 1,
 			"base_cost": 80,
 			"path_rate": PATH_MEDIUM,
@@ -517,6 +523,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"double_turret_right": {
 			"display_name": "Double Turret (Right)",
+			"description": "Upgrades the right cannon to fire two shots before reload.",
 			"max_level": 1,
 			"base_cost": 80,
 			"path_rate": PATH_MEDIUM,
@@ -526,6 +533,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"fire_rate_middle": {
 			"display_name": "Fire Rate (Middle)",
+			"description": "Increases the middle cannon's firing speed each level.",
 			"max_level": 5,
 			"base_cost": 10,
 			"path_rate": PATH_MEDIUM,
@@ -535,6 +543,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"fire_rate_left": {
 			"display_name": "Fire Rate (Left)",
+			"description": "Increases the left cannon's firing speed each level.",
 			"max_level": 5,
 			"base_cost": 10,
 			"path_rate": PATH_MEDIUM,
@@ -544,6 +553,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"fire_rate_right": {
 			"display_name": "Fire Rate (Right)",
+			"description": "Increases the right cannon's firing speed each level.",
 			"max_level": 5,
 			"base_cost": 10,
 			"path_rate": PATH_MEDIUM,
@@ -553,9 +563,9 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"explosion_size": {
 			"display_name": "Explosion Size",
-			"description": "+1 explosion size per level.",
+			"description": "Increases explosion radius by 1 per level.",
 			"max_level": 3,
-			"base_cost": 30,
+			"base_cost": 50,
 			"path_rate": PATH_MEDIUM,
 			"requires": [
 				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
@@ -563,9 +573,9 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"explosion_duration": {
 			"display_name": "Explosion Duration",
-			"description": "+0.2s max-size explosion hold per level.",
+			"description": "Adds 0.2 seconds of max-size explosion duration per level.",
 			"max_level": 5,
-			"base_cost": 24,
+			"base_cost": 75,
 			"path_rate": PATH_MEDIUM,
 			"requires": [
 				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
@@ -573,6 +583,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"missile_speed": {
 			"display_name": "Missile Speed",
+			"description": "Increases missile travel speed each level for faster interceptions.",
 			"max_level": 10,
 			"base_cost": 15,
 			"path_rate": PATH_CHEAP,
@@ -582,6 +593,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"building_5": {
 			"display_name": "Building 5",
+			"description": "Adds a fifth building to strengthen your base.",
 			"max_level": 1,
 			"base_cost": 25,
 			"path_rate": PATH_MEDIUM,
@@ -591,6 +603,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"building_6": {
 			"display_name": "Building 6",
+			"description": "Adds a sixth building for even greater base durability.",
 			"max_level": 1,
 			"base_cost": 75,
 			"path_rate": PATH_MEDIUM,
@@ -600,7 +613,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"repair_shop": {
 			"display_name": "Repair Shop",
-			"description": "Unlocks R repairs for destroyed buildings/cannons and lowers repair cost per level.",
+			"description": "Unlocks repairs with R and reduces repair cost each level.",
 			"max_level": 10,
 			"base_cost": 20,
 			"path_rate": PATH_MEDIUM,
@@ -610,7 +623,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"shield_generator": {
 			"display_name": "Shield Generator",
-			"description": "Each building shield blocks 1 hit, +1 hit per level. Cooldown 30s, -3s per level.",
+			"description": "Gives each building a shield that blocks 1 hit, plus 1 more hit per level.",
 			"max_level": 5,
 			"base_cost": 40,
 			"path_rate": PATH_EXPENSIVE,
@@ -621,7 +634,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"active_shields": {
 			"display_name": "Active Shields",
-			"description": "Hold Space for full-base shield. Battery +1s/level, recharge +1s/level faster.",
+			"description": "Hold Space to deploy a full-base shield. Battery duration and recharge speed improve each level.",
 			"max_level": 5,
 			"base_cost": 50,
 			"path_rate": PATH_EXPENSIVE,
@@ -632,7 +645,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"auto_cannon": {
 			"display_name": "Auto Cannon",
-			"description": "Auto-targets enemy missiles. Fire interval starts at 20s and improves by 2s/level.",
+			"description": "Automatically targets enemy missiles. Fire interval starts at 20s and improves by 2s per level.",
 			"max_level": 5,
 			"base_cost": 50,
 			"path_rate": PATH_EXPENSIVE,
@@ -643,7 +656,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"lure": {
 			"display_name": "Lure",
-			"description": "Press E to deploy lure. Lasts 2s +1s per level.",
+			"description": "Press E to deploy a lure that lasts 2 seconds, plus 1 extra second per level.",
 			"max_level": 3,
 			"base_cost": 60,
 			"path_rate": PATH_MEDIUM,
@@ -654,7 +667,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"ion_wave": {
 			"display_name": "Ion Wave",
-			"description": "Press E to slow all missiles. Slow duration +1s/level, recharge -2s/level.",
+			"description": "Press W to slow all missiles. Duration increases by 1 second per level and recharge drops by 2 seconds per level.",
 			"max_level": 5,
 			"base_cost": 65,
 			"path_rate": PATH_MEDIUM,
@@ -665,7 +678,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"resource_gain": {
 			"display_name": "Resource Gain",
-			"description": "+1 resource per kill per level.",
+			"description": "Earn 1 additional resource per kill for each level purchased.",
 			"max_level": 5,
 			"base_cost": 50,
 			"path_rate": PATH_MEDIUM,

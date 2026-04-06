@@ -3,7 +3,6 @@ extends Area2D
 var destroyed := false
 var permanently_destroyed := false
 var shield_hits_remaining := 0
-var shield_cooldown_remaining := 0.0
 
 const WORLD_1_BUILDING_COLOR := Color(0.15, 0.45, 0.35, 1.0) # dark teal-green
 const WORLD_2_BUILDING_COLOR := Color(0.45, 0.22, 0.18, 1.0) # dark rust
@@ -31,11 +30,12 @@ func _ready() -> void:
 
 	_setup_temp_shield_sprite()
 	_setup_shield_hits_label()
+	_reset_passive_shield_for_wave()
 	_update_visual_state()
 
 
-func _process(delta: float) -> void:
-	_update_shield_state(delta)
+func _process(_delta: float) -> void:
+	_update_shield_state()
 	_update_shield_hits_label()
 
 	if not repair_label:
@@ -89,37 +89,41 @@ func _update_shield_hits_label() -> void:
 	if not show:
 		return
 
-	var now_seconds := Time.get_ticks_msec() / 1000.0
-	if GameManager.is_passive_shield_emp_disabled(now_seconds):
+	if _is_passive_shield_blocked_by_emp():
 		shield_hits_label.text = "EMP"
 	else:
 		shield_hits_label.text = "%d" % max(0, shield_hits_remaining)
 
 
-func _update_shield_state(delta: float) -> void:
+func _update_shield_state() -> void:
 	var max_hits := GameManager.get_shield_generator_hit_capacity()
 
 	if max_hits <= 0 or destroyed:
 		shield_hits_remaining = 0
-		shield_cooldown_remaining = 0.0
 		if shield_sprite:
 			shield_sprite.visible = false
 		return
 
-	var now_seconds := Time.get_ticks_msec() / 1000.0
-	if GameManager.is_passive_shield_emp_disabled(now_seconds):
-		if shield_sprite:
-			shield_sprite.visible = false
-		return
-
-	if shield_hits_remaining <= 0:
-		if shield_cooldown_remaining <= 0.0:
-			shield_hits_remaining = max_hits
-		else:
-			shield_cooldown_remaining = maxf(0.0, shield_cooldown_remaining - delta)
+	if shield_hits_remaining < 0:
+		shield_hits_remaining = 0
+	elif shield_hits_remaining > max_hits:
+		shield_hits_remaining = max_hits
 
 	if shield_sprite:
-		shield_sprite.visible = shield_hits_remaining > 0
+		shield_sprite.visible = shield_hits_remaining > 0 and not _is_passive_shield_blocked_by_emp()
+
+
+func _reset_passive_shield_for_wave() -> void:
+	var max_hits := GameManager.get_shield_generator_hit_capacity()
+	if max_hits > 0 and not destroyed:
+		shield_hits_remaining = max_hits
+	else:
+		shield_hits_remaining = 0
+
+
+func _is_passive_shield_blocked_by_emp() -> bool:
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	return GameManager.is_passive_shield_emp_disabled(now_seconds)
 
 
 func handle_enemy_impact(enemy: Area2D) -> bool:
@@ -127,21 +131,18 @@ func handle_enemy_impact(enemy: Area2D) -> bool:
 		return false
 	if enemy == null:
 		return false
-
-	var now_seconds := Time.get_ticks_msec() / 1000.0
-	if GameManager.is_passive_shield_emp_disabled(now_seconds):
+	if _is_passive_shield_blocked_by_emp():
 		return false
 
 	if enemy.has_meta("building_shield_hit"):
 		return true
 	enemy.set_meta("building_shield_hit", true)
 
-	_update_shield_state(0.0)
+	_update_shield_state()
 
 	if shield_hits_remaining > 0:
 		shield_hits_remaining -= 1
-		if shield_hits_remaining <= 0:
-			shield_cooldown_remaining = GameManager.get_shield_generator_cooldown_seconds()
+		shield_hits_remaining = max(0, shield_hits_remaining)
 		enemy.call_deferred("die", true)
 		return true
 
@@ -217,6 +218,7 @@ func repair() -> void:
 	destroyed = false
 	monitoring = true
 	monitorable = true
+	_reset_passive_shield_for_wave()
 	_update_visual_state()
 
 
