@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://dmbgplhk3j4f2"]
+[gd_scene load_steps=12 format=3 uid="uid://dmbgplhk3j4f2"]
 
 [ext_resource type="Script" path="res://Scripts/BossCarrier.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2"]
@@ -8,9 +8,26 @@
 [ext_resource type="Texture2D" uid="uid://b4cpombaxafgb" path="res://assets/Bosses/Carrier/Union@2x.png" id="6_clhdm"]
 [ext_resource type="Texture2D" uid="uid://bdecdoxr1a7p8" path="res://assets/Bosses/Carrier/Rectangle 3@2x.png" id="7_g68o3"]
 [ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="7_xuvln"]
+[ext_resource type="Texture2D" uid="uid://vwk3b28m27sv" path="res://assets/particle effect 2.png" id="9_ffu7q"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_gg44e"]
-size = Vector2(198, 55)
+size = Vector2(122, 38)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_ran7r"]
+particle_flag_disable_z = true
+angle_min = -720.0
+angle_max = 720.0
+direction = Vector3(0, -1, 0)
+spread = 180.0
+initial_velocity_min = 625.25
+initial_velocity_max = 1000.0
+angular_velocity_min = -400.0
+angular_velocity_max = 400.0
+radial_velocity_max = 100.0
+gravity = Vector3(0, 180, 0)
+scale_min = 0.2
+scale_max = 0.5
+color = Color(1, 0.6, 0.34902, 1)
 
 [node name="BossCarrier" type="Area2D"]
 script = ExtResource("1")
@@ -18,22 +35,22 @@ explosion_scene = ExtResource("2")
 missile_scene = ExtResource("3")
 plane_scene = ExtResource("4")
 fighter_projectile_scene = ExtResource("6")
+flash_sprite_path = NodePath("Sprite2D")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(1, 0.6, 0.35, 1)
-scale = Vector2(0.415331, 0.304)
+scale = Vector2(0.255505, 0.241506)
 texture = ExtResource("6_clhdm")
 
-[node name="Sprite2D" type="Sprite2D" parent="Sprite2D"]
+[node name="Hanger" type="Sprite2D" parent="Sprite2D"]
 position = Vector2(0, 26.3158)
 texture = ExtResource("7_g68o3")
 
 [node name="ShieldSprite" type="Sprite2D" parent="."]
-scale = Vector2(0.661137, 0.319905)
+scale = Vector2(0.396919, 0.179502)
 texture = ExtResource("7_xuvln")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(1, 0.5)
 shape = SubResource("RectangleShape2D_gg44e")
 
 [node name="boss_health" type="Label" parent="."]
@@ -52,3 +69,13 @@ autostart = true
 one_shot = true
 
 [node name="ShieldTimer" type="Timer" parent="."]
+
+[node name="DeathParticles" type="GPUParticles2D" parent="."]
+scale = Vector2(0.09, 0.09)
+emitting = false
+amount = 100
+process_material = SubResource("ParticleProcessMaterial_ran7r")
+texture = ExtResource("9_ffu7q")
+lifetime = 2.0
+one_shot = true
+explosiveness = 0.49

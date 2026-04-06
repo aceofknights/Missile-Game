@@ -29,7 +29,7 @@
 [ext_resource type="Texture2D" uid="uid://cwwcrte6h6pxx" path="res://assets/UpgradeIcons/lure icon.png" id="25_3v3d8"]
 [ext_resource type="Texture2D" uid="uid://bfjs6bo5u2xjo" path="res://assets/UpgradeIcons/ion zone icon.png" id="26_n58bh"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7y8ye"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pcsac"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -41,7 +41,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fnkq6"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ism0c"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -53,7 +53,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sw4db"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_j17tq"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -65,7 +65,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qxhfs"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7weki"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -77,7 +77,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hj216"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tpcm5"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -89,7 +89,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sicc5"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ghs2d"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -101,7 +101,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yycai"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_opep5"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -113,7 +113,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_n58e6"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_o3xm8"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -125,7 +125,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yfjjj"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_clxnw"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -137,7 +137,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lhjo8"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bcqkb"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -149,7 +149,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e3haq"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rlr7f"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -161,7 +161,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_iklmv"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fqk3x"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -173,7 +173,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ph0wf"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hxbvq"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -185,7 +185,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_388rp"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_m6aou"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -197,7 +197,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_i4vdu"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v6blb"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -209,7 +209,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mbihq"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ukr4n"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -221,7 +221,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5o71e"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p0scd"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -233,7 +233,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xlnds"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6bhfs"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -245,7 +245,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_c5f3g"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_v3a4m"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -257,7 +257,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_aqdoq"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ng2it"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -269,7 +269,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_penwq"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oemu8"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -281,7 +281,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b0sjg"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a2wa1"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -293,7 +293,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gawry"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nag6w"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -305,7 +305,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4gswb"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nlly6"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -317,7 +317,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ca5ff"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_q6hln"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -329,7 +329,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0nvky"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_oqlqf"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -341,7 +341,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7adw2"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_b313u"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -353,7 +353,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wbp32"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ovrtw"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -365,7 +365,7 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pw1a8"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_aea0q"]
 bg_color = Color(0.1, 0.12, 0.16, 0.96)
 border_width_left = 2
 border_width_top = 2
@@ -449,7 +449,7 @@ offset_left = 520.0
 offset_top = 230.0
 offset_right = 584.0
 offset_bottom = 294.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_7y8ye")
+theme_override_styles/panel = SubResource("StyleBoxFlat_pcsac")
 upgrade_key = "starting_ammo_middle_1"
 icon_texture = ExtResource("5_o6wqa")
 
@@ -459,7 +459,7 @@ offset_left = 343.0
 offset_top = 123.0
 offset_right = 411.0
 offset_bottom = 191.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_fnkq6")
+theme_override_styles/panel = SubResource("StyleBoxFlat_ism0c")
 upgrade_key = "ammo_factory_1"
 icon_texture = ExtResource("6_4006i")
 
@@ -469,7 +469,7 @@ offset_left = 341.0
 offset_top = 63.0
 offset_right = 409.0
 offset_bottom = 131.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_sw4db")
+theme_override_styles/panel = SubResource("StyleBoxFlat_j17tq")
 upgrade_key = "ammo_factory_2"
 icon_texture = ExtResource("6_4006i")
 
@@ -479,7 +479,7 @@ offset_left = 520.0
 offset_top = 120.0
 offset_right = 588.0
 offset_bottom = 188.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_qxhfs")
+theme_override_styles/panel = SubResource("StyleBoxFlat_7weki")
 upgrade_key = "starting_ammo_middle_2"
 icon_texture = ExtResource("5_o6wqa")
 
@@ -489,7 +489,7 @@ offset_left = 520.0
 offset_top = 74.0
 offset_right = 588.0
 offset_bottom = 142.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_hj216")
+theme_override_styles/panel = SubResource("StyleBoxFlat_tpcm5")
 upgrade_key = "starting_ammo_middle_3"
 icon_texture = ExtResource("5_o6wqa")
 
@@ -499,7 +499,7 @@ offset_left = 341.0
 offset_top = 225.0
 offset_right = 409.0
 offset_bottom = 293.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_sicc5")
+theme_override_styles/panel = SubResource("StyleBoxFlat_ghs2d")
 upgrade_key = "unlock_left_cannon"
 icon_texture = ExtResource("7_602fj")
 
@@ -509,7 +509,7 @@ offset_left = 253.0
 offset_top = 226.0
 offset_right = 321.0
 offset_bottom = 294.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_yycai")
+theme_override_styles/panel = SubResource("StyleBoxFlat_opep5")
 upgrade_key = "starting_ammo_left_2"
 icon_texture = ExtResource("8_exegf")
 
@@ -519,7 +519,7 @@ offset_left = 201.0
 offset_top = 228.0
 offset_right = 269.0
 offset_bottom = 296.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_n58e6")
+theme_override_styles/panel = SubResource("StyleBoxFlat_o3xm8")
 upgrade_key = "starting_ammo_left_3"
 icon_texture = ExtResource("8_exegf")
 
@@ -529,7 +529,7 @@ offset_left = 252.0
 offset_top = 180.0
 offset_right = 320.0
 offset_bottom = 248.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_yfjjj")
+theme_override_styles/panel = SubResource("StyleBoxFlat_clxnw")
 upgrade_key = "double_turret_left"
 icon_texture = ExtResource("9_7ywok")
 
@@ -539,7 +539,7 @@ offset_left = 254.0
 offset_top = 271.0
 offset_right = 322.0
 offset_bottom = 339.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_lhjo8")
+theme_override_styles/panel = SubResource("StyleBoxFlat_bcqkb")
 upgrade_key = "fire_rate_left"
 icon_texture = ExtResource("10_w6uil")
 
@@ -549,7 +549,7 @@ offset_left = 742.0
 offset_top = 233.0
 offset_right = 810.0
 offset_bottom = 301.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_e3haq")
+theme_override_styles/panel = SubResource("StyleBoxFlat_rlr7f")
 upgrade_key = "unlock_right_cannon"
 icon_texture = ExtResource("11_sexs8")
 
@@ -559,7 +559,7 @@ offset_left = 795.0
 offset_top = 232.0
 offset_right = 863.0
 offset_bottom = 300.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_iklmv")
+theme_override_styles/panel = SubResource("StyleBoxFlat_fqk3x")
 upgrade_key = "starting_ammo_right_2"
 icon_texture = ExtResource("12_gsxaw")
 
@@ -569,7 +569,7 @@ offset_left = 846.0
 offset_top = 230.0
 offset_right = 914.0
 offset_bottom = 298.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_ph0wf")
+theme_override_styles/panel = SubResource("StyleBoxFlat_hxbvq")
 upgrade_key = "starting_ammo_right_3"
 icon_texture = ExtResource("12_gsxaw")
 
@@ -579,7 +579,7 @@ offset_left = 799.0
 offset_top = 280.0
 offset_right = 867.0
 offset_bottom = 348.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_388rp")
+theme_override_styles/panel = SubResource("StyleBoxFlat_m6aou")
 upgrade_key = "double_turret_right"
 icon_texture = ExtResource("13_1eriv")
 
@@ -589,7 +589,7 @@ offset_left = 795.0
 offset_top = 188.0
 offset_right = 863.0
 offset_bottom = 256.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_i4vdu")
+theme_override_styles/panel = SubResource("StyleBoxFlat_v6blb")
 upgrade_key = "fire_rate_right"
 icon_texture = ExtResource("14_sqvye")
 
@@ -599,7 +599,7 @@ offset_left = 575.0
 offset_top = 120.0
 offset_right = 643.0
 offset_bottom = 188.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_mbihq")
+theme_override_styles/panel = SubResource("StyleBoxFlat_ukr4n")
 upgrade_key = "double_turret_middle"
 icon_texture = ExtResource("15_81nhm")
 
@@ -609,7 +609,7 @@ offset_left = 472.0
 offset_top = 121.0
 offset_right = 540.0
 offset_bottom = 189.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_5o71e")
+theme_override_styles/panel = SubResource("StyleBoxFlat_p0scd")
 upgrade_key = "fire_rate_middle"
 icon_texture = ExtResource("16_1s2rd")
 
@@ -619,7 +619,7 @@ offset_left = 685.0
 offset_top = 279.0
 offset_right = 749.0
 offset_bottom = 343.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_xlnds")
+theme_override_styles/panel = SubResource("StyleBoxFlat_6bhfs")
 upgrade_key = "explosion_size"
 icon_texture = ExtResource("17_58x3m")
 
@@ -629,7 +629,7 @@ offset_left = 672.0
 offset_top = 319.0
 offset_right = 740.0
 offset_bottom = 387.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_c5f3g")
+theme_override_styles/panel = SubResource("StyleBoxFlat_v3a4m")
 upgrade_key = "explosion_duration"
 icon_texture = ExtResource("18_260ej")
 
@@ -639,7 +639,7 @@ offset_left = 650.0
 offset_top = 363.0
 offset_right = 718.0
 offset_bottom = 431.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_aqdoq")
+theme_override_styles/panel = SubResource("StyleBoxFlat_ng2it")
 upgrade_key = "missile_speed"
 icon_texture = ExtResource("19_tm3lv")
 
@@ -649,7 +649,7 @@ offset_left = 396.0
 offset_top = 333.0
 offset_right = 464.0
 offset_bottom = 401.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_penwq")
+theme_override_styles/panel = SubResource("StyleBoxFlat_oemu8")
 upgrade_key = "building_5"
 icon_texture = ExtResource("17_5bgwt")
 
@@ -659,7 +659,7 @@ offset_left = 347.0
 offset_top = 381.0
 offset_right = 415.0
 offset_bottom = 449.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_b0sjg")
+theme_override_styles/panel = SubResource("StyleBoxFlat_a2wa1")
 upgrade_key = "building_6"
 icon_texture = ExtResource("17_5bgwt")
 
@@ -669,7 +669,7 @@ offset_left = 676.0
 offset_top = 155.0
 offset_right = 744.0
 offset_bottom = 223.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_gawry")
+theme_override_styles/panel = SubResource("StyleBoxFlat_nag6w")
 upgrade_key = "repair_shop"
 icon_texture = ExtResource("18_rwfvo")
 
@@ -679,7 +679,7 @@ offset_left = 439.0
 offset_top = 404.0
 offset_right = 507.0
 offset_bottom = 472.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_4gswb")
+theme_override_styles/panel = SubResource("StyleBoxFlat_nlly6")
 upgrade_key = "shield_generator"
 icon_texture = ExtResource("22_fcvo1")
 
@@ -689,7 +689,7 @@ offset_left = 438.0
 offset_top = 456.0
 offset_right = 506.0
 offset_bottom = 524.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_ca5ff")
+theme_override_styles/panel = SubResource("StyleBoxFlat_q6hln")
 upgrade_key = "active_shields"
 icon_texture = ExtResource("23_di41s")
 
@@ -699,7 +699,7 @@ offset_left = 491.0
 offset_top = 404.0
 offset_right = 559.0
 offset_bottom = 472.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_0nvky")
+theme_override_styles/panel = SubResource("StyleBoxFlat_oqlqf")
 upgrade_key = "auto_cannon"
 icon_texture = ExtResource("24_kiatj")
 
@@ -709,7 +709,7 @@ offset_left = 551.0
 offset_top = 406.0
 offset_right = 619.0
 offset_bottom = 474.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_7adw2")
+theme_override_styles/panel = SubResource("StyleBoxFlat_b313u")
 upgrade_key = "lure"
 icon_texture = ExtResource("25_3v3d8")
 
@@ -719,7 +719,7 @@ offset_left = 603.0
 offset_top = 405.0
 offset_right = 671.0
 offset_bottom = 473.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_wbp32")
+theme_override_styles/panel = SubResource("StyleBoxFlat_ovrtw")
 upgrade_key = "ion_wave"
 icon_texture = ExtResource("26_n58bh")
 
@@ -729,7 +729,7 @@ offset_left = 344.0
 offset_top = 287.0
 offset_right = 412.0
 offset_bottom = 355.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_pw1a8")
+theme_override_styles/panel = SubResource("StyleBoxFlat_aea0q")
 upgrade_key = "resource_gain"
 icon_texture = ExtResource("19_vrn8w")
 
