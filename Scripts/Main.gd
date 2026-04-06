@@ -19,6 +19,10 @@ extends Node2D
 @onready var end_state_label: Label = $UI/EndStateOverlay/CenterContainer/Panel/VBoxContainer/EndStateLabel
 @onready var end_state_continue_button: Button = $UI/EndStateOverlay/CenterContainer/Panel/VBoxContainer/ContinueButton
 @onready var ground_area: Area2D = get_node_or_null("GroundArea") as Area2D
+@onready var boss_health_holder: Control = $UI/BossHealthHolder
+@onready var boss_health_label: Label = $UI/BossHealthHolder/BossHealthLabel
+@onready var boss_health_bar: ProgressBar = $UI/BossHealthHolder/BossHealthBar
+@onready var kill_boss_button: Button = $UI/KillBossButton
 
 const EXPLOSION_SCENE := preload("res://Scene/explosion.tscn")
 const AUTO_CANNON_SHOT_SCENE := preload("res://Scene/fighter_intercept_shot.tscn")
@@ -31,13 +35,23 @@ const PLAYER_DEATH_EXPLOSION_INTERVAL := 0.08
 const DEFAULT_BOSS_EXPLOSION_SIZE := Vector2(240.0, 140.0)
 const PLAYER_BOTTOM_EXPLOSION_Y_MARGIN := 18.0
 
+@export var boss_bar_smooth_speed: float = 8.0
 @export var world_1_ground_color: Color = Color(0.15, 0.45, 0.35, 1.0) # dark teal-green
 @export var world_2_ground_color: Color = Color(0.45, 0.22, 0.18, 1.0) # dark rust
 @export var world_3_ground_color: Color = Color(0.28, 0.18, 0.45, 1.0) # dark purple
 @export var world_4_ground_color: Color = Color(0.18, 0.28, 0.42, 1.0) # dark blue
 @export var world_5_ground_color: Color = Color(0.32, 0.45, 0.18, 1.0) # toxic green
 @export var default_ground_color: Color = Color(0.35, 0.35, 0.35, 1.0)
+@export var boss_death_shake_time: float = 0.9
+@export var boss_death_shake_strength: float = 10.0
+@export var boss_death_fall_time: float = 1.5
+@export var boss_death_final_scale: float = 0.18
+@export var boss_death_rotation_degrees: float = 85.0
+@export var boss_death_curve_height: float = 110.0
 
+var _boss_death_animation_in_progress: bool = false
+var _active_boss: Node = null
+var _boss_bar_displayed_health: float = 0.0
 var _last_ground_world: int = -1
 var base_buildings = 4
 var extra_buildings = 0
@@ -74,11 +88,39 @@ func _enter_tree() -> void:
 func _on_child_entered_tree(node: Node) -> void:
 	_connect_boss_signals(node)
 
+func _on_kill_boss_pressed() -> void:
+	var boss := _find_active_boss_for_ui()
+	if boss == null:
+		print("❌ No active boss to kill")
+		return
+
+	print("💀 Debug kill boss:", boss.name)
+	_force_kill_boss_for_debug(boss)
+
+
+func _force_kill_boss_for_debug(boss: Node) -> void:
+	if boss == null or not is_instance_valid(boss):
+		return
+
+	if _boss_death_animation_in_progress:
+		print("⚠ Boss death animation already in progress")
+		return
+
+	# Stop boss logic cleanly if the boss supports it
+	if boss.has_method("_prepare_for_death_animation"):
+		boss._prepare_for_death_animation()
+	elif boss.has_method("is_boss_dead") and boss.is_boss_dead():
+		return
+
+	_on_boss_start_death_animation(boss)
 
 func _ready() -> void:
 	_ensure_repair_hint_label()
 	_apply_ground_color()
 	_setup_ground_area()
+	_setup_boss_health_ui()
+	kill_boss_button.pressed.connect(_on_kill_boss_pressed)
+		
 	NodeContracts.require_nodes_with_types(self, {
 		"Cannon": "Area2D",
 		"LeftCannon": "Area2D",
@@ -277,6 +319,7 @@ func _process(delta: float) -> void:
 
 	GameManager.update_ammo_factory(delta)
 	GameManager.update_active_shield(delta)
+	_update_boss_health_ui(delta)
 	_handle_upgrade_hotkeys()
 	_update_auto_cannon(delta)
 	_update_active_shield_visual()
@@ -291,6 +334,122 @@ func _process(delta: float) -> void:
 	if _count_surviving_buildings() == 0 and not _end_flow_in_progress:
 		print("🏚️ All buildings destroyed — returning to upgrade screen")
 		GameManager.player_died()
+
+func _setup_boss_health_ui() -> void:
+	if boss_health_holder:
+		boss_health_holder.visible = false
+
+	if boss_health_label:
+		boss_health_label.text = "BOSS"
+		boss_health_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		boss_health_label.add_theme_font_size_override("font_size", 20)
+		boss_health_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.95, 1.0))
+		boss_health_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
+		boss_health_label.add_theme_constant_override("outline_size", 3)
+
+	if boss_health_bar:
+		boss_health_bar.min_value = 0.0
+		boss_health_bar.max_value = 1.0
+		boss_health_bar.value = 1.0
+		boss_health_bar.show_percentage = false
+		boss_health_bar.custom_minimum_size = Vector2(420, 26)
+
+		var bg_style := StyleBoxFlat.new()
+		bg_style.bg_color = Color(0.08, 0.08, 0.10, 0.92)
+		bg_style.border_color = Color(0.75, 0.75, 0.85, 1.0)
+		bg_style.border_width_left = 2
+		bg_style.border_width_top = 2
+		bg_style.border_width_right = 2
+		bg_style.border_width_bottom = 2
+		bg_style.corner_radius_top_left = 6
+		bg_style.corner_radius_top_right = 6
+		bg_style.corner_radius_bottom_left = 6
+		bg_style.corner_radius_bottom_right = 6
+
+		var fill_style := StyleBoxFlat.new()
+		fill_style.bg_color = Color(0.95, 0.20, 0.25, 1.0)
+		fill_style.border_color = Color(1.0, 0.55, 0.60, 1.0)
+		fill_style.border_width_left = 1
+		fill_style.border_width_top = 1
+		fill_style.border_width_right = 1
+		fill_style.border_width_bottom = 1
+		fill_style.corner_radius_top_left = 5
+		fill_style.corner_radius_top_right = 5
+		fill_style.corner_radius_bottom_left = 5
+		fill_style.corner_radius_bottom_right = 5
+
+		boss_health_bar.add_theme_stylebox_override("background", bg_style)
+		boss_health_bar.add_theme_stylebox_override("fill", fill_style)
+
+
+func _update_boss_health_ui(delta: float) -> void:
+	if not is_instance_valid(_active_boss) or _boss_is_invalid(_active_boss):
+		_active_boss = _find_active_boss_for_ui()
+		if _active_boss != null and _active_boss.has_method("get_boss_health"):
+			_boss_bar_displayed_health = float(_active_boss.get_boss_health())
+
+	if _active_boss == null:
+		if boss_health_holder:
+			boss_health_holder.visible = false
+		return
+
+	if not _active_boss.has_method("get_boss_health") or not _active_boss.has_method("get_boss_max_health"):
+		if boss_health_holder:
+			boss_health_holder.visible = false
+		return
+
+	var current_health: float = float(_active_boss.get_boss_health())
+	var max_health: float = maxf(1.0, float(_active_boss.get_boss_max_health()))
+
+	_boss_bar_displayed_health = lerpf(
+		_boss_bar_displayed_health,
+		current_health,
+		clampf(delta * boss_bar_smooth_speed, 0.0, 1.0)
+	)
+
+	if absf(_boss_bar_displayed_health - current_health) < 0.01:
+		_boss_bar_displayed_health = current_health
+
+	if boss_health_holder:
+		boss_health_holder.visible = true
+
+	if boss_health_bar:
+		boss_health_bar.min_value = 0.0
+		boss_health_bar.max_value = max_health
+		boss_health_bar.value = _boss_bar_displayed_health
+
+	if boss_health_label:
+		boss_health_label.text = _get_boss_display_name(_active_boss)
+
+
+func _find_active_boss_for_ui() -> Node:
+	for node in get_tree().get_nodes_in_group("enemy"):
+		if _is_boss_enemy(node) and not _boss_is_invalid(node):
+			return node
+	return null
+
+
+func _boss_is_invalid(node: Node) -> bool:
+	if node == null:
+		return true
+	if not is_instance_valid(node):
+		return true
+	if node.has_method("is_boss_dead") and node.is_boss_dead():
+		return true
+	return false
+
+
+func _get_boss_display_name(boss: Node) -> String:
+	if boss == null:
+		return "BOSS"
+
+	if boss.has_meta("boss_name"):
+		return String(boss.get_meta("boss_name"))
+
+	if "boss_name" in boss:
+		return String(boss.boss_name)
+
+	return String(boss.name).replace("_", " ").to_upper()
 
 
 func _create_active_shield_sprite() -> void:
@@ -781,11 +940,132 @@ func _estimate_boss_body_size(boss: Area2D) -> Vector2:
 
 	return DEFAULT_BOSS_EXPLOSION_SIZE
 
+func _on_boss_start_death_animation(boss: Node) -> void:
+	if _boss_death_animation_in_progress:
+		return
+	_boss_death_animation_in_progress = true
+	_play_shared_boss_death_animation(boss)
+	
+func _play_shared_boss_death_animation(boss: Node) -> void:
+	if boss == null or not is_instance_valid(boss):
+		_finish_boss_death_animation(null)
+		return
+
+	var visual := _get_boss_visual_for_death(boss)
+	if visual == null:
+		_finish_boss_death_animation(boss)
+		return
+
+	var start_pos: Vector2 = boss.global_position
+	var viewport_size: Vector2 = get_viewport_rect().size
+	var ground_y: float = viewport_size.y - PLAYER_BOTTOM_EXPLOSION_Y_MARGIN - randf_range(10.0, 36.0)
+	var end_x: float = clampf(
+		start_pos.x + randf_range(-180.0, 180.0),
+		60.0,
+		viewport_size.x - 60.0
+	)
+	var end_pos := Vector2(end_x, ground_y)
+
+	var base_scale: Vector2 = visual.scale
+	var final_scale := base_scale * boss_death_final_scale
+	var target_rotation := deg_to_rad(randf_range(-boss_death_rotation_degrees, boss_death_rotation_degrees))
+	var shake_elapsed: float = 0.0
+	var fall_elapsed: float = 0.0
+
+	var particles := _get_boss_particles_for_death(boss)
+	if particles:
+		particles.emitting = true
+
+	while shake_elapsed < boss_death_shake_time:
+		if not is_instance_valid(boss) or not is_instance_valid(visual):
+			_finish_boss_death_animation(boss)
+			return
+
+		var t: float = shake_elapsed / maxf(0.001, boss_death_shake_time)
+		var damping: float = 1.0 - t
+		var shake_offset := Vector2(
+			randf_range(-boss_death_shake_strength, boss_death_shake_strength) * damping,
+			randf_range(-boss_death_shake_strength, boss_death_shake_strength) * damping
+		)
+
+		boss.global_position = start_pos + shake_offset
+		visual.rotation = lerpf(0.0, target_rotation * 0.25, t)
+
+		await get_tree().process_frame
+		shake_elapsed += get_process_delta_time()
+
+	start_pos = boss.global_position
+
+	while fall_elapsed < boss_death_fall_time:
+		if not is_instance_valid(boss) or not is_instance_valid(visual):
+			_finish_boss_death_animation(boss)
+			return
+
+		var t: float = fall_elapsed / maxf(0.001, boss_death_fall_time)
+		var curve_y: float = -sin(t * PI) * boss_death_curve_height
+		var pos := start_pos.lerp(end_pos, t)
+		pos.y += curve_y
+
+		boss.global_position = pos
+		visual.rotation = lerpf(visual.rotation, target_rotation, clampf(get_process_delta_time() * 6.0, 0.0, 1.0))
+		visual.scale = base_scale.lerp(final_scale, t)
+
+		await get_tree().process_frame
+		fall_elapsed += get_process_delta_time()
+
+	if is_instance_valid(boss):
+		boss.global_position = end_pos
+
+	if is_instance_valid(visual):
+		visual.scale = final_scale
+		visual.rotation = target_rotation
+		visual.visible = false
+
+	var body_size := _get_boss_body_size_for_death(boss)
+	await _spawn_burst_explosions_in_rect(end_pos, body_size, 10, 0.05)
+
+	_finish_boss_death_animation(boss)
+	
+func _get_boss_visual_for_death(boss: Node) -> CanvasItem:
+	if boss == null:
+		return null
+	if boss.has_method("get_boss_visual_node"):
+		return boss.get_boss_visual_node() as CanvasItem
+	return boss.get_node_or_null("Sprite2D") as CanvasItem
+
+
+func _get_boss_particles_for_death(boss: Node) -> GPUParticles2D:
+	if boss == null:
+		return null
+	if boss.has_method("get_boss_death_particles"):
+		return boss.get_boss_death_particles() as GPUParticles2D
+	return boss.get_node_or_null("DeathParticles") as GPUParticles2D
+
+
+func _get_boss_body_size_for_death(boss: Node) -> Vector2:
+	if boss == null:
+		return DEFAULT_BOSS_EXPLOSION_SIZE
+	if boss.has_method("get_boss_body_size"):
+		return boss.get_boss_body_size()
+	return _estimate_boss_body_size(boss as Area2D)
+
+func _finish_boss_death_animation(boss: Node) -> void:
+	if boss != null and is_instance_valid(boss):
+		if boss.has_signal("boss_defeated"):
+			boss.emit_signal("boss_defeated")
+		if boss.has_signal("enemy_died"):
+			boss.emit_signal("enemy_died")
+		boss.queue_free()
+
+	_boss_death_animation_in_progress = false
 
 func _connect_boss_signals(boss: Node) -> void:
 	if boss == null:
 		return
-
+	if boss.has_signal("start_death_animation"):
+		var death_callable := Callable(self, "_on_boss_start_death_animation")
+		if not boss.start_death_animation.is_connected(death_callable):
+			boss.start_death_animation.connect(death_callable)
 	if boss.has_signal("jam_charge_started"):
 		var charge_callable := Callable(self, "_on_boss_jam_charge_started")
 		if not boss.jam_charge_started.is_connected(charge_callable):
