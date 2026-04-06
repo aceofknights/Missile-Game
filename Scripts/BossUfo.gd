@@ -3,6 +3,7 @@ extends Area2D
 signal enemy_died
 signal boss_defeated
 signal start_death_animation(boss: Node)
+
 @export var explosion_scene: PackedScene
 @export var missile_scene: PackedScene
 @export var scatter_missile_scene: PackedScene
@@ -28,6 +29,26 @@ signal start_death_animation(boss: Node)
 @export var hit_flash_step_time: float = 0.08
 @export var hit_flash_cycles: int = 3
 
+# Shield transition settings
+@export var shield_flash_color: Color = Color(1.0, 1.0, 1.0, 1.0)
+@export var shield_flash_step_time: float = 0.06
+@export var shield_flash_cycles: int = 2
+@export var shield_pop_time: float = 0.12
+@export var shield_on_start_scale_multiplier: float = 0.35
+@export var shield_off_end_scale_multiplier: float = 0.25
+
+# Movement settings
+@export var move_margin_x: float = 120.0
+@export var move_min_y: float = 90.0
+@export var move_max_y: float = 220.0
+@export var arrive_distance: float = 12.0
+@export var target_pause_min: float = 0.25
+@export var target_pause_max: float = 0.75
+
+# Bob settings
+@export var bob_amount: float = 10.0
+@export var bob_speed: float = 2.4
+
 @onready var shield_timer: Timer = $ShieldTimer
 @onready var missile_timer: Timer = $MissileTimer
 @onready var scatter_timer: Timer = $ScatterTimer
@@ -38,12 +59,20 @@ signal start_death_animation(boss: Node)
 var health: int = 3
 var shield_active: bool = true
 var hit_used_this_down_window: bool = false
-var move_direction: float = 1.0
 var is_dead: bool = false
 var current_scatter_interval: float = 8.0
 
 var _base_sprite_modulate: Color = Color(1, 1, 1, 1)
+var _shield_base_modulate: Color = Color(1, 1, 1, 1)
 var _hit_flash_tween: Tween
+var _shield_tween: Tween
+
+var _move_target: Vector2 = Vector2.ZERO
+var _move_pause_timer: float = 0.0
+var _bob_time: float = 0.0
+var _flash_sprite_base_position: Vector2 = Vector2.ZERO
+var _shield_sprite_base_position: Vector2 = Vector2.ZERO
+var _shield_sprite_base_scale: Vector2 = Vector2.ONE
 
 
 func _add_to_scene(node: Node) -> void:
@@ -62,9 +91,15 @@ func _ready() -> void:
 
 	if flash_sprite:
 		_base_sprite_modulate = flash_sprite.modulate
+		_flash_sprite_base_position = flash_sprite.position
 		print("✅ Boss flash sprite found:", flash_sprite.name)
 	else:
 		print("❌ Boss flash sprite NOT found. Set flash_sprite_path in the inspector.")
+
+	if shield_sprite:
+		_shield_sprite_base_position = shield_sprite.position
+		_shield_sprite_base_scale = shield_sprite.scale
+		_shield_base_modulate = shield_sprite.modulate
 
 	shield_timer.wait_time = shield_up_duration
 	shield_timer.timeout.connect(_on_shield_timer_timeout)
@@ -78,7 +113,8 @@ func _ready() -> void:
 	scatter_timer.timeout.connect(_on_scatter_timer_timeout)
 	_schedule_next_scatter()
 
-	_set_shield_active(true)
+	_set_shield_active(true, true)
+	_pick_new_move_target(true)
 	print("👾 Boss ready:", boss_name, " HP=", health)
 
 
@@ -89,7 +125,12 @@ func _process(delta: float) -> void:
 	if boss_health:
 		boss_health.text = "Health %d" % health
 
-	var viewport := get_viewport_rect().size
+	_update_movement(delta)
+	_update_bob(delta)
+
+
+func _update_movement(delta: float) -> void:
+	var viewport: Vector2 = get_viewport_rect().size
 	var boss_speed: float = 1.0
 
 	if health >= 3:
@@ -99,14 +140,49 @@ func _process(delta: float) -> void:
 	else:
 		boss_speed = 5.0
 
-	global_position.x += move_direction * boss_speed * move_speed * delta
+	if _move_pause_timer > 0.0:
+		_move_pause_timer = maxf(0.0, _move_pause_timer - delta)
+		if _move_pause_timer <= 0.0:
+			_pick_new_move_target(false)
+		return
 
-	if global_position.x < 120:
-		global_position.x = 120
-		move_direction = 1.0
-	elif global_position.x > viewport.x - 120:
-		global_position.x = viewport.x - 120
-		move_direction = -1.0
+	var to_target: Vector2 = _move_target - global_position
+	var distance_to_target: float = to_target.length()
+
+	if distance_to_target <= arrive_distance:
+		_move_pause_timer = randf_range(target_pause_min, target_pause_max)
+		return
+
+	var direction: Vector2 = to_target.normalized()
+	global_position += direction * move_speed * boss_speed * delta
+
+	global_position.x = clampf(global_position.x, move_margin_x, viewport.x - move_margin_x)
+	global_position.y = clampf(global_position.y, move_min_y, move_max_y)
+
+
+func _update_bob(delta: float) -> void:
+	if flash_sprite == null:
+		return
+
+	_bob_time += delta * bob_speed
+	var bob_offset_y: float = sin(_bob_time) * bob_amount
+	var bob_offset := Vector2(0.0, bob_offset_y)
+
+	flash_sprite.position = _flash_sprite_base_position + bob_offset
+
+	if shield_sprite:
+		shield_sprite.position = _shield_sprite_base_position + bob_offset
+
+
+func _pick_new_move_target(snap_to_target: bool) -> void:
+	var viewport: Vector2 = get_viewport_rect().size
+	_move_target = Vector2(
+		randf_range(move_margin_x, viewport.x - move_margin_x),
+		randf_range(move_min_y, move_max_y)
+	)
+
+	if snap_to_target:
+		global_position = _move_target
 
 
 func die(no_reward: bool = false) -> void:
@@ -229,6 +305,7 @@ func spawn_scatter_missile() -> void:
 	_add_to_scene(missile)
 	print("☄️ Scatter missile launched")
 
+
 func get_boss_visual_node() -> CanvasItem:
 	return flash_sprite
 
@@ -236,19 +313,31 @@ func get_boss_visual_node() -> CanvasItem:
 func get_boss_death_particles() -> GPUParticles2D:
 	return get_node_or_null("DeathParticles") as GPUParticles2D
 
+
 func _prepare_for_death_animation() -> void:
 	is_dead = true
 	missile_timer.stop()
 	shield_timer.stop()
 	scatter_timer.stop()
-	_set_shield_active(false)
+	_set_shield_active(false, true)
 
 	if _hit_flash_tween:
 		_hit_flash_tween.kill()
 		_hit_flash_tween = null
 
+	if _shield_tween:
+		_shield_tween.kill()
+		_shield_tween = null
+
 	if flash_sprite:
 		flash_sprite.modulate = _base_sprite_modulate
+		flash_sprite.position = _flash_sprite_base_position
+
+	if shield_sprite:
+		shield_sprite.position = _shield_sprite_base_position
+		shield_sprite.scale = _shield_sprite_base_scale
+		shield_sprite.modulate = _shield_base_modulate
+		shield_sprite.visible = false
 
 	monitoring = false
 	monitorable = false
@@ -256,6 +345,7 @@ func _prepare_for_death_animation() -> void:
 	var collision_shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
 	if collision_shape:
 		collision_shape.disabled = true
+
 
 func get_boss_body_size() -> Vector2:
 	var sprite_node := flash_sprite as Sprite2D
@@ -274,10 +364,72 @@ func get_boss_body_size() -> Vector2:
 
 	return Vector2(180.0, 120.0)
 
-func _set_shield_active(value: bool) -> void:
+
+func _set_shield_active(value: bool, instant: bool = false) -> void:
 	shield_active = value
-	if shield_sprite:
-		shield_sprite.visible = shield_active
+
+	if shield_sprite == null:
+		return
+
+	if instant:
+		if _shield_tween:
+			_shield_tween.kill()
+			_shield_tween = null
+		shield_sprite.visible = value
+		shield_sprite.scale = _shield_sprite_base_scale
+		shield_sprite.modulate = _shield_base_modulate
+		return
+
+	_play_shield_transition(value)
+
+
+func _play_shield_transition(turning_on: bool) -> void:
+	if shield_sprite == null:
+		return
+
+	if _shield_tween:
+		_shield_tween.kill()
+
+	shield_sprite.modulate = _shield_base_modulate
+	_shield_tween = create_tween()
+
+	var cycles: int = max(1, shield_flash_cycles)
+
+	if turning_on:
+		shield_sprite.visible = true
+		shield_sprite.scale = _shield_sprite_base_scale * shield_on_start_scale_multiplier
+
+		for _i in range(cycles):
+			_shield_tween.tween_property(shield_sprite, "modulate", shield_flash_color, shield_flash_step_time)
+			_shield_tween.tween_property(shield_sprite, "modulate", _shield_base_modulate, shield_flash_step_time)
+
+		_shield_tween.tween_property(shield_sprite, "scale", _shield_sprite_base_scale, shield_pop_time)
+		_shield_tween.finished.connect(_on_shield_tween_finished.bind(true))
+	else:
+		shield_sprite.visible = true
+		shield_sprite.scale = _shield_sprite_base_scale
+
+		for _i in range(cycles):
+			_shield_tween.tween_property(shield_sprite, "modulate", shield_flash_color, shield_flash_step_time)
+			_shield_tween.tween_property(shield_sprite, "modulate", _shield_base_modulate, shield_flash_step_time)
+
+		_shield_tween.tween_property(
+			shield_sprite,
+			"scale",
+			_shield_sprite_base_scale * shield_off_end_scale_multiplier,
+			shield_pop_time
+		)
+		_shield_tween.finished.connect(_on_shield_tween_finished.bind(false))
+
+
+func _on_shield_tween_finished(should_remain_visible: bool) -> void:
+	_shield_tween = null
+	if shield_sprite == null:
+		return
+
+	shield_sprite.modulate = _shield_base_modulate
+	shield_sprite.scale = _shield_sprite_base_scale
+	shield_sprite.visible = should_remain_visible
 
 
 func _play_hit_flash() -> void:
@@ -299,6 +451,7 @@ func _play_hit_flash() -> void:
 
 	_hit_flash_tween.tween_property(flash_sprite, "modulate", _base_sprite_modulate, hit_flash_step_time)
 	_hit_flash_tween.finished.connect(_on_hit_flash_finished)
+
 
 func _on_hit_flash_finished() -> void:
 	_hit_flash_tween = null

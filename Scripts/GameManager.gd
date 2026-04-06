@@ -25,7 +25,7 @@ const COST_MULTIPLIER := {
 	PATH_MEDIUM: 1.7,
 	PATH_EXPENSIVE: 2
 }
-
+var wave_start_nonce := 0
 var current_wave := 1
 var current_world := 1
 var transitioning_world := false
@@ -1085,7 +1085,14 @@ func _reset_temporary_upgrade_runtime_state() -> void:
 
 
 func start_wave():
+	wave_start_nonce += 1
+	var my_nonce: int = wave_start_nonce
+
 	await get_tree().create_timer(2.0).timeout
+
+	if my_nonce != wave_start_nonce:
+		print("⛔ start_wave() cancelled by newer wave request")
+		return
 
 	print("📣 start_wave() called")
 	print("🌊 Starting Wave %d (World %d)" % [current_wave, current_world])
@@ -1111,7 +1118,6 @@ func start_wave():
 		enemies_to_spawn = current_wave * 2
 		await spawn_enemies_gradually(enemies_to_spawn)
 		_spawn_world_special_attacks()
-
 
 func spawn_enemies_gradually(count):
 	var delay = max(0.3, 1.5 - (current_world * 0.2) - (current_wave * 0.05))
