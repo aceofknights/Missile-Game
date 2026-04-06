@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://egu0k3r4d4as"]
+[gd_scene load_steps=6 format=3 uid="uid://egu0k3r4d4as"]
 
 [ext_resource type="Script" path="res://Scripts/MainMenu.gd" id="1_x53og"]
 [ext_resource type="PackedScene" uid="uid://d3boe8y64whft" path="res://Scene/WorldSelect.tscn" id="2_tuy6b"]
 [ext_resource type="Texture2D" uid="uid://vtmbpawopp0o" path="res://assets/Space Background.png" id="3_nnkvy"]
 [ext_resource type="Texture2D" uid="uid://bm0g7fvb667b" path="res://assets/Missile-Defense-3-27-2026.png" id="4_4y2e3"]
+[ext_resource type="Texture2D" uid="uid://kpt2l8totdw" path="res://assets/Group 1.png" id="4_h6a84"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -21,6 +22,10 @@ game_scene = ExtResource("2_tuy6b")
 position = Vector2(-3.43323e-05, -4.76837e-06)
 scale = Vector2(0.6, 0.6)
 texture = ExtResource("3_nnkvy")
+
+[node name="Group1" type="Sprite2D" parent="."]
+position = Vector2(-57, 196)
+texture = ExtResource("4_h6a84")
 
 [node name="Missile-defense-3-27-2026" type="Sprite2D" parent="."]
 position = Vector2(3, -182)

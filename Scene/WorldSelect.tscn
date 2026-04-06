@@ -1,6 +1,7 @@
-[gd_scene load_steps=258 format=3 uid="uid://d3boe8y64whft"]
+[gd_scene load_steps=259 format=3 uid="uid://d3boe8y64whft"]
 
 [ext_resource type="Script" path="res://Scripts/WorldSelect.gd" id="1_gv2n6"]
+[ext_resource type="Texture2D" uid="uid://kpt2l8totdw" path="res://assets/Group 1.png" id="2_hv6ep"]
 [ext_resource type="Texture2D" uid="uid://75bmn8hrbv7m" path="res://assets/Planets/World 1/2411018794 (1).png" id="3_didx4"]
 [ext_resource type="Texture2D" uid="uid://djiyorc3faq2h" path="res://assets/Planets/World 2/World 2 sprite sheet.png" id="4_07dg6"]
 [ext_resource type="Texture2D" uid="uid://pxy1giv4p5c6" path="res://assets/Planets/World 3/world 3 sprite sheet.png" id="5_t138l"]
@@ -1805,14 +1806,18 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 color = Color(0.0470588, 0.054902, 0.121569, 1)
 
+[node name="Group1" type="Sprite2D" parent="."]
+position = Vector2(211, 136)
+texture = ExtResource("2_hv6ep")
+
 [node name="HomeBaseTitle" type="Label" parent="."]
 layout_mode = 0
-offset_left = 399.0
+offset_left = 476.0
 offset_top = 24.0
-offset_right = 807.0
+offset_right = 665.0
 offset_bottom = 69.0
 theme_override_font_sizes/font_size = 30
-text = "Home Base - World Select"
+text = "World Select"
 
 [node name="StatusLabel" type="Label" parent="."]
 layout_mode = 0
@@ -1893,10 +1898,10 @@ centered = false
 
 [node name="World3Holder" type="Control" parent="."]
 anchors_preset = 0
-offset_left = 405.205
-offset_top = 243.67
-offset_right = 505.205
-offset_bottom = 343.67
+offset_left = 526.205
+offset_top = 185.67
+offset_right = 626.205
+offset_bottom = 285.67
 
 [node name="World3Button" type="TextureButton" parent="World3Holder"]
 layout_mode = 1
@@ -1920,10 +1925,10 @@ centered = false
 
 [node name="World4Holder" type="Control" parent="."]
 anchors_preset = 0
-offset_left = 641.945
-offset_top = 427.27
-offset_right = 741.945
-offset_bottom = 527.27
+offset_left = 794.945
+offset_top = 457.27
+offset_right = 894.945
+offset_bottom = 557.27
 
 [node name="World4Button" type="TextureButton" parent="World4Holder"]
 layout_mode = 1
@@ -1947,9 +1952,9 @@ centered = false
 
 [node name="World5Holder" type="Control" parent="."]
 anchors_preset = 0
-offset_left = 770.0
+offset_left = 913.0
 offset_top = 243.67
-offset_right = 870.0
+offset_right = 1013.0
 offset_bottom = 343.67
 
 [node name="World5Button" type="TextureButton" parent="World5Holder"]

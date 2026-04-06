@@ -18,7 +18,10 @@ explosion_scene = ExtResource("2")
 missile_scene = ExtResource("3")
 ion_missile_scene = ExtResource("4")
 clone_scene = ExtResource("5")
-max_health = 1
+invisible_duration = 4.0
+clone_fire_delay = 2.0
+mid_phase_health_threshold = 4
+critical_phase_health_threshold = 2
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.165503, 0.976426, 0.473841, 1)
@@ -36,14 +39,17 @@ rotation = 1.5708
 shape = SubResource("CapsuleShape2D_1tpqk")
 
 [node name="boss_health" type="Label" parent="."]
+visible = false
 offset_left = -32.0
 offset_top = -56.0
 offset_right = 57.0
 offset_bottom = -27.0
 
 [node name="NormalFireTimer" type="Timer" parent="."]
+one_shot = true
 
 [node name="IonFireTimer" type="Timer" parent="."]
+one_shot = true
 
 [node name="PhaseTimer" type="Timer" parent="."]
 one_shot = true

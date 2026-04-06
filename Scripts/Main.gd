@@ -326,7 +326,7 @@ func _handle_upgrade_hotkeys() -> void:
 	var now_seconds := Time.get_ticks_msec() / 1000.0
 	var hold_space := Input.is_key_pressed(KEY_SPACE)
 	if hold_space and GameManager.is_active_shield_emp_disabled(now_seconds) and _shield_emp_warn_cooldown <= 0.0:
-		announce("⚠ Shield disabled by EMP!", 0.6)
+		announce("⚠ Shield disabled by EMP!", 4)
 		_shield_emp_warn_cooldown = 0.8
 	GameManager.set_active_shield_held(hold_space)
 	var w_down := Input.is_key_pressed(KEY_W)
@@ -617,12 +617,12 @@ func _find_hovered_destroyed_defense() -> Node:
 
 
 func _on_boss_jam_charge_started(_duration: float) -> void:
-	announce("⚠ Relay charging: incoming target jam", 0.8)
+	announce("⚠ Relay charging: incoming target jam", 4)
 
 
 func _on_boss_jam_pulse_started(duration: float, misfire_radius: float) -> void:
 	print("🌀 Boss jam pulse: duration=%.2f radius=%.1f" % [duration, misfire_radius])
-	announce("📡 Targeting JAMMED", minf(duration, 1.4))
+	announce("📡 Targeting JAMMED, Missiles will miss.", minf(duration, 5))
 
 	for cannon in get_tree().get_nodes_in_group("cannon"):
 		if cannon == null:
