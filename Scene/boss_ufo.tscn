@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://imc4shtg5sg6"]
+[gd_scene load_steps=10 format=3 uid="uid://imc4shtg5sg6"]
 
 [ext_resource type="Script" path="res://Scripts/BossUfo.gd" id="1_p9a8k"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2_7m3fu"]
@@ -6,15 +6,35 @@
 [ext_resource type="PackedScene" uid="uid://cvsqtfppxjfw0" path="res://Scene/scatter_missile.tscn" id="4_gub2l"]
 [ext_resource type="Texture2D" uid="uid://xsbejy6t8nof" path="res://assets/Bosses/UFO White.png" id="5_eitwd"]
 [ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="6_ckns8"]
+[ext_resource type="Texture2D" uid="uid://vwk3b28m27sv" path="res://assets/particle effect 2.png" id="7_etods"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_4dkh0"]
 size = Vector2(135, 44)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_fersa"]
+particle_flag_disable_z = true
+angle_min = -720.0
+angle_max = 720.0
+direction = Vector3(0, -1, 0)
+spread = 180.0
+initial_velocity_min = 625.25
+initial_velocity_max = 1000.0
+angular_velocity_min = -400.0
+angular_velocity_max = 400.0
+radial_velocity_max = 100.0
+gravity = Vector3(0, 180, 0)
+scale_min = 0.2
+scale_max = 0.5
+color = Color(0.952941, 0.00392157, 0.0313726, 1)
 
 [node name="BossUfo" type="Area2D"]
 script = ExtResource("1_p9a8k")
 explosion_scene = ExtResource("2_7m3fu")
 missile_scene = ExtResource("3_4pr0n")
 scatter_missile_scene = ExtResource("4_gub2l")
+flash_sprite_path = NodePath("BossSprite")
+hit_flash_step_time = 0.06
+hit_flash_cycles = 6
 
 [node name="BossSprite" type="Sprite2D" parent="."]
 modulate = Color(1, 0, 0, 1)
@@ -39,11 +59,15 @@ autostart = true
 [node name="MissileTimer" type="Timer" parent="."]
 autostart = true
 
-[node name="boss_health" type="Label" parent="."]
-offset_left = -20.0
-offset_top = -51.0
-offset_right = 20.0
-offset_bottom = -28.0
-
 [node name="ScatterTimer" type="Timer" parent="."]
 one_shot = true
+
+[node name="DeathParticles" type="GPUParticles2D" parent="."]
+scale = Vector2(0.09, 0.09)
+emitting = false
+amount = 100
+process_material = SubResource("ParticleProcessMaterial_fersa")
+texture = ExtResource("7_etods")
+lifetime = 2.0
+one_shot = true
+explosiveness = 0.49

@@ -103,6 +103,13 @@ offset_right = 568.0
 offset_bottom = 51.0
 text = "Give 100 Resources"
 
+[node name="KillBossButton" type="Button" parent="UI"]
+offset_left = 191.0
+offset_top = 20.0
+offset_right = 280.0
+offset_bottom = 51.0
+text = "Kill Boss"
+
 [node name="AnnouncementLabel" type="Label" parent="UI"]
 visible = false
 offset_left = 552.0
@@ -171,6 +178,29 @@ horizontal_alignment = 1
 process_mode = 2
 layout_mode = 2
 text = "Continue"
+
+[node name="BossHealthHolder" type="Control" parent="UI"]
+visible = false
+layout_mode = 3
+anchors_preset = 0
+offset_left = 435.955
+offset_top = 59.08
+offset_right = 475.955
+offset_bottom = 99.08
+
+[node name="BossHealthLabel" type="Label" parent="UI/BossHealthHolder"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "boss health"
+
+[node name="BossHealthBar" type="ProgressBar" parent="UI/BossHealthHolder"]
+layout_mode = 0
+offset_right = 4.0
+offset_bottom = 27.0
+max_value = 1.0
+value = 1.0
+show_percentage = false
 
 [node name="Building" parent="." instance=ExtResource("6_ldoyd")]
 position = Vector2(215, 600)

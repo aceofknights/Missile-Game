@@ -574,7 +574,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		"explosion_duration": {
 			"display_name": "Explosion Duration",
 			"description": "Adds 0.2 seconds of max-size explosion duration per level.",
-			"max_level": 5,
+			"max_level": 3,
 			"base_cost": 75,
 			"path_rate": PATH_MEDIUM,
 			"requires": [
