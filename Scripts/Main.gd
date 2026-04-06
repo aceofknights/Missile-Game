@@ -121,6 +121,7 @@ func _ready() -> void:
 	_apply_ground_color()
 	_setup_ground_area()
 	_setup_boss_health_ui()
+	_disable_debug_button_focus()
 	kill_boss_button.pressed.connect(_on_kill_boss_pressed)
 		
 	NodeContracts.require_nodes_with_types(self, {
@@ -484,6 +485,16 @@ func _get_boss_display_name(boss: Node) -> String:
 
 	return String(boss.name).replace("_", " ").to_upper()
 
+func _disable_debug_button_focus() -> void:
+	if destroy_all_button:
+		destroy_all_button.focus_mode = Control.FOCUS_NONE
+	if skip_to_boss:
+		skip_to_boss.focus_mode = Control.FOCUS_NONE
+	if give_resources:
+		give_resources.focus_mode = Control.FOCUS_NONE
+	if kill_boss_button:
+		kill_boss_button.focus_mode = Control.FOCUS_NONE
+		
 
 func _create_active_shield_sprite() -> void:
 	_active_shield_hitbox = Area2D.new()
@@ -1084,8 +1095,10 @@ func _get_boss_body_size_for_death(boss: Node) -> Vector2:
 		return boss.get_boss_body_size()
 	return _estimate_boss_body_size(boss as Area2D)
 
-func _finish_boss_death_animation(boss: Node) -> void:
-	if boss != null and is_instance_valid(boss):
+func _finish_boss_death_animation(boss) -> void:
+	var valid_boss := boss != null and is_instance_valid(boss)
+
+	if valid_boss:
 		if boss.has_signal("boss_defeated"):
 			boss.emit_signal("boss_defeated")
 		if boss.has_signal("enemy_died"):
