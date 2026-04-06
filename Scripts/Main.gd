@@ -48,6 +48,8 @@ const PLAYER_BOTTOM_EXPLOSION_Y_MARGIN := 18.0
 @export var boss_death_final_scale: float = 0.18
 @export var boss_death_rotation_degrees: float = 85.0
 @export var boss_death_curve_height: float = 110.0
+@export var victory_screen_delay_after_explosions: float = 2.0
+@export var defeat_screen_delay_after_explosions: float = 2.0
 
 var _boss_death_animation_in_progress: bool = false
 var _active_boss: Node = null
@@ -254,18 +256,49 @@ func _fire_closest_cannon(target_position: Vector2) -> void:
 
 
 func _skip_to_boss() -> void:
-	if GameManager.current_world == 1:
-		GameManager.current_wave = 10
-	elif GameManager.current_world == 2:
-		GameManager.current_wave = 15
-	elif GameManager.current_world == 3:
-		GameManager.current_wave = 20
-	elif GameManager.current_world == 4:
-		GameManager.current_wave = 35
-	elif GameManager.current_world == 5:
-		GameManager.current_wave = 50
+	var boss_wave: int = 10
 
+	match GameManager.current_world:
+		1:
+			boss_wave = 10
+		2:
+			boss_wave = 15
+		3:
+			boss_wave = 20
+		4:
+			boss_wave = 35
+		5:
+			boss_wave = 50
+		_:
+			boss_wave = 10
 
+	# If already on the boss wave, just restart it cleanly.
+	# If past it somehow, do nothing.
+	if GameManager.current_wave > boss_wave:
+		print("⚠ Already past boss wave %d" % boss_wave)
+		return
+
+	# Hard-stop the current wave so it cannot finish and increment afterward.
+	GameManager.wave_active = false
+	GameManager.enemies_alive = 0
+	GameManager.is_boss_wave = false
+	GameManager.world_special_state = {}
+
+	# Clear active enemies from the current wave.
+	for enemy in get_tree().get_nodes_in_group("enemy"):
+		if enemy and is_instance_valid(enemy):
+			enemy.queue_free()
+
+	# Jump directly to the boss wave and start it fresh.
+	GameManager.current_wave = boss_wave
+	await get_tree().process_frame
+	GameManager.start_wave()
+
+	print("⏭ Ended current wave and started boss wave %d" % boss_wave)
+	
+	
+	
+	
 func _apply_building_unlocks() -> void:
 	_set_building_active(building5, GameManager.get_extra_buildings() >= 1)
 	_set_building_active(building6, GameManager.get_extra_buildings() >= 2)
@@ -855,6 +888,7 @@ func _on_world_victory_requested() -> void:
 		explosion_size = _estimate_boss_body_size(boss)
 
 	await _spawn_burst_explosions_in_rect(explosion_center, explosion_size, BOSS_DEATH_EXPLOSION_COUNT, BOSS_DEATH_EXPLOSION_INTERVAL)
+	await get_tree().create_timer(victory_screen_delay_after_explosions).timeout
 	_show_end_menu("VICTORY")
 	_end_flow_in_progress = false
 
@@ -865,6 +899,7 @@ func _on_player_defeat_requested() -> void:
 
 	_end_flow_in_progress = true
 	await _spawn_bottom_explosions(PLAYER_DEATH_EXPLOSION_COUNT, PLAYER_DEATH_EXPLOSION_INTERVAL)
+	await get_tree().create_timer(defeat_screen_delay_after_explosions).timeout
 	_show_end_menu("DEFEAT")
 	_end_flow_in_progress = false
 
