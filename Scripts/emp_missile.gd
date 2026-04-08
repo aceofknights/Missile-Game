@@ -60,18 +60,65 @@ func _on_area_entered(area: Area2D) -> void:
 		area.queue_free()
 		return
 
+	# Active base shield still disables the global base shield system.
 	if area.is_in_group("active_base_shield"):
 		GameManager.apply_emp_to_shields(emp_disable_duration)
 		die(true)
 		return
 
-	if area.is_in_group("defense_target") or area.is_in_group("cannon"):
-		GameManager.apply_emp_to_shields(emp_disable_duration)
+	# Cannons: only disable the specific cannon hit.
+	if area.is_in_group("cannon"):
 		if area.has_method("disable_temporarily"):
 			area.disable_temporarily(emp_disable_duration)
-		elif area.has_method("die"):
-			area.call_deferred("die")
 		die(true)
+		return
+
+	# Buildings: only disable the shield on the specific building hit.
+	if area.is_in_group("defense_target"):
+		if area.has_method("has_active_shield") and area.has_active_shield():
+			if area.has_method("disable_shield_temporarily"):
+				area.disable_shield_temporarily(emp_disable_duration)
+			die(true)
+		return
+
+func _apply_emp_to_target(target: Area2D) -> void:
+	if target == null or not is_instance_valid(target):
+		return
+
+	if target.has_method("disable_temporarily"):
+		target.disable_temporarily(emp_disable_duration)
+		return
+
+	if target.has_method("disable_shield_temporarily"):
+		target.disable_shield_temporarily(emp_disable_duration)
+		return
+
+	if target.has_method("disable_shield"):
+		target.disable_shield(emp_disable_duration)
+		return
+
+	if target.has_method("on_emp_hit"):
+		target.on_emp_hit(emp_disable_duration)
+		return
+
+
+func _target_has_emp_vulnerable_shield(target: Area2D) -> bool:
+	if target == null or not is_instance_valid(target):
+		return false
+
+	if target.has_method("has_active_shield"):
+		return bool(target.has_active_shield())
+
+	if target.has_method("has_shield"):
+		return bool(target.has_shield())
+
+	if "shield_active" in target:
+		return bool(target.shield_active)
+
+	if "shield_hits_remaining" in target:
+		return int(target.shield_hits_remaining) > 0
+
+	return false
 
 
 func die(no_reward := false) -> void:

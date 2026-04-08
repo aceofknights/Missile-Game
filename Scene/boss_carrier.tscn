@@ -53,12 +53,6 @@ texture = ExtResource("7_xuvln")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_gg44e")
 
-[node name="boss_health" type="Label" parent="."]
-offset_left = -95.0
-offset_top = -75.0
-offset_right = 105.0
-offset_bottom = -44.0
-
 [node name="FighterSpawnTimer" type="Timer" parent="."]
 autostart = true
 

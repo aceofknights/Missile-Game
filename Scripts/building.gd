@@ -3,7 +3,7 @@ extends Area2D
 var destroyed := false
 var permanently_destroyed := false
 var shield_hits_remaining := 0
-
+var emp_shield_disabled_remaining := 0.0
 const WORLD_1_BUILDING_COLOR := Color(0.15, 0.45, 0.35, 1.0) # dark teal-green
 const WORLD_2_BUILDING_COLOR := Color(0.45, 0.22, 0.18, 1.0) # dark rust
 const WORLD_3_BUILDING_COLOR := Color(0.28, 0.18, 0.45, 1.0) # dark purple
@@ -37,7 +37,9 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	_update_shield_state()
 	_update_shield_hits_label()
-
+	if emp_shield_disabled_remaining > 0.0:
+		emp_shield_disabled_remaining = maxf(0.0, emp_shield_disabled_remaining - _delta)
+		
 	if not repair_label:
 		return
 
@@ -122,9 +124,22 @@ func _reset_passive_shield_for_wave() -> void:
 
 
 func _is_passive_shield_blocked_by_emp() -> bool:
-	var now_seconds := Time.get_ticks_msec() / 1000.0
-	return GameManager.is_passive_shield_emp_disabled(now_seconds)
+	return emp_shield_disabled_remaining > 0.0
+	
+func has_active_shield() -> bool:
+	return not destroyed and shield_hits_remaining > 0 and not _is_passive_shield_blocked_by_emp()
 
+
+func disable_shield_temporarily(duration: float) -> void:
+	if destroyed:
+		return
+	if shield_hits_remaining <= 0:
+		return
+
+	emp_shield_disabled_remaining = maxf(emp_shield_disabled_remaining, maxf(0.1, duration))
+	_update_shield_state()
+	_update_shield_hits_label()
+	
 
 func handle_enemy_impact(enemy: Area2D) -> bool:
 	if destroyed:

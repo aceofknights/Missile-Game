@@ -18,6 +18,7 @@ var jam_end_time: float = 0.0
 var jam_misfire_radius: float = 0.0
 var permanently_destroyed: bool = false
 var shield_hits_remaining := 0
+var shield_emp_disabled_remaining := 0.0
 
 @onready var muzzle: Marker2D = get_node_or_null("CannonGun/Muzzle") as Marker2D
 @onready var ammo_label: Label = $AmmoLabel
@@ -58,6 +59,9 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if emp_disabled_remaining > 0.0:
 		emp_disabled_remaining = maxf(0.0, emp_disabled_remaining - delta)
+
+	if shield_emp_disabled_remaining > 0.0:
+		shield_emp_disabled_remaining = maxf(0.0, shield_emp_disabled_remaining - delta)
 
 	if _can_operate():
 		_rotate_gun_to_mouse()
@@ -284,9 +288,8 @@ func _reset_passive_shield_for_wave() -> void:
 
 
 func _is_passive_shield_blocked_by_emp() -> bool:
-	var now_seconds := Time.get_ticks_msec() / 1000.0
-	return GameManager.is_passive_shield_emp_disabled(now_seconds)
-
+	return shield_emp_disabled_remaining > 0.0
+	
 
 func handle_enemy_impact(enemy: Area2D) -> bool:
 	if _is_passive_shield_blocked_by_emp():
@@ -303,7 +306,9 @@ func handle_enemy_impact(enemy: Area2D) -> bool:
 
 
 func disable_temporarily(duration: float) -> void:
-	emp_disabled_remaining = maxf(emp_disabled_remaining, maxf(0.1, duration))
+	var applied_duration: float = maxf(0.1, duration)
+	emp_disabled_remaining = maxf(emp_disabled_remaining, applied_duration)
+	shield_emp_disabled_remaining = maxf(shield_emp_disabled_remaining, applied_duration)
 	_refresh_visibility_state()
 
 
@@ -345,6 +350,7 @@ func repair() -> void:
 	cooldown = 0.0
 	shots_in_cycle = 0
 	emp_disabled_remaining = 0.0
+	shield_emp_disabled_remaining = 0.0
 	clear_targeting_jam()
 	_reset_passive_shield_for_wave()
 	_refresh_visibility_state()

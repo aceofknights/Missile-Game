@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://da61lyp6k626a"]
+[gd_scene load_steps=10 format=3 uid="uid://da61lyp6k626a"]
 
 [ext_resource type="Script" path="res://Scripts/BossWorld3.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2"]
@@ -6,16 +6,36 @@
 [ext_resource type="PackedScene" uid="uid://dqofihdy7ehf8" path="res://Scene/emp_missile.tscn" id="4"]
 [ext_resource type="Texture2D" uid="uid://5or3ydgen4hj" path="res://assets/Bosses/Drone_N.png" id="5_rol6x"]
 [ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="6_50x62"]
+[ext_resource type="Texture2D" uid="uid://vwk3b28m27sv" path="res://assets/particle effect 2.png" id="7_5lp0d"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_4u6xy"]
 radius = 30.0
 height = 184.0
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_hjpi5"]
+particle_flag_disable_z = true
+angle_min = -720.0
+angle_max = 720.0
+direction = Vector3(0, -1, 0)
+spread = 180.0
+initial_velocity_min = 625.25
+initial_velocity_max = 1000.0
+angular_velocity_min = -400.0
+angular_velocity_max = 400.0
+radial_velocity_max = 100.0
+gravity = Vector3(0, 180, 0)
+scale_min = 0.2
+scale_max = 0.5
+color = Color(0.619608, 0.266667, 0.94902, 1)
 
 [node name="BossPlaceholder" type="Area2D"]
 script = ExtResource("1")
 explosion_scene = ExtResource("2")
 missile_scene = ExtResource("3")
 emp_missile_scene = ExtResource("4")
+emp_charge_duration = 3.0
+jam_interval = 7.5
+flash_sprite_path = NodePath("Sprite2D")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.619424, 0.267317, 0.947765, 1)
@@ -63,3 +83,13 @@ visible = false
 
 [node name="EmpRing" type="Line2D" parent="."]
 visible = false
+
+[node name="DeathParticles" type="GPUParticles2D" parent="."]
+scale = Vector2(0.09, 0.09)
+emitting = false
+amount = 100
+process_material = SubResource("ParticleProcessMaterial_hjpi5")
+texture = ExtResource("7_5lp0d")
+lifetime = 2.0
+one_shot = true
+explosiveness = 0.49
