@@ -32,6 +32,7 @@ script = ExtResource("1_p9a8k")
 explosion_scene = ExtResource("2_7m3fu")
 missile_scene = ExtResource("3_4pr0n")
 scatter_missile_scene = ExtResource("4_gub2l")
+boss_name = "UFO"
 flash_sprite_path = NodePath("BossSprite")
 hit_flash_step_time = 0.06
 hit_flash_cycles = 6

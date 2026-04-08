@@ -83,6 +83,7 @@ offset_right = 50.0
 grow_vertical = 0
 
 [node name="DestroyAllButton" type="Button" parent="UI"]
+visible = false
 offset_left = 879.0
 offset_top = 19.0
 offset_right = 1128.0
@@ -90,6 +91,7 @@ offset_bottom = 50.0
 text = "destroy all buildings"
 
 [node name="SkipToBoss" type="Button" parent="UI"]
+visible = false
 offset_left = 601.0
 offset_top = 20.0
 offset_right = 850.0
@@ -97,6 +99,7 @@ offset_bottom = 51.0
 text = "Skip To Boss"
 
 [node name="GiveResources" type="Button" parent="UI"]
+visible = false
 offset_left = 319.0
 offset_top = 20.0
 offset_right = 568.0
@@ -104,6 +107,7 @@ offset_bottom = 51.0
 text = "Give 100 Resources"
 
 [node name="KillBossButton" type="Button" parent="UI"]
+visible = false
 offset_left = 191.0
 offset_top = 20.0
 offset_right = 280.0
@@ -180,19 +184,12 @@ layout_mode = 2
 text = "Continue"
 
 [node name="BossHealthHolder" type="Control" parent="UI"]
-visible = false
 layout_mode = 3
 anchors_preset = 0
 offset_left = 435.955
-offset_top = 59.08
+offset_top = 6.08
 offset_right = 475.955
-offset_bottom = 99.08
-
-[node name="BossHealthLabel" type="Label" parent="UI/BossHealthHolder"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-text = "boss health"
+offset_bottom = 46.08
 
 [node name="BossHealthBar" type="ProgressBar" parent="UI/BossHealthHolder"]
 layout_mode = 0
@@ -201,6 +198,12 @@ offset_bottom = 27.0
 max_value = 1.0
 value = 1.0
 show_percentage = false
+
+[node name="BossHealthLabel" type="Label" parent="UI/BossHealthHolder"]
+layout_mode = 0
+offset_right = 90.0
+offset_bottom = 23.0
+text = "boss health"
 
 [node name="Building" parent="." instance=ExtResource("6_ldoyd")]
 position = Vector2(215, 600)

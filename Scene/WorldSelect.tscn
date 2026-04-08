@@ -1838,8 +1838,10 @@ text = "Save and Quit"
 
 [node name="UnlockAllWorldsButton" type="Button" parent="."]
 layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
+offset_left = -195.0
+offset_right = -6.0
+offset_bottom = 31.0
+disabled = true
 text = "UnlockAllWorldsButton"
 
 [node name="World1Holder" type="Control" parent="."]
