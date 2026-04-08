@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://butngk3a4eknx"]
+[gd_scene load_steps=16 format=3 uid="uid://butngk3a4eknx"]
 
 [ext_resource type="Script" path="res://Scripts/BossWorld5.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2"]
@@ -12,10 +12,27 @@
 [ext_resource type="Texture2D" uid="uid://c1tdnirnapmbo" path="res://assets/Bosses/Mothership 23.png" id="11_bh27k"]
 [ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="11_wugop"]
 [ext_resource type="PackedScene" uid="uid://shhfar6yui3i" path="res://Scene/laser_strike_indicator.tscn" id="12_jvf3d"]
+[ext_resource type="Texture2D" uid="uid://vwk3b28m27sv" path="res://assets/particle effect 2.png" id="13_px4an"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_am8nv"]
 radius = 47.0
 height = 128.0
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_vixeh"]
+particle_flag_disable_z = true
+angle_min = -720.0
+angle_max = 720.0
+direction = Vector3(0, -1, 0)
+spread = 180.0
+initial_velocity_min = 625.25
+initial_velocity_max = 1000.0
+angular_velocity_min = -400.0
+angular_velocity_max = 400.0
+radial_velocity_max = 100.0
+gravity = Vector3(0, 180, 0)
+scale_min = 0.2
+scale_max = 0.5
+color = Color(0.980392, 1, 0, 1)
 
 [node name="BossMothership" type="Area2D"]
 script = ExtResource("1")
@@ -32,7 +49,8 @@ debug_enable_normal_missiles = true
 debug_enable_scatter_missiles = true
 debug_enable_emp = true
 debug_enable_ion = true
-max_health = 9
+max_health = 10
+flash_sprite_path = NodePath("Sprite2D")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.980392, 1, 0, 1)
@@ -47,12 +65,6 @@ texture = ExtResource("11_wugop")
 visible = false
 rotation = 1.5708
 shape = SubResource("CapsuleShape2D_am8nv")
-
-[node name="boss_health" type="Label" parent="."]
-offset_left = -112.0
-offset_top = -76.0
-offset_right = 119.0
-offset_bottom = -40.0
 
 [node name="ShieldTimer" type="Timer" parent="."]
 one_shot = true
@@ -80,3 +92,13 @@ one_shot = true
 
 [node name="LaserChargeTimer" type="Timer" parent="."]
 one_shot = true
+
+[node name="DeathParticles" type="GPUParticles2D" parent="."]
+scale = Vector2(0.09, 0.09)
+emitting = false
+amount = 100
+process_material = SubResource("ParticleProcessMaterial_vixeh")
+texture = ExtResource("13_px4an")
+lifetime = 2.0
+one_shot = true
+explosiveness = 0.49
