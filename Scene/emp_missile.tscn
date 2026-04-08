@@ -9,6 +9,7 @@ size = Vector2(14, 8)
 [node name="EmpMissile" type="Area2D"]
 collision_mask = 5
 script = ExtResource("1")
+emp_disable_duration = 2.0
 trail_color = Color(0.741176, 0.796078, 0.101961, 1)
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

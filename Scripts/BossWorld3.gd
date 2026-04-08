@@ -2,6 +2,7 @@ extends Area2D
 
 signal enemy_died
 signal boss_defeated
+signal start_death_animation(boss: Node)
 signal jam_charge_started(duration: float)
 signal jam_pulse_started(duration: float, misfire_radius: float)
 
@@ -22,6 +23,38 @@ signal jam_pulse_started(duration: float, misfire_radius: float)
 @export var jam_duration_max: float = 2.0
 @export var jam_misfire_radius_min: float = 95.0
 @export var jam_misfire_radius_max: float = 180.0
+@export var boss_name: String = "CYBER DRONE"
+@export var emp_initial_delay: float = 2.0
+@export var jam_initial_delay: float = 4.5
+
+# Drag your actual visible sprite here in the inspector
+@export_node_path("CanvasItem") var flash_sprite_path: NodePath
+
+# Hit flash settings
+@export var hit_flash_white: Color = Color(1.0, 1.0, 1.0, 1.0)
+@export var hit_flash_red: Color = Color(1.0, 0.25, 0.25, 1.0)
+@export var hit_flash_step_time: float = 0.08
+@export var hit_flash_cycles: int = 3
+
+# Shield transition settings
+@export var shield_flash_color: Color = Color(1.0, 1.0, 1.0, 1.0)
+@export var shield_flash_step_time: float = 0.06
+@export var shield_flash_cycles: int = 2
+@export var shield_pop_time: float = 0.12
+@export var shield_on_start_scale_multiplier: float = 0.35
+@export var shield_off_end_scale_multiplier: float = 0.25
+
+# Movement settings
+@export var move_margin_x: float = 120.0
+@export var move_min_y: float = 90.0
+@export var move_max_y: float = 220.0
+@export var arrive_distance: float = 12.0
+@export var target_pause_min: float = 0.25
+@export var target_pause_max: float = 0.75
+
+# Bob settings
+@export var bob_amount: float = 8.0
+@export var bob_speed: float = 2.3
 
 @onready var shield_timer: Timer = $ShieldTimer
 @onready var missile_timer: Timer = $MissileTimer
@@ -32,14 +65,26 @@ signal jam_pulse_started(duration: float, misfire_radius: float)
 @onready var boss_health: Label = $boss_health
 @onready var jam_ring: Line2D = $JamRing
 @onready var shield_sprite: Sprite2D = $ShieldSprite
+@onready var flash_sprite: CanvasItem = get_node_or_null(flash_sprite_path) as CanvasItem
 
 var health: int = 5
 var shield_active: bool = true
 var hit_used_this_down_window: bool = false
-var move_direction: float = 1.0
 var is_dead: bool = false
 var queued_emp_targets: Array = []
 var emp_charge_active: bool = false
+
+var _base_sprite_modulate: Color = Color(1, 1, 1, 1)
+var _shield_base_modulate: Color = Color(1, 1, 1, 1)
+var _hit_flash_tween: Tween
+var _shield_tween: Tween
+
+var _move_target: Vector2 = Vector2.ZERO
+var _move_pause_timer: float = 0.0
+var _bob_time: float = 0.0
+var _flash_sprite_base_position: Vector2 = Vector2.ZERO
+var _shield_sprite_base_position: Vector2 = Vector2.ZERO
+var _shield_sprite_base_scale: Vector2 = Vector2.ONE
 
 
 func _add_to_scene(node: Node) -> void:
@@ -53,6 +98,18 @@ func _add_to_scene(node: Node) -> void:
 func _ready() -> void:
 	health = max_health
 	add_to_group("enemy")
+	add_to_group("boss")
+
+	if flash_sprite:
+		_base_sprite_modulate = flash_sprite.modulate
+		_flash_sprite_base_position = flash_sprite.position
+	else:
+		print("❌ Cyber Drone flash sprite NOT found. Set flash_sprite_path in the inspector.")
+
+	if shield_sprite:
+		_shield_sprite_base_position = shield_sprite.position
+		_shield_sprite_base_scale = shield_sprite.scale
+		_shield_base_modulate = shield_sprite.modulate
 
 	shield_timer.wait_time = shield_up_duration
 	shield_timer.timeout.connect(_on_shield_timer_timeout)
@@ -64,7 +121,6 @@ func _ready() -> void:
 
 	emp_timer.wait_time = emp_interval
 	emp_timer.timeout.connect(_on_emp_timer_timeout)
-	emp_timer.start()
 
 	emp_charge_timer.one_shot = true
 	emp_charge_timer.wait_time = emp_charge_duration
@@ -72,45 +128,96 @@ func _ready() -> void:
 
 	jam_timer.wait_time = jam_interval
 	jam_timer.timeout.connect(_on_jam_timer_timeout)
-	jam_timer.start()
 
 	jam_charge_timer.one_shot = true
 	jam_charge_timer.wait_time = jam_charge_duration
 	jam_charge_timer.timeout.connect(_on_jam_charge_timer_timeout)
 
+	get_tree().create_timer(emp_initial_delay).timeout.connect(_start_emp_timer_after_delay)
+	get_tree().create_timer(jam_initial_delay).timeout.connect(_start_jam_timer_after_delay)
+	
+	
 	_prepare_jam_ring()
-	_set_shield_active(true)
+	_set_shield_active(true, true)
+	_pick_new_move_target(true)
 
+func _start_emp_timer_after_delay() -> void:
+	if not is_dead:
+		emp_timer.start()
+
+
+func _start_jam_timer_after_delay() -> void:
+	if not is_dead:
+		jam_timer.start()
+		
 
 func _process(delta: float) -> void:
 	if is_dead:
 		return
 
-	boss_health.text = "Health %d" % health
-	_move_like_ufo(delta)
+	if boss_health:
+		boss_health.text = "Health %d" % health
+
+	_update_movement(delta)
+	_update_bob(delta)
 	_animate_jam_ring(delta)
 	_update_missile_rate_by_health()
 
 
-func _move_like_ufo(delta: float) -> void:
+func _update_movement(delta: float) -> void:
 	var viewport: Vector2 = get_viewport_rect().size
+	var drone_speed: float = move_speed
 
-	var boss_speed: float = 1.0
 	if health >= 4:
-		boss_speed = 1.0
+		drone_speed *= 1.0
 	elif health >= 2:
-		boss_speed = 2.0
+		drone_speed *= 1.5
 	else:
-		boss_speed = 5.0
+		drone_speed *= 2.0
 
-	global_position.x += move_direction * boss_speed * move_speed * delta
+	if _move_pause_timer > 0.0:
+		_move_pause_timer = maxf(0.0, _move_pause_timer - delta)
+		if _move_pause_timer <= 0.0:
+			_pick_new_move_target(false)
+		return
 
-	if global_position.x < 120.0:
-		global_position.x = 120.0
-		move_direction = 1.0
-	elif global_position.x > viewport.x - 120.0:
-		global_position.x = viewport.x - 120.0
-		move_direction = -1.0
+	var to_target: Vector2 = _move_target - global_position
+	var distance_to_target: float = to_target.length()
+
+	if distance_to_target <= arrive_distance:
+		_move_pause_timer = randf_range(target_pause_min, target_pause_max)
+		return
+
+	var direction: Vector2 = to_target.normalized()
+	global_position += direction * drone_speed * delta
+
+	global_position.x = clampf(global_position.x, move_margin_x, viewport.x - move_margin_x)
+	global_position.y = clampf(global_position.y, move_min_y, move_max_y)
+
+
+func _update_bob(delta: float) -> void:
+	if flash_sprite == null:
+		return
+
+	_bob_time += delta * bob_speed
+	var bob_offset_y: float = sin(_bob_time) * bob_amount
+	var bob_offset := Vector2(0.0, bob_offset_y)
+
+	flash_sprite.position = _flash_sprite_base_position + bob_offset
+
+	if shield_sprite:
+		shield_sprite.position = _shield_sprite_base_position + bob_offset
+
+
+func _pick_new_move_target(snap_to_target: bool) -> void:
+	var viewport: Vector2 = get_viewport_rect().size
+	_move_target = Vector2(
+		randf_range(move_margin_x, viewport.x - move_margin_x),
+		randf_range(move_min_y, move_max_y)
+	)
+
+	if snap_to_target:
+		global_position = _move_target
 
 
 func _update_missile_rate_by_health() -> void:
@@ -135,7 +242,16 @@ func die(no_reward: bool = false) -> void:
 
 	hit_used_this_down_window = true
 	health -= 1
+	_play_hit_flash()
+
+	# Bring shield back immediately after a successful hit
+	_set_shield_active(true)
+	shield_timer.stop()
+	shield_timer.wait_time = shield_up_duration
+	shield_timer.start()
+
 	print("🤖 Cyber Drone hit! Remaining HP: %d" % health)
+	print("🛡️ Shield restored after hit")
 
 	if health <= 0:
 		_die_for_real(no_reward)
@@ -143,6 +259,18 @@ func die(no_reward: bool = false) -> void:
 
 
 func _die_for_real(no_reward: bool = false) -> void:
+	if is_dead:
+		return
+
+	_prepare_for_death_animation()
+
+	if not no_reward:
+		GameManager.add_resources(10)
+
+	emit_signal("start_death_animation", self)
+
+
+func _prepare_for_death_animation() -> void:
 	is_dead = true
 	missile_timer.stop()
 	shield_timer.stop()
@@ -150,21 +278,34 @@ func _die_for_real(no_reward: bool = false) -> void:
 	emp_charge_timer.stop()
 	jam_timer.stop()
 	jam_charge_timer.stop()
-	_set_shield_active(false)
+	_set_shield_active(false, true)
 
-	if not no_reward:
-		GameManager.add_resources(10)
+	if _hit_flash_tween:
+		_hit_flash_tween.kill()
+		_hit_flash_tween = null
 
-	emit_signal("boss_defeated")
-	emit_signal("enemy_died")
+	if _shield_tween:
+		_shield_tween.kill()
+		_shield_tween = null
 
-	if explosion_scene:
-		var explosion = explosion_scene.instantiate()
-		explosion.global_position = global_position
-		explosion.gives_reward = false
-		_add_to_scene(explosion)
+	if flash_sprite:
+		flash_sprite.modulate = _base_sprite_modulate
+		flash_sprite.position = _flash_sprite_base_position
 
-	queue_free()
+	if shield_sprite:
+		shield_sprite.position = _shield_sprite_base_position
+		shield_sprite.scale = _shield_sprite_base_scale
+		shield_sprite.modulate = _shield_base_modulate
+		shield_sprite.visible = false
+
+	_hide_jam_charge_ring()
+
+	monitoring = false
+	monitorable = false
+
+	var collision_shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if collision_shape:
+		collision_shape.disabled = true
 
 
 func _on_shield_timer_timeout() -> void:
@@ -194,13 +335,27 @@ func _on_emp_timer_timeout() -> void:
 func _on_emp_charge_timer_timeout() -> void:
 	if is_dead:
 		return
+
 	emp_charge_active = false
+
+	var valid_targets: Array = []
+	for target in queued_emp_targets:
+		if target == null or not is_instance_valid(target):
+			continue
+		if target.has_method("is_destroyed") and target.is_destroyed():
+			continue
+		valid_targets.append(target)
+
+	if valid_targets.is_empty():
+		queued_emp_targets.clear()
+		return
+
 	var attack_origin: Vector2 = global_position + Vector2(0, 28)
 	EmpAttackUtils.spawn_emp_volley(
 		self,
 		emp_missile_scene,
 		attack_origin,
-		queued_emp_targets,
+		valid_targets,
 		Callable(GameManager, "_on_enemy_died")
 	)
 	queued_emp_targets.clear()
@@ -254,10 +409,13 @@ func spawn_normal_missile() -> void:
 func _queue_emp_attack() -> void:
 	if emp_charge_active:
 		return
-	var active_cannons: Array = EmpAttackUtils.get_active_cannons(get_tree())
-	queued_emp_targets = EmpAttackUtils.select_emp_targets_for_health(active_cannons, health)
+
+	var emp_targets: Array = _get_emp_targets()
+	queued_emp_targets = EmpAttackUtils.select_emp_targets_for_health(emp_targets, health)
+
 	if queued_emp_targets.is_empty():
 		return
+
 	emp_charge_active = true
 	emp_charge_timer.start()
 
@@ -270,7 +428,7 @@ func spawn_emp_missile() -> void:
 		self,
 		emp_missile_scene,
 		global_position + Vector2(0, 28),
-		EmpAttackUtils.select_emp_targets_for_health(EmpAttackUtils.get_active_cannons(get_tree()), health),
+		EmpAttackUtils.select_emp_targets_for_health(_get_emp_targets(), health),
 		Callable(GameManager, "_on_enemy_died")
 	)
 
@@ -311,7 +469,156 @@ func _animate_jam_ring(delta: float) -> void:
 	jam_ring.modulate.a = minf(1.0, jam_ring.modulate.a + (1.8 * delta / maxf(0.01, float(jam_charge_duration))))
 
 
-func _set_shield_active(value: bool) -> void:
+func _set_shield_active(value: bool, instant: bool = false) -> void:
 	shield_active = value
-	if shield_sprite:
-		shield_sprite.visible = shield_active
+
+	if shield_sprite == null:
+		return
+
+	if instant:
+		if _shield_tween:
+			_shield_tween.kill()
+			_shield_tween = null
+		shield_sprite.visible = value
+		shield_sprite.scale = _shield_sprite_base_scale
+		shield_sprite.modulate = _shield_base_modulate
+		return
+
+	_play_shield_transition(value)
+
+
+func _play_shield_transition(turning_on: bool) -> void:
+	if shield_sprite == null:
+		return
+
+	if _shield_tween:
+		_shield_tween.kill()
+
+	shield_sprite.modulate = _shield_base_modulate
+	_shield_tween = create_tween()
+
+	var cycles: int = max(1, shield_flash_cycles)
+
+	if turning_on:
+		shield_sprite.visible = true
+		shield_sprite.scale = _shield_sprite_base_scale * shield_on_start_scale_multiplier
+
+		for _i in range(cycles):
+			_shield_tween.tween_property(shield_sprite, "modulate", shield_flash_color, shield_flash_step_time)
+			_shield_tween.tween_property(shield_sprite, "modulate", _shield_base_modulate, shield_flash_step_time)
+
+		_shield_tween.tween_property(shield_sprite, "scale", _shield_sprite_base_scale, shield_pop_time)
+		_shield_tween.finished.connect(_on_shield_tween_finished.bind(true))
+	else:
+		shield_sprite.visible = true
+		shield_sprite.scale = _shield_sprite_base_scale
+
+		for _i in range(cycles):
+			_shield_tween.tween_property(shield_sprite, "modulate", shield_flash_color, shield_flash_step_time)
+			_shield_tween.tween_property(shield_sprite, "modulate", _shield_base_modulate, shield_flash_step_time)
+
+		_shield_tween.tween_property(
+			shield_sprite,
+			"scale",
+			_shield_sprite_base_scale * shield_off_end_scale_multiplier,
+			shield_pop_time
+		)
+		_shield_tween.finished.connect(_on_shield_tween_finished.bind(false))
+
+
+func _on_shield_tween_finished(should_remain_visible: bool) -> void:
+	_shield_tween = null
+	if shield_sprite == null:
+		return
+
+	shield_sprite.modulate = _shield_base_modulate
+	shield_sprite.scale = _shield_sprite_base_scale
+	shield_sprite.visible = should_remain_visible
+
+
+func _play_hit_flash() -> void:
+	if flash_sprite == null:
+		print("❌ Cannot flash cyber drone: flash_sprite is null")
+		return
+
+	if _hit_flash_tween:
+		_hit_flash_tween.kill()
+
+	flash_sprite.modulate = _base_sprite_modulate
+	_hit_flash_tween = create_tween()
+
+	var cycles: int = max(1, hit_flash_cycles)
+	for _i in range(cycles):
+		_hit_flash_tween.tween_property(flash_sprite, "modulate", hit_flash_white, hit_flash_step_time)
+		_hit_flash_tween.tween_property(flash_sprite, "modulate", hit_flash_red, hit_flash_step_time)
+
+	_hit_flash_tween.tween_property(flash_sprite, "modulate", _base_sprite_modulate, hit_flash_step_time)
+	_hit_flash_tween.finished.connect(_on_hit_flash_finished)
+
+
+func _on_hit_flash_finished() -> void:
+	_hit_flash_tween = null
+	if flash_sprite:
+		flash_sprite.modulate = _base_sprite_modulate
+
+
+func get_boss_visual_node() -> CanvasItem:
+	return flash_sprite
+
+
+func get_boss_death_particles() -> GPUParticles2D:
+	return get_node_or_null("DeathParticles") as GPUParticles2D
+
+
+func get_boss_body_size() -> Vector2:
+	var sprite_node := flash_sprite as Sprite2D
+	if sprite_node and sprite_node.texture:
+		return sprite_node.texture.get_size() * sprite_node.scale
+
+	var collision_shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	if collision_shape and collision_shape.shape is RectangleShape2D:
+		var rect_shape := collision_shape.shape as RectangleShape2D
+		return rect_shape.size * collision_shape.scale
+
+	if collision_shape and collision_shape.shape is CircleShape2D:
+		var circle_shape := collision_shape.shape as CircleShape2D
+		var diameter: float = circle_shape.radius * 2.0
+		return Vector2(diameter, diameter) * collision_shape.scale
+
+	return Vector2(180.0, 120.0)
+
+
+func get_boss_health() -> int:
+	return health
+
+
+func get_boss_max_health() -> int:
+	return max_health
+
+
+func is_boss_dead() -> bool:
+	return is_dead
+
+
+func get_boss_display_name() -> String:
+	return boss_name
+
+func _get_emp_targets() -> Array:
+	var targets: Array = []
+
+	for cannon in EmpAttackUtils.get_active_cannons(get_tree()):
+		if cannon == null or not is_instance_valid(cannon):
+			continue
+		if cannon.has_method("is_destroyed") and cannon.is_destroyed():
+			continue
+		targets.append(cannon)
+
+	for node in get_tree().get_nodes_in_group("building"):
+		if node == null or not is_instance_valid(node):
+			continue
+		if node.has_method("is_destroyed") and node.is_destroyed():
+			continue
+		if node.has_method("has_active_shield") and node.has_active_shield():
+			targets.append(node)
+
+	return targets
