@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://sgpdvt7wkooc"]
+[gd_scene load_steps=11 format=3 uid="uid://sgpdvt7wkooc"]
 
 [ext_resource type="Script" path="res://Scripts/BossCopier.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://g0r4peps31qo" path="res://Scene/explosion.tscn" id="2"]
@@ -7,10 +7,27 @@
 [ext_resource type="PackedScene" uid="uid://dhkwvxqueco7b" path="res://Scene/boss_copier_clone.tscn" id="5"]
 [ext_resource type="Texture2D" uid="uid://21od4arbkvuv" path="res://assets/Bosses/Copier (2).png" id="6_pcxc3"]
 [ext_resource type="Texture2D" uid="uid://dhm1eog8ffhpt" path="res://assets/ShieldUfo.png" id="7_cjnsd"]
+[ext_resource type="Texture2D" uid="uid://vwk3b28m27sv" path="res://assets/particle effect 2.png" id="8_v5xp2"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_1tpqk"]
 radius = 32.0
 height = 132.0
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_8vwc7"]
+particle_flag_disable_z = true
+angle_min = -720.0
+angle_max = 720.0
+direction = Vector3(0, -1, 0)
+spread = 180.0
+initial_velocity_min = 625.25
+initial_velocity_max = 1000.0
+angular_velocity_min = -400.0
+angular_velocity_max = 400.0
+radial_velocity_max = 100.0
+gravity = Vector3(0, 180, 0)
+scale_min = 0.2
+scale_max = 0.5
+color = Color(0.164706, 0.976471, 0.47451, 1)
 
 [node name="BossCopier" type="Area2D"]
 script = ExtResource("1")
@@ -20,8 +37,11 @@ ion_missile_scene = ExtResource("4")
 clone_scene = ExtResource("5")
 invisible_duration = 4.0
 clone_fire_delay = 2.0
+normal_fire_interval = 2.8
 mid_phase_health_threshold = 4
 critical_phase_health_threshold = 2
+flash_sprite_path = NodePath("Sprite2D")
+real_tell_color = Color(0.52885, 0.997919, 0.640616, 1)
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.165503, 0.976426, 0.473841, 1)
@@ -46,7 +66,6 @@ offset_right = 57.0
 offset_bottom = -27.0
 
 [node name="NormalFireTimer" type="Timer" parent="."]
-one_shot = true
 
 [node name="IonFireTimer" type="Timer" parent="."]
 one_shot = true
@@ -62,3 +81,13 @@ one_shot = true
 
 [node name="VanishTimer" type="Timer" parent="."]
 one_shot = true
+
+[node name="DeathParticles" type="GPUParticles2D" parent="."]
+scale = Vector2(0.09, 0.09)
+emitting = false
+amount = 100
+process_material = SubResource("ParticleProcessMaterial_8vwc7")
+texture = ExtResource("8_v5xp2")
+lifetime = 2.0
+one_shot = true
+explosiveness = 0.49
