@@ -83,12 +83,11 @@ offset_right = 50.0
 grow_vertical = 0
 
 [node name="DestroyAllButton" type="Button" parent="UI"]
-visible = false
-offset_left = 879.0
-offset_top = 19.0
-offset_right = 1128.0
-offset_bottom = 50.0
-text = "destroy all buildings"
+offset_left = 1041.0
+offset_top = 7.0
+offset_right = 1142.35
+offset_bottom = 38.0
+text = "End Run"
 
 [node name="SkipToBoss" type="Button" parent="UI"]
 visible = false
