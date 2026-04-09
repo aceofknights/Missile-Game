@@ -1811,35 +1811,46 @@ position = Vector2(211, 136)
 texture = ExtResource("2_hv6ep")
 
 [node name="HomeBaseTitle" type="Label" parent="."]
-layout_mode = 0
-offset_left = 476.0
-offset_top = 24.0
-offset_right = 665.0
-offset_bottom = 69.0
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -180.0
+offset_right = 180.0
+offset_bottom = 45.0
+grow_horizontal = 2
 theme_override_font_sizes/font_size = 30
 text = "World Select"
 
 [node name="StatusLabel" type="Label" parent="."]
-layout_mode = 0
-offset_left = 379.0
-offset_top = 560.0
-offset_right = 874.0
-offset_bottom = 583.0
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -247.5
+offset_top = -39.0
+offset_right = 247.5
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 0
 text = "Status"
 horizontal_alignment = 1
 
 [node name="SaveQuitButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 24.0
-offset_top = 24.0
-offset_right = 152.0
-offset_bottom = 55.0
+layout_mode = 1
+offset_right = 216.0
+offset_bottom = 31.0
 text = "Save and Quit"
 
 [node name="UnlockAllWorldsButton" type="Button" parent="."]
 layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
+offset_left = -218.0
+offset_top = -76.0
+offset_right = 126.0
+offset_bottom = -45.0
+disabled = true
 text = "UnlockAllWorldsButton"
 
 [node name="World1Holder" type="Control" parent="."]

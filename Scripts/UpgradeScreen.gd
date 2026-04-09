@@ -97,7 +97,7 @@ func _build_tree() -> void:
 
 
 func _refresh_view() -> void:
-	resource_label.text = "Resources: %d" % GameManager.player_resources
+	resource_label.text = "Scrap: %d" % GameManager.player_resources
 
 	var defs: Dictionary = GameManager.get_upgrade_definitions_world_1()
 

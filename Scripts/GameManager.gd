@@ -1287,7 +1287,7 @@ func next_wave_or_boss():
 	else:
 		current_wave += 1
 		await get_tree().create_timer(1.0).timeout
-		emit_signal("announce_wave", "🌊 Wave %d Incoming..." % current_wave, 2.0)
+		emit_signal("announce_wave", "Wave %d" % current_wave, 2.0)
 		await get_tree().create_timer(2.0).timeout
 		start_wave()
 

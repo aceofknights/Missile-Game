@@ -1,10 +1,13 @@
-[gd_scene load_steps=6 format=3 uid="uid://egu0k3r4d4as"]
+[gd_scene load_steps=7 format=3 uid="uid://egu0k3r4d4as"]
 
 [ext_resource type="Script" path="res://Scripts/MainMenu.gd" id="1_x53og"]
 [ext_resource type="PackedScene" uid="uid://d3boe8y64whft" path="res://Scene/WorldSelect.tscn" id="2_tuy6b"]
 [ext_resource type="Texture2D" uid="uid://vtmbpawopp0o" path="res://assets/Space Background.png" id="3_nnkvy"]
 [ext_resource type="Texture2D" uid="uid://bm0g7fvb667b" path="res://assets/Missile-Defense-3-27-2026.png" id="4_4y2e3"]
 [ext_resource type="Texture2D" uid="uid://kpt2l8totdw" path="res://assets/Group 1.png" id="4_h6a84"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l5m8t"]
+bg_color = Color(0.153176, 0.146334, 0.227432, 0.854902)
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -47,17 +50,109 @@ grow_vertical = 2
 
 [node name="NewGame" type="Button" parent="VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_hover_color = Color(0.00180538, 0.720199, 0.72023, 1)
 text = "New Game"
 
 [node name="Continue" type="Button" parent="VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_hover_color = Color(0, 0.721569, 0.721569, 1)
 text = "Continue"
 
 [node name="Quit" type="Button" parent="VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_hover_color = Color(0, 0.721569, 0.721569, 1)
 text = "Quit"
 
-[node name="OverwriteConfirm" type="ConfirmationDialog" parent="."]
+[node name="Old_OverwriteConfirm" type="ConfirmationDialog" parent="."]
 title = "Overwrite save?"
+size = Vector2i(960, 100)
 ok_button_text = "Overwrite"
 dialog_text = "Starting a new game will erase your current save. Continue?"
+
+[node name="OverwriteConfirm" type="CanvasLayer" parent="."]
+
+[node name="Dimmer" type="ColorRect" parent="OverwriteConfirm"]
+visible = false
+layout_direction = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -314.0
+offset_bottom = -251.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.419608, 0.419608, 0.419608, 0.490196)
+
+[node name="CenterContainer" type="CenterContainer" parent="OverwriteConfirm"]
+layout_direction = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PopupOffset" type="Control" parent="OverwriteConfirm/CenterContainer"]
+custom_minimum_size = Vector2(420, 180)
+layout_mode = 2
+
+[node name="PanelContainer" type="Panel" parent="OverwriteConfirm/CenterContainer/PopupOffset"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -55.0
+offset_bottom = -55.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_l5m8t")
+
+[node name="Padding" type="MarginContainer" parent="OverwriteConfirm/CenterContainer/PopupOffset/PanelContainer"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -188.0
+offset_top = -85.0
+offset_right = 188.0
+offset_bottom = 85.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="Content" type="VBoxContainer" parent="OverwriteConfirm/CenterContainer/PopupOffset/PanelContainer/Padding"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="OverwriteConfirm/CenterContainer/PopupOffset/PanelContainer/Padding/Content"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Overwrite Save?"
+
+[node name="MessageLabel" type="Label" parent="OverwriteConfirm/CenterContainer/PopupOffset/PanelContainer/Padding/Content"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+text = "Starting a new game will erase your current save data. Continue?
+"
+autowrap_mode = 2
+justification_flags = 171
+
+[node name="Divider" type="HSeparator" parent="OverwriteConfirm/CenterContainer/PopupOffset/PanelContainer/Padding/Content"]
+layout_mode = 2
+
+[node name="Buttons" type="HBoxContainer" parent="OverwriteConfirm/CenterContainer/PopupOffset/PanelContainer/Padding/Content"]
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 80
+
+[node name="ConfirmButton" type="Button" parent="OverwriteConfirm/CenterContainer/PopupOffset/PanelContainer/Padding/Content/Buttons"]
+layout_mode = 2
+text = "Overwrite"
+
+[node name="CancelButton" type="Button" parent="OverwriteConfirm/CenterContainer/PopupOffset/PanelContainer/Padding/Content/Buttons"]
+layout_mode = 2
+text = "Cancel"
