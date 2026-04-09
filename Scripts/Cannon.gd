@@ -149,8 +149,8 @@ func _update_ui() -> void:
 
 
 func _update_overlay_positions() -> void:
-	ammo_label.global_position = global_position + Vector2(-45, 14)
-	fire_rate_bar.global_position = global_position + Vector2(-45, 35)
+	ammo_label.global_position = global_position + Vector2(-45, 20)
+	fire_rate_bar.global_position = global_position + Vector2(-45, 40)
 	if repair_label:
 		repair_label.global_position = global_position + Vector2(-70, -68)
 

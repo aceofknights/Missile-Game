@@ -21,10 +21,16 @@ GameManager="*res://Scripts/GameManager.gd"
 [display]
 
 window/stretch/mode="viewport"
+mouse_cursor/custom_image="res://assets/Crosshair2.png"
+mouse_cursor/custom_image_hotspot=Vector2(16, 16)
 
 [dotnet]
 
 project/assembly_name="MissileCommandClone"
+
+[gui]
+
+theme/custom="res://assets/Themes/main_theme.tres"
 
 [rendering]
 

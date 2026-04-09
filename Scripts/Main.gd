@@ -20,7 +20,7 @@ extends Node2D
 @onready var end_state_continue_button: Button = $UI/EndStateOverlay/CenterContainer/Panel/VBoxContainer/ContinueButton
 @onready var ground_area: Area2D = get_node_or_null("GroundArea") as Area2D
 @onready var boss_health_holder: Control = $UI/BossHealthHolder
-@onready var boss_health_label: Label = $UI/BossHealthHolder/BossHealthLabel
+@onready var boss_health_label: Label = $UI/BossHealthHolder/BossHealthBar/BossHealthLabel
 @onready var boss_health_bar: ProgressBar = $UI/BossHealthHolder/BossHealthBar
 @onready var kill_boss_button: Button = $UI/KillBossButton
 
@@ -359,9 +359,9 @@ func _process(delta: float) -> void:
 	_update_active_shield_visual()
 	_update_ability_status_ui()
 	_shield_emp_warn_cooldown = maxf(0.0, _shield_emp_warn_cooldown - delta)
-	AmmoLabel.text = "Ammo: %s" % GameManager.get_total_ammo_status()
-	wave_label.text = "🌊 Wave %d / 🌍 World %d" % [GameManager.current_wave, GameManager.current_world]
-	ResourceLabel.text = "Resources: %d" % GameManager.player_resources
+	#AmmoLabel.text = "Ammo: %s" % GameManager.get_total_ammo_status()
+	#wave_label.text = "Wave %d" % [GameManager.current_wave, GameManager.current_world]
+	ResourceLabel.text = "Scrap: %d" % GameManager.player_resources
 	_apply_ground_color()
 	_update_repair_hint(delta)
 
@@ -372,14 +372,6 @@ func _process(delta: float) -> void:
 func _setup_boss_health_ui() -> void:
 	if boss_health_holder:
 		boss_health_holder.visible = false
-
-	if boss_health_label:
-		boss_health_label.text = "BOSS"
-		boss_health_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		boss_health_label.add_theme_font_size_override("font_size", 20)
-		boss_health_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.95, 1.0))
-		boss_health_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
-		boss_health_label.add_theme_constant_override("outline_size", 3)
 
 	if boss_health_bar:
 		boss_health_bar.min_value = 0.0
@@ -414,6 +406,22 @@ func _setup_boss_health_ui() -> void:
 
 		boss_health_bar.add_theme_stylebox_override("background", bg_style)
 		boss_health_bar.add_theme_stylebox_override("fill", fill_style)
+
+	if boss_health_label:
+		boss_health_label.text = "BOSS"
+		boss_health_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		boss_health_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		boss_health_label.add_theme_font_size_override("font_size", 20)
+		boss_health_label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.95, 1.0))
+		boss_health_label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
+		boss_health_label.add_theme_constant_override("outline_size", 3)
+
+		boss_health_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+		boss_health_label.offset_left = 0
+		boss_health_label.offset_top = 0
+		boss_health_label.offset_right = 0
+		boss_health_label.offset_bottom = 0
+		boss_health_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 func _update_boss_health_ui(delta: float) -> void:
