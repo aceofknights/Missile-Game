@@ -923,19 +923,23 @@ func _get_wave_building_ammo_per_building() -> int:
 
 
 func _get_surviving_buildings_for_wave_bonus() -> int:
+	return _get_surviving_building_nodes_for_wave_bonus().size()
+
+
+func _get_surviving_building_nodes_for_wave_bonus() -> Array:
 	var tree := get_tree()
 	if tree == null:
-		return 0
+		return []
 
-	var alive_count := 0
+	var buildings: Array = []
 	for node in tree.get_nodes_in_group("building"):
 		if node == null or not is_instance_valid(node):
 			continue
 		if node.has_method("is_destroyed") and bool(node.is_destroyed()):
 			continue
-		alive_count += 1
+		buildings.append(node)
 
-	return alive_count
+	return buildings
 
 
 func _grant_wave_building_ammo_bonus() -> void:
@@ -954,11 +958,16 @@ func _grant_wave_building_ammo_bonus() -> void:
 	if available_cannons.is_empty():
 		return
 
-	var surviving_buildings := _get_surviving_buildings_for_wave_bonus()
+	var surviving_buildings_nodes := _get_surviving_building_nodes_for_wave_bonus()
+	var surviving_buildings := surviving_buildings_nodes.size()
 	if surviving_buildings <= 0:
 		return
 
 	var ammo_per_building := _get_wave_building_ammo_per_building()
+	for building in surviving_buildings_nodes:
+		if building != null and is_instance_valid(building) and building.has_method("play_wave_ammo_bonus_animation"):
+			building.play_wave_ammo_bonus_animation(ammo_per_building)
+
 	var total_bonus_ammo := surviving_buildings * ammo_per_building
 	var distribution_index := 0
 
