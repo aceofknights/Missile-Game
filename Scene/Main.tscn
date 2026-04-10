@@ -116,6 +116,63 @@ offset_right = 208.0
 offset_bottom = 28.0
 text = "ResourceLabel"
 
+[node name="AbilityStatus" type="Control" parent="UI"]
+offset_left = 20.0
+offset_top = 60.0
+offset_right = 260.0
+offset_bottom = 238.0
+
+[node name="AutoCannonLabel" type="Label" parent="UI/AbilityStatus"]
+offset_right = 200.0
+offset_bottom = 20.0
+text = "Auto Cannon"
+
+[node name="AutoCannonBar" type="ProgressBar" parent="UI/AbilityStatus"]
+offset_top = 22.0
+offset_right = 200.0
+offset_bottom = 40.0
+max_value = 1.0
+show_percentage = false
+
+[node name="IonWaveLabel" type="Label" parent="UI/AbilityStatus"]
+offset_top = 46.0
+offset_right = 200.0
+offset_bottom = 66.0
+text = "Ion Wave Cooldown"
+
+[node name="IonWaveBar" type="ProgressBar" parent="UI/AbilityStatus"]
+offset_top = 68.0
+offset_right = 200.0
+offset_bottom = 86.0
+max_value = 1.0
+show_percentage = false
+
+[node name="LureLabel" type="Label" parent="UI/AbilityStatus"]
+offset_top = 92.0
+offset_right = 200.0
+offset_bottom = 112.0
+text = "Lure Cooldown"
+
+[node name="LureBar" type="ProgressBar" parent="UI/AbilityStatus"]
+offset_top = 114.0
+offset_right = 200.0
+offset_bottom = 132.0
+max_value = 1.0
+show_percentage = false
+
+[node name="ShieldEnergyLabel" type="Label" parent="UI/AbilityStatus"]
+offset_top = 138.0
+offset_right = 240.0
+offset_bottom = 158.0
+text = "Active Shield Energy"
+
+[node name="ShieldEnergyBar" type="ProgressBar" parent="UI/AbilityStatus"]
+offset_top = 160.0
+offset_right = 240.0
+offset_bottom = 178.0
+max_value = 1.0
+show_percentage = false
+
 [node name="EndStateOverlay" type="Control" parent="UI"]
 process_mode = 2
 visible = false
