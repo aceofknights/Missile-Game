@@ -1,7 +1,8 @@
-[gd_scene load_steps=23 format=3 uid="uid://ctxqd2rutxxdu"]
+[gd_scene load_steps=24 format=3 uid="uid://ctxqd2rutxxdu"]
 
 [ext_resource type="Script" path="res://Scripts/Main.gd" id="1_7l10b"]
 [ext_resource type="Texture2D" uid="uid://kpt2l8totdw" path="res://assets/Group 1.png" id="2_0otvt"]
+[ext_resource type="PackedScene" uid="uid://kynt1kh1vc5b" path="res://Scene/Lure.tscn" id="2_bwnbf"]
 [ext_resource type="PackedScene" uid="uid://vt8afrux1ojd" path="res://Scene/cannon.tscn" id="2_oj5qe"]
 [ext_resource type="Texture2D" uid="uid://cmf8xd3bw00v8" path="res://assets/black square.png" id="2_qwm4p"]
 [ext_resource type="Script" path="res://Scripts/Spawner.gd" id="3_k5sqb"]
@@ -27,6 +28,7 @@ size = Vector2(1159, 37)
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_7l10b")
+lure_scene = ExtResource("2_bwnbf")
 
 [node name="BlackSquare" type="Sprite2D" parent="."]
 position = Vector2(581, 631.75)
@@ -79,10 +81,10 @@ grow_horizontal = 0
 text = "End Run"
 
 [node name="SkipToBoss" type="Button" parent="UI"]
-offset_left = 914.0
-offset_top = 200.0
-offset_right = 1163.0
-offset_bottom = 231.0
+offset_left = 912.0
+offset_top = 75.0
+offset_right = 1161.0
+offset_bottom = 106.0
 text = "Skip To Boss"
 
 [node name="GiveResources" type="Button" parent="UI"]
@@ -94,11 +96,10 @@ offset_bottom = 51.0
 text = "Give 100 Resources"
 
 [node name="KillBossButton" type="Button" parent="UI"]
-visible = false
-offset_left = 191.0
-offset_top = 20.0
-offset_right = 280.0
-offset_bottom = 51.0
+offset_left = 995.0
+offset_top = 40.0
+offset_right = 1147.0
+offset_bottom = 71.0
 text = "Kill Boss"
 
 [node name="AnnouncementLabel" type="Label" parent="UI"]

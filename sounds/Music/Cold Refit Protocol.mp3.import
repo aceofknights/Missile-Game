@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://btth62oqjmgyf"
+path="res://.godot/imported/Cold Refit Protocol.mp3-84ef2a8cfeec7c077339bcaaf51ad9ea.mp3str"
+
+[deps]
+
+source_file="res://sounds/Music/Cold Refit Protocol.mp3"
+dest_files=["res://.godot/imported/Cold Refit Protocol.mp3-84ef2a8cfeec7c077339bcaaf51ad9ea.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

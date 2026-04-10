@@ -42,7 +42,8 @@ func _ready() -> void:
 	world3_btn.pressed.connect(func(): _select_world(3))
 	world4_btn.pressed.connect(func(): _select_world(4))
 	world5_btn.pressed.connect(func(): _select_world(5))
-
+	MusicManager.play_music(preload("res://sounds/Music/Orbital Standby.mp3"), "menu_theme")
+	
 	_connect_hover(world1_btn, world1_anim, 1)
 	_connect_hover(world2_btn, world2_anim, 2)
 	_connect_hover(world3_btn, world3_anim, 3)

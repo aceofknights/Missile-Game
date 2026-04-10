@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://cqnyv2kywllpx"
+path="res://.godot/imported/Orbital Standby.mp3-17e698a1420c0fe41ab6fde665fa2d82.mp3str"
+
+[deps]
+
+source_file="res://sounds/Music/Orbital Standby.mp3"
+dest_files=["res://.godot/imported/Orbital Standby.mp3-17e698a1420c0fe41ab6fde665fa2d82.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
