@@ -10,7 +10,9 @@ const WORLD_3_BUILDING_COLOR := Color(0.28, 0.18, 0.45, 1.0) # dark purple
 const WORLD_4_BUILDING_COLOR := Color(0.18, 0.28, 0.42, 1.0) # dark blue
 const WORLD_5_BUILDING_COLOR := Color(0.32, 0.45, 0.18, 1.0) # toxic green
 const DEFAULT_BUILDING_COLOR := Color(0.35, 0.35, 0.35, 1.0)
-const WAVE_AMMO_ICON_TEXTURE := preload("res://icon.svg")
+
+const WAVE_AMMO_ICON_TEXTURE := preload("res://assets/UpgradeIcons/yellow plus ammo.png")
+@export var WAVE_AMMO_ICON_TEXTURE_COLOR := Color(1,1,1,1)
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var destroyed_sprite: Sprite2D = get_node_or_null("Destroyed") as Sprite2D
@@ -213,7 +215,7 @@ func play_wave_ammo_bonus_animation(icon_count: int) -> void:
 	if destroyed:
 		return
 
-	var total_icons := clamp(icon_count, 1, 2)
+	var total_icons: int = clamp(icon_count, 1, 2)
 	for i in range(total_icons):
 		_spawn_wave_ammo_icon(i, total_icons)
 
