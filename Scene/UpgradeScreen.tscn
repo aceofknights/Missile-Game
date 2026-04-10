@@ -664,6 +664,16 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_bcjro")
 upgrade_key = "building_6"
 icon_texture = ExtResource("17_5bgwt")
 
+[node name="building_ammo_bonus" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
+layout_mode = 0
+offset_left = 294.0
+offset_top = 430.0
+offset_right = 362.0
+offset_bottom = 498.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_2tgad")
+upgrade_key = "building_ammo_bonus"
+icon_texture = ExtResource("17_5bgwt")
+
 [node name="repair_shop" parent="RootMargin/MainVBox/CenterRow/TechTreePanel/TechTreeArea" instance=ExtResource("4_node")]
 layout_mode = 0
 offset_left = 676.0
