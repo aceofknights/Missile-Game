@@ -72,5 +72,5 @@ script = ExtResource("1_p7fo2")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 sprite_frames = SubResource("SpriteFrames_h5mu7")
-frame_progress = 0.960049
+frame_progress = 0.179312
 speed_scale = 3.0

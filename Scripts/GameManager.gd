@@ -611,6 +611,16 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 				{"upgrade": "building_5", "min_level": 1}
 			]
 		},
+		"building_ammo_bonus": {
+			"display_name": "Building Ammo Boost",
+			"description": "Start each wave after Wave 1 with +2 ammo per surviving building (instead of +1), split round-robin across available cannons.",
+			"max_level": 1,
+			"base_cost": 100,
+			"path_rate": PATH_MEDIUM,
+			"requires": [
+				{"upgrade": "building_6", "min_level": 1}
+			]
+		},
 		"repair_shop": {
 			"display_name": "Repair Shop",
 			"description": "Unlocks repairs with R and reduces repair cost each level.",
@@ -906,6 +916,86 @@ func _give_factory_ammo_tick() -> bool:
 	return false
 
 
+func _get_wave_building_ammo_per_building() -> int:
+	if get_upgrade_level("building_ammo_bonus") > 0:
+		return 2
+	return 1
+
+
+func _get_surviving_buildings_for_wave_bonus() -> int:
+	return _get_surviving_building_nodes_for_wave_bonus().size()
+
+
+func _get_surviving_building_nodes_for_wave_bonus() -> Array:
+	var tree := get_tree()
+	if tree == null:
+		return []
+
+	var buildings: Array = []
+	for node in tree.get_nodes_in_group("building"):
+		if node == null or not is_instance_valid(node):
+			continue
+		if node.has_method("is_destroyed") and bool(node.is_destroyed()):
+			continue
+		buildings.append(node)
+
+	return buildings
+
+
+func _grant_wave_building_ammo_bonus() -> void:
+	if current_wave <= 1:
+		return
+
+	var state := _world_state()
+	var cannons: Dictionary = state["cannons"]
+	var available_cannons: Array[String] = []
+	for cannon_id in CANNON_IDS:
+		var cannon_state: Dictionary = cannons[cannon_id]
+		if not bool(cannon_state["unlocked"]) or bool(cannon_state["destroyed"]):
+			continue
+		available_cannons.append(cannon_id)
+
+	if available_cannons.is_empty():
+		return
+
+	var surviving_buildings_nodes := _get_surviving_building_nodes_for_wave_bonus()
+	var surviving_buildings := surviving_buildings_nodes.size()
+	if surviving_buildings <= 0:
+		return
+
+	var ammo_per_building := _get_wave_building_ammo_per_building()
+	for building in surviving_buildings_nodes:
+		if building != null and is_instance_valid(building) and building.has_method("play_wave_ammo_bonus_animation"):
+			building.play_wave_ammo_bonus_animation(ammo_per_building)
+
+	var total_bonus_ammo := surviving_buildings * ammo_per_building
+	var distribution_index := 0
+
+	while total_bonus_ammo > 0:
+		var granted_this_pass := false
+		for offset in range(available_cannons.size()):
+			var idx := (distribution_index + offset) % available_cannons.size()
+			var cannon_id := available_cannons[idx]
+			var cannon_state: Dictionary = cannons[cannon_id]
+			var current_ammo := int(cannon_state["current_ammo"])
+			var max_ammo := _get_cannon_max_ammo_from_state(state, cannon_id)
+			if current_ammo >= max_ammo:
+				continue
+
+			cannon_state["current_ammo"] = current_ammo + 1
+			total_bonus_ammo -= 1
+			distribution_index = (idx + 1) % available_cannons.size()
+			granted_this_pass = true
+
+			if total_bonus_ammo <= 0:
+				break
+
+		if not granted_this_pass:
+			break
+
+	print("🔋 Wave ammo bonus granted: +%d ammo from %d surviving buildings" % [surviving_buildings * ammo_per_building, surviving_buildings])
+
+
 func update_ammo_factory(delta: float) -> void:
 	var interval = _get_ammo_factory_interval()
 	if interval <= 0.0:
@@ -1096,6 +1186,7 @@ func start_wave():
 
 	print("📣 start_wave() called")
 	print("🌊 Starting Wave %d (World %d)" % [current_wave, current_world])
+	_grant_wave_building_ammo_bonus()
 
 	if current_world == 1:
 		is_boss_wave = (current_wave % 10 == 0)

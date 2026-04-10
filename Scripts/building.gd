@@ -11,6 +11,9 @@ const WORLD_4_BUILDING_COLOR := Color(0.18, 0.28, 0.42, 1.0) # dark blue
 const WORLD_5_BUILDING_COLOR := Color(0.32, 0.45, 0.18, 1.0) # toxic green
 const DEFAULT_BUILDING_COLOR := Color(0.35, 0.35, 0.35, 1.0)
 
+const WAVE_AMMO_ICON_TEXTURE := preload("res://assets/UpgradeIcons/yellow plus ammo.png")
+@export var WAVE_AMMO_ICON_TEXTURE_COLOR := Color(1,1,1,1)
+
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var destroyed_sprite: Sprite2D = get_node_or_null("Destroyed") as Sprite2D
 @onready var repair_label: Label = get_node_or_null("RepairLabel") as Label
@@ -206,6 +209,43 @@ func _get_world_building_color() -> Color:
 
 func is_destroyed() -> bool:
 	return destroyed
+
+
+func play_wave_ammo_bonus_animation(icon_count: int) -> void:
+	if destroyed:
+		return
+
+	var total_icons: int = clamp(icon_count, 1, 2)
+	for i in range(total_icons):
+		_spawn_wave_ammo_icon(i, total_icons)
+
+
+func _spawn_wave_ammo_icon(icon_index: int, total_icons: int) -> void:
+	var icon := Sprite2D.new()
+	icon.texture = WAVE_AMMO_ICON_TEXTURE
+	icon.z_index = 80
+	icon.top_level = true
+	icon.scale = Vector2(0.08, 0.08)
+
+	var x_offset := 0.0
+	if total_icons == 2:
+		x_offset = -10.0 if icon_index == 0 else 10.0
+
+	icon.global_position = global_position + Vector2(x_offset, -18.0)
+	icon.modulate = Color(1.0, 1.0, 1.0, 0.0)
+	get_tree().current_scene.add_child(icon)
+
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(icon, "global_position", icon.global_position + Vector2(0.0, -42.0), 0.95)\
+		.set_trans(Tween.TRANS_SINE)\
+		.set_ease(Tween.EASE_OUT)
+	tween.tween_property(icon, "modulate:a", 1.0, 0.22)
+	tween.chain().tween_property(icon, "modulate:a", 0.0, 0.45)
+	tween.finished.connect(func() -> void:
+		if is_instance_valid(icon):
+			icon.queue_free()
+	)
 
 
 func is_hovered(global_mouse_position: Vector2) -> bool:
