@@ -19,7 +19,7 @@ func _ready() -> void:
 	continue_button.pressed.connect(continue_game)
 	save_quit_button.pressed.connect(_on_save_and_quit_pressed)
 	world_select_button.pressed.connect(_on_back_to_world_select_pressed)
-
+	MusicManager.play_music(preload("res://sounds/Music/Orbital Standby.mp3"), "menu_theme")
 	if debug_buy_all_button:
 		debug_buy_all_button.pressed.connect(_on_debug_buy_all_pressed)
 

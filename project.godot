@@ -17,6 +17,7 @@ config/features=PackedStringArray("4.2")
 [autoload]
 
 GameManager="*res://Scripts/GameManager.gd"
+MusicManager="*res://Scripts/MusicManager.gd"
 
 [display]
 

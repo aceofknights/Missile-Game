@@ -16,7 +16,7 @@ func _ready() -> void:
 	new_game_button.pressed.connect(_on_new_game_pressed)
 	continue_button.pressed.connect(_on_continue_pressed)
 	quit_button.pressed.connect(quit_game)
-
+	MusicManager.play_music(preload("res://sounds/Music/Orbital Standby.mp3"), "menu_theme")
 	confirm_button.pressed.connect(_confirm_new_game)
 	cancel_button.pressed.connect(_on_overwrite_cancelled)
 	dimmer.gui_input.connect(_on_dimmer_gui_input)

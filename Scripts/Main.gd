@@ -50,6 +50,7 @@ const PLAYER_BOTTOM_EXPLOSION_Y_MARGIN := 18.0
 @export var boss_death_curve_height: float = 110.0
 @export var victory_screen_delay_after_explosions: float = 2.0
 @export var defeat_screen_delay_after_explosions: float = 2.0
+@export var lure_scene: PackedScene
 
 var _boss_death_animation_in_progress: bool = false
 var _active_boss: Node = null
@@ -123,7 +124,7 @@ func _ready() -> void:
 	_setup_boss_health_ui()
 	_disable_debug_button_focus()
 	kill_boss_button.pressed.connect(_on_kill_boss_pressed)
-		
+	MusicManager.stop_music()
 	NodeContracts.require_nodes_with_types(self, {
 		"Cannon": "Area2D",
 		"LeftCannon": "Area2D",
@@ -351,6 +352,7 @@ func _process(delta: float) -> void:
 	if _end_menu_active:
 		return
 
+	_cleanup_finished_lures()
 	GameManager.update_ammo_factory(delta)
 	GameManager.update_active_shield(delta)
 	_update_boss_health_ui(delta)
@@ -554,11 +556,44 @@ func _handle_upgrade_hotkeys() -> void:
 	if e_down and not _e_was_down:
 		_e_was_down = true
 		if GameManager.can_trigger_lure(now_seconds):
-			GameManager.trigger_lure(get_global_mouse_position(), now_seconds)
+			var lure_pos := get_global_mouse_position()
+			GameManager.trigger_lure(lure_pos, now_seconds)
+			_spawn_lure_at(lure_pos)
 			announce("🎯 Lure Deployed!", 1.0)
 	if not e_down:
 		_e_was_down = false
 
+func _spawn_lure_at(pos: Vector2) -> void:
+	if lure_scene == null:
+		return
+
+	# Optional: prevent duplicate visible lure scenes
+	for child in get_children():
+		if child != null and is_instance_valid(child) and child.is_in_group("player_lure"):
+			child.queue_free()
+
+	var lure = lure_scene.instantiate()
+	if lure == null:
+		return
+
+	add_child(lure)
+	lure.global_position = pos
+
+	if lure.has_method("play_spawn"):
+		lure.play_spawn()
+
+	if lure is Node2D:
+		lure.add_to_group("player_lure")
+
+
+func _cleanup_finished_lures() -> void:
+	var now_seconds := Time.get_ticks_msec() / 1000.0
+	if GameManager.is_lure_active(now_seconds):
+		return
+
+	for child in get_children():
+		if child != null and is_instance_valid(child) and child.is_in_group("player_lure"):
+			child.queue_free()
 
 func _update_auto_cannon(delta: float) -> void:
 	var level := GameManager.get_upgrade_level("auto_cannon")
