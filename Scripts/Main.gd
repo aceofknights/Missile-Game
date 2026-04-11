@@ -161,7 +161,7 @@ func _ready() -> void:
 	GameManager.start_wave()
 	_apply_building_unlocks()
 	_create_active_shield_sprite()
-	_create_ability_status_ui()
+	_bind_ability_status_ui()
 
 	# Connect to any boss already present in the scene.
 	for node in get_tree().get_nodes_in_group("enemy"):
@@ -651,82 +651,15 @@ func _update_active_shield_visual() -> void:
 		_active_shield_collision.disabled = not active
 
 
-func _create_ability_status_ui() -> void:
-	var ui := get_node_or_null("UI") as CanvasLayer
-	if ui == null:
-		return
-
-	_auto_cannon_label = Label.new()
-	_auto_cannon_label.text = "Auto Cannon"
-	_auto_cannon_label.offset_left = 20
-	_auto_cannon_label.offset_top = 60
-	_auto_cannon_label.offset_right = 220
-	_auto_cannon_label.offset_bottom = 80
-	ui.add_child(_auto_cannon_label)
-
-	_auto_cannon_bar = ProgressBar.new()
-	_auto_cannon_bar.min_value = 0.0
-	_auto_cannon_bar.max_value = 1.0
-	_auto_cannon_bar.show_percentage = false
-	_auto_cannon_bar.offset_left = 20
-	_auto_cannon_bar.offset_top = 82
-	_auto_cannon_bar.offset_right = 220
-	_auto_cannon_bar.offset_bottom = 100
-	ui.add_child(_auto_cannon_bar)
-
-	_ion_label = Label.new()
-	_ion_label.text = "Ion Wave Cooldown"
-	_ion_label.offset_left = 20
-	_ion_label.offset_top = 106
-	_ion_label.offset_right = 220
-	_ion_label.offset_bottom = 126
-	ui.add_child(_ion_label)
-
-	_ion_bar = ProgressBar.new()
-	_ion_bar.min_value = 0.0
-	_ion_bar.max_value = 1.0
-	_ion_bar.show_percentage = false
-	_ion_bar.offset_left = 20
-	_ion_bar.offset_top = 128
-	_ion_bar.offset_right = 220
-	_ion_bar.offset_bottom = 146
-	ui.add_child(_ion_bar)
-
-	_lure_label = Label.new()
-	_lure_label.text = "Lure Cooldown"
-	_lure_label.offset_left = 20
-	_lure_label.offset_top = 152
-	_lure_label.offset_right = 220
-	_lure_label.offset_bottom = 172
-	ui.add_child(_lure_label)
-
-	_lure_bar = ProgressBar.new()
-	_lure_bar.min_value = 0.0
-	_lure_bar.max_value = 1.0
-	_lure_bar.show_percentage = false
-	_lure_bar.offset_left = 20
-	_lure_bar.offset_top = 174
-	_lure_bar.offset_right = 220
-	_lure_bar.offset_bottom = 192
-	ui.add_child(_lure_bar)
-
-	_shield_energy_label = Label.new()
-	_shield_energy_label.text = "Active Shield Energy"
-	_shield_energy_label.offset_left = 20
-	_shield_energy_label.offset_top = 198
-	_shield_energy_label.offset_right = 260
-	_shield_energy_label.offset_bottom = 218
-	ui.add_child(_shield_energy_label)
-
-	_shield_energy_bar = ProgressBar.new()
-	_shield_energy_bar.min_value = 0.0
-	_shield_energy_bar.max_value = 1.0
-	_shield_energy_bar.show_percentage = false
-	_shield_energy_bar.offset_left = 20
-	_shield_energy_bar.offset_top = 220
-	_shield_energy_bar.offset_right = 260
-	_shield_energy_bar.offset_bottom = 238
-	ui.add_child(_shield_energy_bar)
+func _bind_ability_status_ui() -> void:
+	_auto_cannon_label = get_node_or_null("UI/AbilityStatus/AutoCannonLabel") as Label
+	_auto_cannon_bar = get_node_or_null("UI/AbilityStatus/AutoCannonBar") as ProgressBar
+	_ion_label = get_node_or_null("UI/AbilityStatus/IonWaveLabel") as Label
+	_ion_bar = get_node_or_null("UI/AbilityStatus/IonWaveBar") as ProgressBar
+	_lure_label = get_node_or_null("UI/AbilityStatus/LureLabel") as Label
+	_lure_bar = get_node_or_null("UI/AbilityStatus/LureBar") as ProgressBar
+	_shield_energy_label = get_node_or_null("UI/AbilityStatus/ShieldEnergyLabel") as Label
+	_shield_energy_bar = get_node_or_null("UI/AbilityStatus/ShieldEnergyBar") as ProgressBar
 
 
 func _update_ability_status_ui() -> void:

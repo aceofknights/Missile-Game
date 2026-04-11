@@ -613,7 +613,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"building_ammo_bonus": {
 			"display_name": "Building Ammo Boost",
-			"description": "Start each wave after Wave 1 with +2 ammo per surviving building (instead of +1), split round-robin across available cannons.",
+			"description": "Increase the ammo gained after each wave per building by 1",
 			"max_level": 1,
 			"base_cost": 100,
 			"path_rate": PATH_MEDIUM,
