@@ -133,9 +133,10 @@ func _spawn_special_missile(scene: PackedScene) -> void:
 	_add_to_scene(missile)
 
 
-func spawn_side_plane(role: String = "fighter") -> void:
+func spawn_side_plane() -> void:
 	if BOSS_PLANE_SCENE == null:
 		return
+
 	var plane := BOSS_PLANE_SCENE.instantiate()
 	if plane == null:
 		return
@@ -143,9 +144,18 @@ func spawn_side_plane(role: String = "fighter") -> void:
 		return
 
 	GameManager.enemies_alive += 1
-	plane.role = role
+
+	# Randomly choose 1 of the 2 plane types
+	var spawned_role: String = "fighter" if randf() < 0.5 else "bomber"
+	plane.role = spawned_role
+
 	plane.base_speed = randf_range(110.0, 155.0)
-	plane.action_interval = randf_range(1.8, 2.8)
+
+	if spawned_role == "bomber":
+		plane.bomber_action_interval = randf_range(1.8, 2.8)
+	else:
+		plane.fighter_action_interval = randf_range(0.7, 1.2)
+
 	plane.plane_removed.connect(_on_side_plane_removed)
 
 	var from_left := randf() < 0.5

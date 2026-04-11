@@ -313,14 +313,14 @@ func get_ion_wave_duration() -> float:
 	var level := get_upgrade_level("ion_wave")
 	if level <= 0:
 		return 0.0
-	return 10.0 + float(level)
+	return 3.0 + float(level)
 
-
+#max cd is 10, cd is 45 seconds minus 2 times level
 func get_ion_wave_recharge_time() -> float:
 	var level := get_upgrade_level("ion_wave")
 	if level <= 0:
 		return 9999.0
-	return maxf(10.0, 45.0 - (2.0 * float(level)))
+	return maxf(10.0, 60.0 - (2.0 * float(level)))
 
 
 func can_trigger_ion_wave(now_seconds: float) -> bool:
@@ -350,7 +350,7 @@ func get_lure_recharge_time() -> float:
 	var level := get_upgrade_level("lure")
 	if level <= 0:
 		return 9999.0
-	return maxf(4.0, 12.0 - float(level))
+	return maxf(4.0, 22.0 - float(level))
 
 
 func can_trigger_lure(now_seconds: float) -> bool:
@@ -1328,18 +1328,15 @@ func _try_spawn_side_planes(state: Dictionary) -> void:
 	if remaining >= 3 and randf() < 0.22:
 		burst_count = 2
 
-	var spawned_now := 0
-	for _i in range(burst_count):
+	for i in range(burst_count):
 		if int(state["plane_spawned_total"]) >= target_total:
 			break
-		var role := "fighter"
-		if randf() < 0.35:
-			role = "bomber"
+
 		if spawner.has_method("spawn_side_plane"):
-			spawner.spawn_side_plane(role)
+			spawner.spawn_side_plane()
 			state["plane_spawned_total"] = int(state["plane_spawned_total"]) + 1
-			spawned_now += 1
-		if spawned_now > 0:
+
+		if i < burst_count - 1:
 			await get_tree().create_timer(randf_range(0.2, 0.8)).timeout
 
 
