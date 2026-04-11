@@ -14,6 +14,7 @@ var _upgrade_buttons: Dictionary = {}
 var _connections: Array = []
 var _hovered_upgrade_key: String = ""
 var _hovered_mouse_pos: Vector2 = Vector2.ZERO
+const TUTORIAL_UPGRADE_SCREEN := "upgrade_screen_intro_seen"
 
 func _ready() -> void:
 	continue_button.pressed.connect(continue_game)
@@ -31,6 +32,7 @@ func _ready() -> void:
 
 	_build_tree()
 	_refresh_view()
+	_show_upgrade_tutorial_if_needed()
 
 
 func _build_tree() -> void:
@@ -281,6 +283,27 @@ func _on_upgrade_hover_ended() -> void:
 		hover_tooltip.hide_tooltip()
 	else:
 		hover_tooltip.visible = false
+
+
+func _show_upgrade_tutorial_if_needed() -> void:
+	if GameManager.has_seen_tutorial(TUTORIAL_UPGRADE_SCREEN):
+		return
+
+	var popup := AcceptDialog.new()
+	popup.title = "Tutorial"
+	popup.size = Vector2i(700, 230)
+	popup.dialog_text = "Enemy missiles give scrap when shot down, and scrap is used to upgrade your defenses.\n\nHit Continue when ready to try again."
+	add_child(popup)
+	popup.popup_centered()
+	popup.confirmed.connect(func() -> void:
+		if is_instance_valid(popup):
+			popup.queue_free()
+	)
+	popup.close_requested.connect(func() -> void:
+		if is_instance_valid(popup):
+			popup.queue_free()
+	)
+	GameManager.mark_tutorial_seen(TUTORIAL_UPGRADE_SCREEN)
 
 
 func continue_game() -> void:
