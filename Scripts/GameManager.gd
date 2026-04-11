@@ -429,7 +429,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"display_name": "Ammo Factory 2",
 			"description": "Further increases ammo production for sustained fights.",
 			"max_level": 10,
-			"base_cost": 20,
+			"base_cost": 50,
 			"path_rate": PATH_MEDIUM,
 			"requires": [{"upgrade": "ammo_factory_1", "min_level": 10}]
 		},
@@ -515,7 +515,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"display_name": "Double Turret (Left)",
 			"description": "Upgrades the left cannon to fire two shots before reload.",
 			"max_level": 1,
-			"base_cost": 80,
+			"base_cost": 120,
 			"path_rate": PATH_MEDIUM,
 			"requires": [
 				{"upgrade": "unlock_left_cannon", "min_level": 1}
@@ -525,7 +525,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"display_name": "Double Turret (Right)",
 			"description": "Upgrades the right cannon to fire two shots before reload.",
 			"max_level": 1,
-			"base_cost": 80,
+			"base_cost": 120,
 			"path_rate": PATH_MEDIUM,
 			"requires": [
 				{"upgrade": "unlock_right_cannon", "min_level": 1}
@@ -535,7 +535,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"display_name": "Fire Rate (Middle)",
 			"description": "Increases the middle cannon's firing speed each level.",
 			"max_level": 5,
-			"base_cost": 10,
+			"base_cost": 15,
 			"path_rate": PATH_MEDIUM,
 			"requires": [
 				{"upgrade": "starting_ammo_middle_1", "min_level": 10}
@@ -545,7 +545,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"display_name": "Fire Rate (Left)",
 			"description": "Increases the left cannon's firing speed each level.",
 			"max_level": 5,
-			"base_cost": 10,
+			"base_cost": 15,
 			"path_rate": PATH_MEDIUM,
 			"requires": [
 				{"upgrade": "unlock_left_cannon", "min_level": 1}
@@ -555,7 +555,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"display_name": "Fire Rate (Right)",
 			"description": "Increases the right cannon's firing speed each level.",
 			"max_level": 5,
-			"base_cost": 10,
+			"base_cost": 15,
 			"path_rate": PATH_MEDIUM,
 			"requires": [
 				{"upgrade": "unlock_right_cannon", "min_level": 1}
@@ -584,9 +584,9 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		"missile_speed": {
 			"display_name": "Missile Speed",
 			"description": "Increases missile travel speed each level for faster interceptions.",
-			"max_level": 10,
-			"base_cost": 15,
-			"path_rate": PATH_CHEAP,
+			"max_level": 5,
+			"base_cost": 20,
+			"path_rate": PATH_MEDIUM,
 			"requires": [
 				{"upgrade": "starting_ammo_middle_1", "min_level": 1}
 			]
@@ -615,7 +615,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"display_name": "Building Ammo Boost",
 			"description": "Increase the ammo gained after each wave per building by 1",
 			"max_level": 1,
-			"base_cost": 100,
+			"base_cost": 300,
 			"path_rate": PATH_MEDIUM,
 			"requires": [
 				{"upgrade": "building_6", "min_level": 1}
@@ -634,8 +634,8 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		"shield_generator": {
 			"display_name": "Shield Generator",
 			"description": "Gives each building a shield that blocks 1 hit, plus 1 more hit per level.",
-			"max_level": 5,
-			"base_cost": 40,
+			"max_level": 2,
+			"base_cost": 250,
 			"path_rate": PATH_EXPENSIVE,
 			"min_world": 2,
 			"requires": [
@@ -645,8 +645,8 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		"active_shields": {
 			"display_name": "Active Shields",
 			"description": "Hold Space to deploy a full-base shield. Battery duration and recharge speed improve each level.",
-			"max_level": 5,
-			"base_cost": 50,
+			"max_level": 3,
+			"base_cost": 100,
 			"path_rate": PATH_EXPENSIVE,
 			"min_world": 2,
 			"requires": [
@@ -657,7 +657,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"display_name": "Auto Cannon",
 			"description": "Automatically targets enemy missiles. Fire interval starts at 20s and improves by 2s per level.",
 			"max_level": 5,
-			"base_cost": 50,
+			"base_cost": 85,
 			"path_rate": PATH_EXPENSIVE,
 			"min_world": 3,
 			"requires": [
@@ -668,7 +668,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 			"display_name": "Lure",
 			"description": "Press E to deploy a lure that lasts 2 seconds, plus 1 extra second per level.",
 			"max_level": 3,
-			"base_cost": 60,
+			"base_cost": 90,
 			"path_rate": PATH_MEDIUM,
 			"min_world": 4,
 			"requires": [
@@ -1042,7 +1042,7 @@ func get_explosion_radius_bonus() -> float:
 
 
 func get_explosion_duration_bonus() -> float:
-	return 0.2 * float(get_upgrade_level("explosion_duration"))
+	return 0.1 * float(get_upgrade_level("explosion_duration"))
 
 
 func can_use_repair_shop() -> bool:

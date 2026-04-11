@@ -31,35 +31,36 @@ script = ExtResource("1_7l10b")
 lure_scene = ExtResource("2_bwnbf")
 
 [node name="BlackSquare" type="Sprite2D" parent="."]
-position = Vector2(581, 631.75)
-scale = Vector2(0.615625, 0.0393517)
+position = Vector2(581, 612)
+scale = Vector2(0.615625, 0.0629629)
 texture = ExtResource("2_qwm4p")
 
 [node name="SpaceBackground" type="Sprite2D" parent="."]
-position = Vector2(576, 305)
+position = Vector2(576, 274)
 scale = Vector2(0.6, 0.564815)
 texture = ExtResource("2_0otvt")
 
 [node name="Ground" type="Sprite2D" parent="."]
-position = Vector2(560.5, 612)
+position = Vector2(560.5, 580)
 scale = Vector2(1.2175, 0.839024)
 texture = ExtResource("4_sgjqg")
 
 [node name="GroundArea" type="Area2D" parent="."]
+position = Vector2(0, -32)
 
 [node name="GroundCol" type="CollisionShape2D" parent="GroundArea"]
 position = Vector2(569.5, 629.5)
 shape = SubResource("RectangleShape2D_fjo3f")
 
 [node name="Cannon" parent="." instance=ExtResource("2_oj5qe")]
-position = Vector2(590, 596)
+position = Vector2(590, 564)
 
 [node name="LeftCannon" parent="." instance=ExtResource("2_oj5qe")]
-position = Vector2(64, 596)
+position = Vector2(64, 564)
 cannon_id = "left"
 
 [node name="RightCannon" parent="." instance=ExtResource("2_oj5qe")]
-position = Vector2(1091.03, 596)
+position = Vector2(1091.03, 564)
 cannon_id = "right"
 
 [node name="Spawner" type="Node2D" parent="."]
@@ -125,61 +126,98 @@ offset_right = 260.0
 offset_bottom = 238.0
 
 [node name="AutoCannonLabel" type="Label" parent="UI/AbilityStatus"]
-layout_mode = 0
-offset_right = 200.0
-offset_bottom = 20.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -67.0
+offset_top = 470.0
+offset_right = 133.0
+offset_bottom = 490.0
+grow_horizontal = 2
+grow_vertical = 2
 text = "Auto Cannon"
 
 [node name="AutoCannonBar" type="ProgressBar" parent="UI/AbilityStatus"]
 layout_mode = 0
-offset_top = 22.0
-offset_right = 200.0
-offset_bottom = 40.0
+offset_left = 53.0
+offset_top = 560.0
+offset_right = 253.0
+offset_bottom = 578.0
 max_value = 1.0
 show_percentage = false
 
 [node name="IonWaveLabel" type="Label" parent="UI/AbilityStatus"]
-layout_mode = 0
-offset_top = 46.0
-offset_right = 200.0
-offset_bottom = 66.0
-text = "Ion Wave Cooldown"
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 257.0
+offset_top = 470.0
+offset_right = 457.0
+offset_bottom = 490.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Ion Wave"
 
 [node name="IonWaveBar" type="ProgressBar" parent="UI/AbilityStatus"]
 layout_mode = 0
-offset_top = 68.0
-offset_right = 200.0
-offset_bottom = 86.0
+offset_left = 377.0
+offset_top = 560.0
+offset_right = 577.0
+offset_bottom = 578.0
 max_value = 1.0
 show_percentage = false
 
 [node name="LureLabel" type="Label" parent="UI/AbilityStatus"]
-layout_mode = 0
-offset_top = 92.0
-offset_right = 200.0
-offset_bottom = 112.0
-text = "Lure Cooldown"
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 491.0
+offset_top = 470.0
+offset_right = 699.0
+offset_bottom = 490.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Lure"
 
 [node name="LureBar" type="ProgressBar" parent="UI/AbilityStatus"]
 layout_mode = 0
-offset_top = 114.0
-offset_right = 200.0
-offset_bottom = 132.0
+offset_left = 615.0
+offset_top = 560.0
+offset_right = 815.0
+offset_bottom = 578.0
 max_value = 1.0
 show_percentage = false
 
 [node name="ShieldEnergyLabel" type="Label" parent="UI/AbilityStatus"]
-layout_mode = 0
-offset_top = 138.0
-offset_right = 240.0
-offset_bottom = 158.0
-text = "Active Shield Energy"
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 735.0
+offset_top = 470.0
+offset_right = 1055.0
+offset_bottom = 490.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Shield Energy"
 
 [node name="ShieldEnergyBar" type="ProgressBar" parent="UI/AbilityStatus"]
 layout_mode = 0
-offset_top = 160.0
-offset_right = 240.0
-offset_bottom = 178.0
+offset_left = 915.0
+offset_top = 560.0
+offset_right = 1115.0
+offset_bottom = 578.0
 max_value = 1.0
 show_percentage = false
 
@@ -276,22 +314,22 @@ grow_vertical = 2
 text = "boss health"
 
 [node name="Building" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(215, 600)
+position = Vector2(215, 568)
 
 [node name="Building2" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(458, 600)
+position = Vector2(458, 568)
 
 [node name="Building3" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(734, 600)
+position = Vector2(734, 568)
 
 [node name="Building4" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(951, 600)
+position = Vector2(951, 568)
 
 [node name="Building5" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(846, 600)
+position = Vector2(846, 568)
 
 [node name="Building6" parent="." instance=ExtResource("6_ldoyd")]
-position = Vector2(332.67, 600)
+position = Vector2(332.67, 568)
 
 [node name="PauseMenu" parent="." instance=ExtResource("5_u4f7x")]
 
