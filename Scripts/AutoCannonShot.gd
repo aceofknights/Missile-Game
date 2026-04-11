@@ -1,7 +1,7 @@
 extends Area2D
 
 @export var speed: float = 1300.0
-@export var max_lifetime: float = 0.35
+@export var max_lifetime: float = 0.8
 @export var hit_radius: float = 24.0
 
 var target_node: Area2D = null
@@ -54,12 +54,14 @@ func _destroy_target_projectile() -> void:
 	if not is_instance_valid(target_node):
 		return
 
+	var hit_position: Vector2 = target_node.global_position
+	_spawn_fallback_explosion(hit_position)
+
 	if target_node.has_method("explode"):
 		target_node.call_deferred("explode")
 	elif target_node.has_method("die"):
-		target_node.call_deferred("die", true)
+		target_node.call_deferred("die", true, false)
 	else:
-		_spawn_fallback_explosion(target_node.global_position)
 		target_node.queue_free()
 
 
