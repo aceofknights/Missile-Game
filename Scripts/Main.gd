@@ -34,6 +34,9 @@ const BOSS_DEATH_EXPLOSION_INTERVAL := 0.07
 const PLAYER_DEATH_EXPLOSION_INTERVAL := 0.08
 const DEFAULT_BOSS_EXPLOSION_SIZE := Vector2(240.0, 140.0)
 const PLAYER_BOTTOM_EXPLOSION_Y_MARGIN := 18.0
+const TUTORIAL_LEFT_CLICK := "w1_left_click_intro_seen"
+const TUTORIAL_EXPLOSION_HINT := "w1_explosion_hint_seen"
+const TUTORIAL_BUILDING_AMMO := "w1_building_ammo_hint_seen"
 
 @export var boss_bar_smooth_speed: float = 8.0
 @export var world_1_ground_color: Color = Color(0.15, 0.45, 0.35, 1.0) # dark teal-green
@@ -88,6 +91,8 @@ var _shield_emp_warn_cooldown := 0.0
 @export var auto_cannon_wave_start_grace: float = 0.5
 
 var _auto_cannon_wave_grace_timer: float = 0.0
+var _tutorial_waiting_for_first_shot := false
+var _tutorial_waiting_for_first_explosion := false
 
 func get_building_count() -> int:
 	return base_buildings + GameManager.get_extra_buildings()
@@ -99,6 +104,7 @@ func _enter_tree() -> void:
 
 func _on_child_entered_tree(node: Node) -> void:
 	_connect_boss_signals(node)
+	_try_show_explosion_tutorial(node)
 
 func _on_kill_boss_pressed() -> void:
 	var boss := _find_active_boss_for_ui()
@@ -177,6 +183,8 @@ func _ready() -> void:
 	for node in get_tree().get_nodes_in_group("enemy"):
 		_connect_boss_signals(node)
 
+	_start_world_1_tutorial_if_needed()
+
 func _setup_ground_area() -> void:
 	if ground_area == null:
 		return
@@ -248,7 +256,7 @@ func _get_ordered_cannons() -> Array:
 	return [middle_cannon, left_cannon, right_cannon]
 
 
-func _fire_closest_cannon(target_position: Vector2) -> void:
+func _fire_closest_cannon(target_position: Vector2) -> bool:
 	var best_cannon: Node = null
 	var best_distance_sq: float = INF
 
@@ -264,7 +272,105 @@ func _fire_closest_cannon(target_position: Vector2) -> void:
 			best_cannon = cannon
 
 	if best_cannon != null and best_cannon.has_method("try_fire_at"):
-		best_cannon.try_fire_at(target_position)
+		return bool(best_cannon.try_fire_at(target_position))
+	return false
+
+
+func _start_world_1_tutorial_if_needed() -> void:
+	var in_first_wave := GameManager.current_world == 1 and GameManager.current_wave == 1
+	if not in_first_wave:
+		return
+
+	if GameManager.has_seen_tutorial(TUTORIAL_LEFT_CLICK):
+		return
+
+	_tutorial_waiting_for_first_shot = true
+	_tutorial_waiting_for_first_explosion = false
+	_show_tutorial_popup("left click to fire.")
+	GameManager.mark_tutorial_seen(TUTORIAL_LEFT_CLICK)
+
+
+func _show_tutorial_popup(message: String) -> void:
+	var popup := AcceptDialog.new()
+	popup.dialog_text = message
+	popup.title = "Tutorial"
+	popup.size = Vector2i(560, 170)
+	popup.exclusive = false
+	add_child(popup)
+	popup.popup_centered()
+	popup.confirmed.connect(func() -> void:
+		if is_instance_valid(popup):
+			popup.queue_free()
+	)
+	popup.close_requested.connect(func() -> void:
+		if is_instance_valid(popup):
+			popup.queue_free()
+	)
+
+
+func _show_world_tutorial_hint(text: String, world_position: Vector2, duration: float = 4.5) -> void:
+	var label := Label.new()
+	label.text = text
+	label.modulate = Color(1, 1, 1, 1)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_color_override("font_color", Color(1.0, 0.95, 0.65, 1.0))
+	label.add_theme_color_override("font_outline_color", Color(0.0, 0.0, 0.0, 1.0))
+	label.add_theme_constant_override("outline_size", 3)
+	label.z_index = 3000
+	label.top_level = true
+	add_child(label)
+	label.global_position = world_position + Vector2(-200, -54)
+
+	var tween := create_tween()
+	tween.tween_interval(duration)
+	tween.tween_property(label, "modulate:a", 0.0, 0.4)
+	tween.finished.connect(func() -> void:
+		if is_instance_valid(label):
+			label.queue_free()
+	)
+
+
+func _try_show_explosion_tutorial(node: Node) -> void:
+	if not _tutorial_waiting_for_first_explosion:
+		return
+	if GameManager.has_seen_tutorial(TUTORIAL_EXPLOSION_HINT):
+		return
+	if node == null or not is_instance_valid(node):
+		return
+	if not node.is_in_group("player_explosion"):
+		return
+
+	_tutorial_waiting_for_first_explosion = false
+	var explosion_node := node as Node2D
+	if explosion_node == null:
+		return
+	_show_world_tutorial_hint("Use the explosion to blow up enemy missiles.", explosion_node.global_position + Vector2(240, -40))
+	GameManager.mark_tutorial_seen(TUTORIAL_EXPLOSION_HINT)
+
+
+func _show_building_ammo_tutorial_hint() -> void:
+	if GameManager.has_seen_tutorial(TUTORIAL_BUILDING_AMMO):
+		return
+	if GameManager.current_world != 1 or GameManager.current_wave != 2:
+		return
+
+	var target_building: Node2D = null
+	for b in get_tree().get_nodes_in_group("building"):
+		if b == null or not is_instance_valid(b):
+			continue
+		if b.has_method("is_destroyed") and bool(b.is_destroyed()):
+			continue
+		if b is Node2D:
+			target_building = b
+			break
+
+	var hint_pos := Vector2(576, 520)
+	if target_building != null:
+		hint_pos = target_building.global_position + Vector2(0, -80)
+
+	_show_world_tutorial_hint("You get 1 missile back for every building still up at the end of a round.", hint_pos, 5.5)
+	GameManager.mark_tutorial_seen(TUTORIAL_BUILDING_AMMO)
 
 
 func _skip_to_boss() -> void:
@@ -883,7 +989,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		_fire_closest_cannon(get_global_mouse_position())
+		var fired := _fire_closest_cannon(get_global_mouse_position())
+		if fired and _tutorial_waiting_for_first_shot and not GameManager.has_seen_tutorial(TUTORIAL_EXPLOSION_HINT):
+			_tutorial_waiting_for_first_shot = false
+			_tutorial_waiting_for_first_explosion = true
 		return
 
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_R:
@@ -900,6 +1009,7 @@ func _on_player_died() -> void:
 
 func _on_announce_wave(message: String, duration: float) -> void:
 	announce(message, duration)
+	_show_building_ammo_tutorial_hint()
 
 
 func _on_world_victory_requested() -> void:
