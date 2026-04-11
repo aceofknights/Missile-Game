@@ -6,8 +6,8 @@ class_name Explosion
 @export var max_visual_scale: float = 2.0
 @export var size_multiplier: float = 0.2
 
-@export var grow_time: float = 0.5
-@export var hold_time: float = 0.2
+@export var grow_time: float = 1
+@export var hold_time: float = 0.1
 @export var shrink_time: float = 0.15
 
 @export var min_visible_t: float = 0.02

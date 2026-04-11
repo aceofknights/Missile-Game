@@ -35,6 +35,7 @@ func _ready() -> void:
 	rotation = velocity.angle()
 	connect("area_entered", Callable(self, "_on_area_entered"))
 	add_to_group("enemy")
+	add_to_group("normal_enemy_missile")
 
 	monitoring = true
 	monitorable = true

@@ -12,6 +12,7 @@ radius = 25.1794
 [node name="Explosion" type="Area2D"]
 script = ExtResource("1_08i34")
 size_multiplier = 0.33
+grow_time = 0.6
 explosion_sound = ExtResource("2_y3suc")
 
 [node name="Timer" type="Timer" parent="."]

@@ -25,7 +25,7 @@ extends Node2D
 @onready var kill_boss_button: Button = $UI/KillBossButton
 
 const EXPLOSION_SCENE := preload("res://Scene/explosion.tscn")
-const AUTO_CANNON_SHOT_SCENE := preload("res://Scene/fighter_intercept_shot.tscn")
+const AUTO_CANNON_SHOT_SCENE := preload("res://Scene/auto_cannon_shot.tscn")
 const TEMP_SHIELD_TEXTURE := preload("res://assets/ShieldUfo.png")
 const ION_WAVE_TEXTURE := preload("res://assets/Ion Zone.png")
 const BOSS_DEATH_EXPLOSION_COUNT := 16
@@ -78,7 +78,11 @@ var _lure_bar: ProgressBar
 var _shield_energy_label: Label
 var _shield_energy_bar: ProgressBar
 var _shield_emp_warn_cooldown := 0.0
+@export var auto_cannon_max_range: float = 500.0
+@export var auto_cannon_screen_margin: float = 32.0
+@export var auto_cannon_wave_start_grace: float = 0.5
 
+var _auto_cannon_wave_grace_timer: float = 0.0
 
 func get_building_count() -> int:
 	return base_buildings + GameManager.get_extra_buildings()
@@ -159,6 +163,7 @@ func _ready() -> void:
 	if not GameManager.player_defeat_requested.is_connected(Callable(self, "_on_player_defeat_requested")):
 		GameManager.player_defeat_requested.connect(_on_player_defeat_requested)
 	GameManager.start_wave()
+	_auto_cannon_wave_grace_timer = auto_cannon_wave_start_grace
 	_apply_building_unlocks()
 	_create_active_shield_sprite()
 	_bind_ability_status_ui()
@@ -351,7 +356,7 @@ func _on_destroy_all_pressed() -> void:
 func _process(delta: float) -> void:
 	if _end_menu_active:
 		return
-
+	_auto_cannon_wave_grace_timer = maxf(0.0, _auto_cannon_wave_grace_timer - delta)
 	_cleanup_finished_lures()
 	GameManager.update_ammo_factory(delta)
 	GameManager.update_active_shield(delta)
@@ -600,6 +605,9 @@ func _update_auto_cannon(delta: float) -> void:
 	if level <= 0:
 		return
 
+	if _auto_cannon_wave_grace_timer > 0.0:
+		return
+
 	_auto_cannon_timer -= delta
 	if _auto_cannon_timer > 0.0:
 		return
@@ -607,14 +615,25 @@ func _update_auto_cannon(delta: float) -> void:
 	var fire_interval := maxf(2.0, 20.0 - (2.0 * float(level)))
 
 	var best_enemy: Area2D = null
-	var best_dist_sq := INF
+	var best_dist_sq: float = INF
+	var max_range_sq: float = auto_cannon_max_range * auto_cannon_max_range
+	var view_rect := get_viewport_rect().grow(auto_cannon_screen_margin)
+
 	for node in get_tree().get_nodes_in_group("enemy"):
 		if not (node is Area2D):
 			continue
 		if _is_boss_enemy(node):
 			continue
+
 		var as_area := node as Area2D
+
+		if not view_rect.has_point(as_area.global_position):
+			continue
+
 		var dist_sq := as_area.global_position.distance_squared_to(middle_cannon.global_position)
+		if dist_sq > max_range_sq:
+			continue
+
 		if dist_sq < best_dist_sq:
 			best_dist_sq = dist_sq
 			best_enemy = as_area
@@ -625,6 +644,7 @@ func _update_auto_cannon(delta: float) -> void:
 	var shot := AUTO_CANNON_SHOT_SCENE.instantiate()
 	if shot == null:
 		return
+
 	_auto_cannon_timer = fire_interval
 	shot.global_position = middle_cannon.global_position
 	shot.target_node = best_enemy
