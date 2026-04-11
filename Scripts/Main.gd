@@ -69,14 +69,19 @@ var _w_was_down := false
 var _e_was_down := false
 var _active_shield_hitbox: Area2D
 var _active_shield_collision: CollisionShape2D
+var _ability_panel: Control
 var _auto_cannon_label: Label
 var _auto_cannon_bar: ProgressBar
+var _auto_cannon_card: Control
 var _ion_label: Label
 var _ion_bar: ProgressBar
+var _ion_card: Control
 var _lure_label: Label
 var _lure_bar: ProgressBar
+var _lure_card: Control
 var _shield_energy_label: Label
 var _shield_energy_bar: ProgressBar
+var _shield_card: Control
 var _shield_emp_warn_cooldown := 0.0
 @export var auto_cannon_max_range: float = 500.0
 @export var auto_cannon_screen_margin: float = 32.0
@@ -672,14 +677,19 @@ func _update_active_shield_visual() -> void:
 
 
 func _bind_ability_status_ui() -> void:
-	_auto_cannon_label = get_node_or_null("UI/AbilityStatus/AutoCannonLabel") as Label
-	_auto_cannon_bar = get_node_or_null("UI/AbilityStatus/AutoCannonBar") as ProgressBar
-	_ion_label = get_node_or_null("UI/AbilityStatus/IonWaveLabel") as Label
-	_ion_bar = get_node_or_null("UI/AbilityStatus/IonWaveBar") as ProgressBar
-	_lure_label = get_node_or_null("UI/AbilityStatus/LureLabel") as Label
-	_lure_bar = get_node_or_null("UI/AbilityStatus/LureBar") as ProgressBar
-	_shield_energy_label = get_node_or_null("UI/AbilityStatus/ShieldEnergyLabel") as Label
-	_shield_energy_bar = get_node_or_null("UI/AbilityStatus/ShieldEnergyBar") as ProgressBar
+	_ability_panel = get_node_or_null("UI/AbilityStatus/AbilityPanel") as Control
+	_auto_cannon_label = get_node_or_null("UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/AutoCannonCard/AutoCannonLabel") as Label
+	_auto_cannon_bar = get_node_or_null("UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/AutoCannonCard/AutoCannonBar") as ProgressBar
+	_auto_cannon_card = get_node_or_null("UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/AutoCannonCard") as Control
+	_ion_label = get_node_or_null("UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/IonWaveCard/IonWaveLabel") as Label
+	_ion_bar = get_node_or_null("UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/IonWaveCard/IonWaveBar") as ProgressBar
+	_ion_card = get_node_or_null("UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/IonWaveCard") as Control
+	_lure_label = get_node_or_null("UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/LureCard/LureLabel") as Label
+	_lure_bar = get_node_or_null("UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/LureCard/LureBar") as ProgressBar
+	_lure_card = get_node_or_null("UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/LureCard") as Control
+	_shield_energy_label = get_node_or_null("UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/ShieldCard/ShieldEnergyLabel") as Label
+	_shield_energy_bar = get_node_or_null("UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/ShieldCard/ShieldEnergyBar") as ProgressBar
+	_shield_card = get_node_or_null("UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/ShieldCard") as Control
 
 
 func _update_ability_status_ui() -> void:
@@ -691,7 +701,9 @@ func _update_ability_status_ui() -> void:
 
 	if _auto_cannon_label:
 		_auto_cannon_label.visible = auto_level > 0
-		_auto_cannon_label.text = "Auto Cannon: %s" % ("READY" if _auto_cannon_timer <= 0.0 and auto_level > 0 else "Charging")
+		_auto_cannon_label.text = "READY" if _auto_cannon_timer <= 0.0 and auto_level > 0 else "Charging"
+	if _auto_cannon_card:
+		_auto_cannon_card.visible = auto_level > 0
 	if _auto_cannon_bar:
 		_auto_cannon_bar.visible = auto_level > 0
 		_auto_cannon_bar.value = auto_ready_ratio
@@ -709,12 +721,14 @@ func _update_ability_status_ui() -> void:
 	if _ion_label:
 		_ion_label.visible = ion_level > 0
 		if ion_level > 0 and GameManager.is_ion_wave_active(now_seconds):
-			_ion_label.text = "Ion Wave: ACTIVE %.1fs" % maxf(0.0, GameManager.ion_wave_end_time - now_seconds)
+			_ion_label.text = "ACTIVE %.1fs" % maxf(0.0, GameManager.ion_wave_end_time - now_seconds)
 		else:
-			_ion_label.text = "Ion Wave: %s" % ("READY" if ion_cd <= 0.0 and ion_level > 0 else "%.1fs" % ion_cd)
+			_ion_label.text = "READY" if ion_cd <= 0.0 and ion_level > 0 else "%.1fs" % ion_cd
 	if _ion_bar:
 		_ion_bar.visible = ion_level > 0
 		_ion_bar.value = ion_ready_ratio
+	if _ion_card:
+		_ion_card.visible = ion_level > 0
 
 	var lure_level := GameManager.get_upgrade_level("lure")
 	var lure_cd := GameManager.get_lure_cooldown_remaining(now_seconds)
@@ -726,12 +740,14 @@ func _update_ability_status_ui() -> void:
 	if _lure_label:
 		_lure_label.visible = lure_level > 0
 		if lure_level > 0 and GameManager.is_lure_active(now_seconds):
-			_lure_label.text = "Lure: ACTIVE %.1fs" % maxf(0.0, GameManager.lure_end_time - now_seconds)
+			_lure_label.text = "ACTIVE %.1fs" % maxf(0.0, GameManager.lure_end_time - now_seconds)
 		else:
-			_lure_label.text = "Lure: %s" % ("READY" if lure_cd <= 0.0 and lure_level > 0 else "%.1fs" % lure_cd)
+			_lure_label.text = "READY" if lure_cd <= 0.0 and lure_level > 0 else "%.1fs" % lure_cd
 	if _lure_bar:
 		_lure_bar.visible = lure_level > 0
 		_lure_bar.value = lure_ready_ratio
+	if _lure_card:
+		_lure_card.visible = lure_level > 0
 
 	var active_shield_level := GameManager.get_upgrade_level("active_shields")
 	var shield_ratio := 0.0
@@ -741,12 +757,16 @@ func _update_ability_status_ui() -> void:
 	if _shield_energy_label:
 		_shield_energy_label.visible = active_shield_level > 0
 		if GameManager.is_active_shield_emp_disabled(now_seconds):
-			_shield_energy_label.text = "Active Shield: EMP %.1fs" % GameManager.get_active_shield_emp_disabled_remaining(now_seconds)
+			_shield_energy_label.text = "EMP %.1fs" % GameManager.get_active_shield_emp_disabled_remaining(now_seconds)
 		else:
-			_shield_energy_label.text = "Active Shield Energy: %d%%" % int(round(shield_ratio * 100.0))
+			_shield_energy_label.text = "%d%% Energy" % int(round(shield_ratio * 100.0))
 	if _shield_energy_bar:
 		_shield_energy_bar.visible = active_shield_level > 0
 		_shield_energy_bar.value = shield_ratio
+	if _shield_card:
+		_shield_card.visible = active_shield_level > 0
+	if _ability_panel:
+		_ability_panel.visible = auto_level > 0 or ion_level > 0 or lure_level > 0 or active_shield_level > 0
 
 
 func _spawn_ion_wave_animation() -> void:

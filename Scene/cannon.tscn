@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://vt8afrux1ojd"]
+[gd_scene load_steps=8 format=3 uid="uid://vt8afrux1ojd"]
 
 [ext_resource type="Script" path="res://Scripts/Cannon.gd" id="1_riktf"]
 [ext_resource type="PackedScene" uid="uid://d3kinnbojuaxp" path="res://Scene/projectile.tscn" id="2_w50be"]
@@ -8,6 +8,14 @@
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_w28l3"]
 size = Vector2(60, 77)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_s05sk"]
+bg_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+corner_detail = 20
 
 [node name="Cannon" type="Area2D"]
 script = ExtResource("1_riktf")
@@ -50,6 +58,7 @@ offset_left = -45.0
 offset_top = 37.0
 offset_right = 45.0
 offset_bottom = 47.0
+theme_override_styles/background = SubResource("StyleBoxFlat_s05sk")
 max_value = 1.0
 value = 1.0
 show_percentage = false
