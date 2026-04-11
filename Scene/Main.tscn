@@ -1,4 +1,4 @@
-[gd_scene load_steps=24 format=3 uid="uid://ctxqd2rutxxdu"]
+[gd_scene load_steps=30 format=3 uid="uid://ctxqd2rutxxdu"]
 
 [ext_resource type="Script" path="res://Scripts/Main.gd" id="1_7l10b"]
 [ext_resource type="Texture2D" uid="uid://kpt2l8totdw" path="res://assets/Group 1.png" id="2_0otvt"]
@@ -25,6 +25,53 @@
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fjo3f"]
 size = Vector2(1159, 37)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ability_panel"]
+bg_color = Color(0.0352941, 0.0627451, 0.121569, 0.78)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.25098, 0.454902, 0.745098, 0.7)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ability_bar_bg"]
+bg_color = Color(0.0627451, 0.0980392, 0.176471, 0.9)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ability_bar_auto"]
+bg_color = Color(0.266667, 0.772549, 1, 0.95)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ability_bar_ion"]
+bg_color = Color(0.396078, 0.486275, 1, 0.95)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ability_bar_lure"]
+bg_color = Color(1, 0.541176, 0.309804, 0.95)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ability_bar_shield"]
+bg_color = Color(0.352941, 0.901961, 0.427451, 0.95)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_7l10b")
@@ -119,107 +166,142 @@ text = "ResourceLabel"
 
 [node name="AbilityStatus" type="Control" parent="UI"]
 layout_mode = 3
-anchors_preset = 0
-offset_left = 20.0
-offset_top = 60.0
-offset_right = 260.0
-offset_bottom = 238.0
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -126.0
 
-[node name="AutoCannonLabel" type="Label" parent="UI/AbilityStatus"]
+[node name="AbilityPanel" type="PanelContainer" parent="UI/AbilityStatus"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -67.0
-offset_top = 470.0
-offset_right = 133.0
-offset_bottom = 490.0
+offset_left = -430.0
+offset_top = 14.0
+offset_right = 430.0
+offset_bottom = 106.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ability_panel")
+
+[node name="Padding" type="MarginContainer" parent="UI/AbilityStatus/AbilityPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="AbilitiesRow" type="HBoxContainer" parent="UI/AbilityStatus/AbilityPanel/Padding"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="AutoCannonCard" type="VBoxContainer" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow"]
+custom_minimum_size = Vector2(195, 0)
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Title" type="Label" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/AutoCannonCard"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.95, 0.95, 0.9)
+theme_override_font_sizes/font_size = 13
 text = "Auto Cannon"
 
-[node name="AutoCannonBar" type="ProgressBar" parent="UI/AbilityStatus"]
-layout_mode = 0
-offset_left = 53.0
-offset_top = 560.0
-offset_right = 253.0
-offset_bottom = 578.0
+[node name="AutoCannonLabel" type="Label" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/AutoCannonCard"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.72, 0.96, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "Ready"
+
+[node name="AutoCannonBar" type="ProgressBar" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/AutoCannonCard"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_horizontal = 3
 max_value = 1.0
 show_percentage = false
+theme_override_styles/background = SubResource("StyleBoxFlat_ability_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_ability_bar_auto")
 
-[node name="IonWaveLabel" type="Label" parent="UI/AbilityStatus"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = 257.0
-offset_top = 470.0
-offset_right = 457.0
-offset_bottom = 490.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="IonWaveCard" type="VBoxContainer" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow"]
+custom_minimum_size = Vector2(195, 0)
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Title" type="Label" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/IonWaveCard"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.95, 0.95, 0.9)
+theme_override_font_sizes/font_size = 13
 text = "Ion Wave"
 
-[node name="IonWaveBar" type="ProgressBar" parent="UI/AbilityStatus"]
-layout_mode = 0
-offset_left = 377.0
-offset_top = 560.0
-offset_right = 577.0
-offset_bottom = 578.0
+[node name="IonWaveLabel" type="Label" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/IonWaveCard"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "Ready"
+
+[node name="IonWaveBar" type="ProgressBar" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/IonWaveCard"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_horizontal = 3
 max_value = 1.0
 show_percentage = false
+theme_override_styles/background = SubResource("StyleBoxFlat_ability_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_ability_bar_ion")
 
-[node name="LureLabel" type="Label" parent="UI/AbilityStatus"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = 491.0
-offset_top = 470.0
-offset_right = 699.0
-offset_bottom = 490.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="LureCard" type="VBoxContainer" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow"]
+custom_minimum_size = Vector2(195, 0)
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="Title" type="Label" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/LureCard"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.95, 0.95, 0.9)
+theme_override_font_sizes/font_size = 13
 text = "Lure"
 
-[node name="LureBar" type="ProgressBar" parent="UI/AbilityStatus"]
-layout_mode = 0
-offset_left = 615.0
-offset_top = 560.0
-offset_right = 815.0
-offset_bottom = 578.0
+[node name="LureLabel" type="Label" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/LureCard"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.8, 1)
+theme_override_font_sizes/font_size = 14
+text = "Ready"
+
+[node name="LureBar" type="ProgressBar" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/LureCard"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_horizontal = 3
 max_value = 1.0
 show_percentage = false
+theme_override_styles/background = SubResource("StyleBoxFlat_ability_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_ability_bar_lure")
 
-[node name="ShieldEnergyLabel" type="Label" parent="UI/AbilityStatus"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = 735.0
-offset_top = 470.0
-offset_right = 1055.0
-offset_bottom = 490.0
-grow_horizontal = 2
-grow_vertical = 2
-text = "Shield Energy"
+[node name="ShieldCard" type="VBoxContainer" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow"]
+custom_minimum_size = Vector2(195, 0)
+layout_mode = 2
+theme_override_constants/separation = 3
 
-[node name="ShieldEnergyBar" type="ProgressBar" parent="UI/AbilityStatus"]
-layout_mode = 0
-offset_left = 915.0
-offset_top = 560.0
-offset_right = 1115.0
-offset_bottom = 578.0
+[node name="Title" type="Label" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/ShieldCard"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.95, 0.95, 0.9)
+theme_override_font_sizes/font_size = 13
+text = "Active Shield"
+
+[node name="ShieldEnergyLabel" type="Label" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/ShieldCard"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 1, 0.76, 1)
+theme_override_font_sizes/font_size = 14
+text = "0%"
+
+[node name="ShieldEnergyBar" type="ProgressBar" parent="UI/AbilityStatus/AbilityPanel/Padding/AbilitiesRow/ShieldCard"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+size_flags_horizontal = 3
 max_value = 1.0
 show_percentage = false
+theme_override_styles/background = SubResource("StyleBoxFlat_ability_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_ability_bar_shield")
 
 [node name="EndStateOverlay" type="Control" parent="UI"]
 process_mode = 2
