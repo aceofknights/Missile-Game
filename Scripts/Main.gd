@@ -25,7 +25,7 @@ extends Node2D
 @onready var kill_boss_button: Button = $UI/KillBossButton
 
 const EXPLOSION_SCENE := preload("res://Scene/explosion.tscn")
-const AUTO_CANNON_SHOT_SCENE := preload("res://Scene/fighter_intercept_shot.tscn")
+const AUTO_CANNON_SHOT_SCENE := preload("res://Scene/auto_cannon_shot.tscn")
 const TEMP_SHIELD_TEXTURE := preload("res://assets/ShieldUfo.png")
 const ION_WAVE_TEXTURE := preload("res://assets/Ion Zone.png")
 const BOSS_DEATH_EXPLOSION_COUNT := 16
@@ -608,10 +608,8 @@ func _update_auto_cannon(delta: float) -> void:
 
 	var best_enemy: Area2D = null
 	var best_dist_sq := INF
-	for node in get_tree().get_nodes_in_group("enemy"):
+	for node in get_tree().get_nodes_in_group("normal_enemy_missile"):
 		if not (node is Area2D):
-			continue
-		if _is_boss_enemy(node):
 			continue
 		var as_area := node as Area2D
 		var dist_sq := as_area.global_position.distance_squared_to(middle_cannon.global_position)
@@ -627,8 +625,11 @@ func _update_auto_cannon(delta: float) -> void:
 		return
 	_auto_cannon_timer = fire_interval
 	shot.global_position = middle_cannon.global_position
-	shot.target_node = best_enemy
-	shot.target_position = best_enemy.global_position
+	if shot.has_method("setup_shot"):
+		shot.setup_shot(best_enemy, best_enemy.global_position)
+	else:
+		shot.target_node = best_enemy
+		shot.target_position = best_enemy.global_position
 	add_child(shot)
 
 
