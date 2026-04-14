@@ -18,6 +18,8 @@ extends Node2D
 @onready var end_state_overlay: Control = $UI/EndStateOverlay
 @onready var end_state_label: Label = $UI/EndStateOverlay/CenterContainer/Panel/VBoxContainer/EndStateLabel
 @onready var end_state_continue_button: Button = $UI/EndStateOverlay/CenterContainer/Panel/VBoxContainer/ContinueButton
+@onready var end_state_panel: Panel = $UI/EndStateOverlay/CenterContainer/Panel
+@onready var end_state_dimmer: ColorRect = $UI/EndStateOverlay/Dimmer
 @onready var ground_area: Area2D = get_node_or_null("GroundArea") as Area2D
 @onready var boss_health_holder: Control = $UI/BossHealthHolder
 @onready var boss_health_label: Label = $UI/BossHealthHolder/BossHealthBar/BossHealthLabel
@@ -37,6 +39,7 @@ const PLAYER_BOTTOM_EXPLOSION_Y_MARGIN := 18.0
 const TUTORIAL_LEFT_CLICK := "w1_left_click_intro_seen"
 const TUTORIAL_EXPLOSION_HINT := "w1_explosion_hint_seen"
 const TUTORIAL_BUILDING_AMMO := "w1_building_ammo_hint_seen"
+const TUTORIAL_MOUSE_ICON := preload("res://icon.svg")
 
 @export var boss_bar_smooth_speed: float = 8.0
 @export var world_1_ground_color: Color = Color(0.15, 0.45, 0.35, 1.0) # dark teal-green
@@ -93,6 +96,8 @@ var _shield_emp_warn_cooldown := 0.0
 var _auto_cannon_wave_grace_timer: float = 0.0
 var _tutorial_waiting_for_first_shot := false
 var _tutorial_waiting_for_first_explosion := false
+var _pending_wave_start_after_tutorial := false
+var _end_state_subtitle: Label
 
 func get_building_count() -> int:
 	return base_buildings + GameManager.get_extra_buildings()
@@ -137,6 +142,7 @@ func _ready() -> void:
 	_apply_ground_color()
 	_setup_ground_area()
 	_setup_boss_health_ui()
+	_setup_end_state_ui()
 	_disable_debug_button_focus()
 	kill_boss_button.pressed.connect(_on_kill_boss_pressed)
 	MusicManager.stop_music()
@@ -173,8 +179,10 @@ func _ready() -> void:
 		GameManager.world_victory_requested.connect(_on_world_victory_requested)
 	if not GameManager.player_defeat_requested.is_connected(Callable(self, "_on_player_defeat_requested")):
 		GameManager.player_defeat_requested.connect(_on_player_defeat_requested)
-	GameManager.start_wave()
-	_auto_cannon_wave_grace_timer = auto_cannon_wave_start_grace
+	var intro_tutorial_open := _start_world_1_tutorial_if_needed()
+	if not intro_tutorial_open:
+		GameManager.start_wave()
+		_auto_cannon_wave_grace_timer = auto_cannon_wave_start_grace
 	_apply_building_unlocks()
 	_create_active_shield_sprite()
 	_bind_ability_status_ui()
@@ -182,8 +190,6 @@ func _ready() -> void:
 	# Connect to any boss already present in the scene.
 	for node in get_tree().get_nodes_in_group("enemy"):
 		_connect_boss_signals(node)
-
-	_start_world_1_tutorial_if_needed()
 
 func _setup_ground_area() -> void:
 	if ground_area == null:
@@ -276,36 +282,296 @@ func _fire_closest_cannon(target_position: Vector2) -> bool:
 	return false
 
 
-func _start_world_1_tutorial_if_needed() -> void:
+func _start_world_1_tutorial_if_needed() -> bool:
 	var in_first_wave := GameManager.current_world == 1 and GameManager.current_wave == 1
 	if not in_first_wave:
-		return
+		return false
 
 	if GameManager.has_seen_tutorial(TUTORIAL_LEFT_CLICK):
-		return
+		return false
 
 	_tutorial_waiting_for_first_shot = true
 	_tutorial_waiting_for_first_explosion = false
+	_pending_wave_start_after_tutorial = true
 	_show_tutorial_popup("left click to fire.")
 	GameManager.mark_tutorial_seen(TUTORIAL_LEFT_CLICK)
+	return true
 
 
 func _show_tutorial_popup(message: String) -> void:
-	var popup := AcceptDialog.new()
-	popup.dialog_text = message
-	popup.title = "Tutorial"
-	popup.size = Vector2i(560, 170)
-	popup.exclusive = false
-	add_child(popup)
-	popup.popup_centered()
-	popup.confirmed.connect(func() -> void:
-		if is_instance_valid(popup):
-			popup.queue_free()
+	var overlay := Control.new()
+	overlay.name = "TutorialPopup"
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.z_index = 3000
+	add_child(overlay)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.add_child(center)
+
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(540.0, 0.0)
+	panel.mouse_filter = Control.MOUSE_FILTER_STOP
+	panel.add_theme_stylebox_override("panel", _create_tutorial_popup_panel_style())
+	center.add_child(panel)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_bottom", 20)
+	panel.add_child(margin)
+
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 18)
+	margin.add_child(row)
+
+	var icon_shell := PanelContainer.new()
+	icon_shell.custom_minimum_size = Vector2(74.0, 74.0)
+	icon_shell.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	icon_shell.add_theme_stylebox_override("panel", _create_tutorial_popup_icon_style())
+	row.add_child(icon_shell)
+
+	var icon_margin := MarginContainer.new()
+	icon_margin.add_theme_constant_override("margin_left", 14)
+	icon_margin.add_theme_constant_override("margin_top", 14)
+	icon_margin.add_theme_constant_override("margin_right", 14)
+	icon_margin.add_theme_constant_override("margin_bottom", 14)
+	icon_shell.add_child(icon_margin)
+
+	var icon := TextureRect.new()
+	icon.texture = TUTORIAL_MOUSE_ICON
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = Vector2(46.0, 46.0)
+	icon.modulate = Color(0.95, 0.98, 1.0, 1.0)
+	icon_margin.add_child(icon)
+
+	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 10)
+	row.add_child(content)
+
+	var title := Label.new()
+	title.text = "Left Click To Fire"
+	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_color_override("font_color", Color(1.0, 0.96, 0.84, 1.0))
+	content.add_child(title)
+
+	var body := Label.new()
+	body.text = message.capitalize() + " The nearest cannon will take the shot."
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.custom_minimum_size = Vector2(320.0, 0.0)
+	body.add_theme_font_size_override("font_size", 20)
+	body.add_theme_color_override("font_color", Color(0.86, 0.92, 1.0, 0.96))
+	content.add_child(body)
+
+	var continue_button := Button.new()
+	continue_button.text = "Continue"
+	continue_button.size_flags_horizontal = Control.SIZE_SHRINK_END
+	continue_button.focus_mode = Control.FOCUS_NONE
+	continue_button.add_theme_color_override("font_color", Color(0.07, 0.1, 0.16, 1.0))
+	continue_button.add_theme_color_override("font_hover_color", Color(0.07, 0.1, 0.16, 1.0))
+	continue_button.add_theme_color_override("font_pressed_color", Color(0.07, 0.1, 0.16, 1.0))
+	continue_button.add_theme_stylebox_override("normal", _create_tutorial_popup_button_style(Color(0.96, 0.84, 0.48, 1.0)))
+	continue_button.add_theme_stylebox_override("hover", _create_tutorial_popup_button_style(Color(1.0, 0.89, 0.56, 1.0)))
+	continue_button.add_theme_stylebox_override("pressed", _create_tutorial_popup_button_style(Color(0.9, 0.76, 0.42, 1.0)))
+	continue_button.pressed.connect(func() -> void:
+		if _pending_wave_start_after_tutorial:
+			_pending_wave_start_after_tutorial = false
+			GameManager.start_wave()
+			_auto_cannon_wave_grace_timer = auto_cannon_wave_start_grace
+		if is_instance_valid(overlay):
+			overlay.queue_free()
 	)
-	popup.close_requested.connect(func() -> void:
-		if is_instance_valid(popup):
-			popup.queue_free()
+	content.add_child(continue_button)
+
+	panel.modulate.a = 0.0
+	panel.scale = Vector2(0.94, 0.94)
+	var tween := create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_CUBIC)
+	tween.parallel().tween_property(panel, "modulate:a", 1.0, 0.18)
+	tween.parallel().tween_property(panel, "scale", Vector2.ONE, 0.22)
+
+
+func _show_center_tutorial_hint(title_text: String, body_text: String, duration: float = 5.0) -> void:
+	var card := PanelContainer.new()
+	card.name = "TutorialHintCard"
+	card.top_level = true
+	card.z_index = 3000
+	card.custom_minimum_size = Vector2(460.0, 0.0)
+	card.add_theme_stylebox_override("panel", _create_tutorial_popup_panel_style())
+	add_child(card)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_bottom", 20)
+	card.add_child(margin)
+
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 8)
+	margin.add_child(content)
+
+	var title := Label.new()
+	title.text = title_text
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_color_override("font_color", Color(1.0, 0.96, 0.84, 1.0))
+	content.add_child(title)
+
+	var body := Label.new()
+	body.text = body_text
+	body.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.custom_minimum_size = Vector2(360.0, 0.0)
+	body.add_theme_font_size_override("font_size", 18)
+	body.add_theme_color_override("font_color", Color(0.86, 0.92, 1.0, 0.96))
+	content.add_child(body)
+
+	card.reset_size()
+	var viewport_size := get_viewport_rect().size
+	card.global_position = Vector2(
+		(viewport_size.x - card.size.x) * 0.5,
+		(viewport_size.y - card.size.y) * 0.5
 	)
+
+	card.modulate.a = 0.0
+	card.scale = Vector2(0.96, 0.96)
+	var tween := create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_CUBIC)
+	tween.parallel().tween_property(card, "modulate:a", 1.0, 0.18)
+	tween.parallel().tween_property(card, "scale", Vector2.ONE, 0.2)
+	tween.chain().tween_interval(duration)
+	tween.tween_property(card, "modulate:a", 0.0, 0.35)
+	tween.finished.connect(func() -> void:
+		if is_instance_valid(card):
+			card.queue_free()
+	)
+
+
+func _create_tutorial_popup_panel_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.03, 0.06, 0.12, 0.92)
+	style.border_color = Color(0.38, 0.67, 1.0, 0.7)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(20)
+	style.set_content_margin(SIDE_LEFT, 0)
+	style.set_content_margin(SIDE_TOP, 0)
+	style.set_content_margin(SIDE_RIGHT, 0)
+	style.set_content_margin(SIDE_BOTTOM, 0)
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.38)
+	style.shadow_size = 18
+	style.shadow_offset = Vector2(0, 8)
+	return style
+
+
+func _create_tutorial_popup_icon_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.19, 0.31, 0.95)
+	style.border_color = Color(0.45, 0.77, 1.0, 0.5)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(16)
+	return style
+
+
+func _create_tutorial_popup_button_style(color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.set_corner_radius_all(12)
+	style.set_content_margin(SIDE_LEFT, 18)
+	style.set_content_margin(SIDE_TOP, 10)
+	style.set_content_margin(SIDE_RIGHT, 18)
+	style.set_content_margin(SIDE_BOTTOM, 10)
+	return style
+
+
+func _setup_end_state_ui() -> void:
+	if end_state_dimmer:
+		end_state_dimmer.color = Color(0.01, 0.03, 0.08, 0.7)
+
+	if end_state_panel:
+		end_state_panel.custom_minimum_size = Vector2(460.0, 240.0)
+		end_state_panel.add_theme_stylebox_override("panel", _create_end_state_panel_style(Color(0.38, 0.67, 1.0, 0.72)))
+
+	var vbox := end_state_label.get_parent() as VBoxContainer
+	if vbox:
+		vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		vbox.add_theme_constant_override("separation", 12)
+		vbox.set_anchors_preset(Control.PRESET_CENTER)
+		vbox.offset_left = -165.0
+		vbox.offset_top = -76.0
+		vbox.offset_right = 165.0
+		vbox.offset_bottom = 76.0
+
+	if end_state_label:
+		end_state_label.add_theme_font_size_override("font_size", 40)
+		end_state_label.add_theme_color_override("font_color", Color(1.0, 0.96, 0.84, 1.0))
+
+	if vbox and _end_state_subtitle == null:
+		_end_state_subtitle = Label.new()
+		_end_state_subtitle.name = "EndStateSubtitle"
+		_end_state_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		_end_state_subtitle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_end_state_subtitle.custom_minimum_size = Vector2(300.0, 0.0)
+		_end_state_subtitle.add_theme_font_size_override("font_size", 18)
+		_end_state_subtitle.add_theme_color_override("font_color", Color(0.82, 0.9, 1.0, 0.94))
+		vbox.add_child(_end_state_subtitle)
+		vbox.move_child(_end_state_subtitle, 1)
+
+	if end_state_continue_button:
+		end_state_continue_button.focus_mode = Control.FOCUS_NONE
+		end_state_continue_button.text = "Continue"
+		end_state_continue_button.add_theme_color_override("font_color", Color(0.07, 0.1, 0.16, 1.0))
+		end_state_continue_button.add_theme_color_override("font_hover_color", Color(0.07, 0.1, 0.16, 1.0))
+		end_state_continue_button.add_theme_color_override("font_pressed_color", Color(0.07, 0.1, 0.16, 1.0))
+
+
+func _apply_end_state_theme(title_text: String) -> void:
+	var accent := Color(0.38, 0.67, 1.0, 0.72)
+	var title_color := Color(1.0, 0.96, 0.84, 1.0)
+	var subtitle := "Hold the line and push forward to the next operation."
+
+	if title_text == "VICTORY":
+		accent = Color(0.3, 0.82, 1.0, 0.8)
+		title_color = Color(1.0, 0.95, 0.74, 1.0)
+		subtitle = "The sector is secure. Refit and get ready for the next wave."
+	else:
+		accent = Color(1.0, 0.45, 0.34, 0.82)
+		title_color = Color(1.0, 0.84, 0.8, 1.0)
+		subtitle = "The line broke this time. Regroup, upgrade, and try the run again."
+
+	if end_state_panel:
+		end_state_panel.add_theme_stylebox_override("panel", _create_end_state_panel_style(accent))
+
+	if end_state_label:
+		end_state_label.add_theme_color_override("font_color", title_color)
+
+	if _end_state_subtitle:
+		_end_state_subtitle.text = subtitle
+
+	if end_state_continue_button:
+		end_state_continue_button.add_theme_stylebox_override("normal", _create_tutorial_popup_button_style(Color(0.96, 0.84, 0.48, 1.0)))
+		end_state_continue_button.add_theme_stylebox_override("hover", _create_tutorial_popup_button_style(Color(1.0, 0.89, 0.56, 1.0)))
+		end_state_continue_button.add_theme_stylebox_override("pressed", _create_tutorial_popup_button_style(Color(0.9, 0.76, 0.42, 1.0)))
+
+
+func _create_end_state_panel_style(border_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.03, 0.06, 0.12, 0.95)
+	style.border_color = border_color
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(20)
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.42)
+	style.shadow_size = 22
+	style.shadow_offset = Vector2(0, 10)
+	return style
 
 
 func _show_world_tutorial_hint(text: String, world_position: Vector2, duration: float = 4.5) -> void:
@@ -355,21 +621,11 @@ func _show_building_ammo_tutorial_hint() -> void:
 	if GameManager.current_world != 1 or GameManager.current_wave != 2:
 		return
 
-	var target_building: Node2D = null
-	for b in get_tree().get_nodes_in_group("building"):
-		if b == null or not is_instance_valid(b):
-			continue
-		if b.has_method("is_destroyed") and bool(b.is_destroyed()):
-			continue
-		if b is Node2D:
-			target_building = b
-			break
-
-	var hint_pos := Vector2(576, 520)
-	if target_building != null:
-		hint_pos = target_building.global_position + Vector2(0, -80)
-
-	_show_world_tutorial_hint("You get 1 missile back for every building still up at the end of a round.", hint_pos, 5.5)
+	_show_center_tutorial_hint(
+		"Buildings Refill Ammo",
+		"At the end of each round, every surviving building gives you 1 missile back.",
+		5.5
+	)
 	GameManager.mark_tutorial_seen(TUTORIAL_BUILDING_AMMO)
 
 
@@ -1044,6 +1300,7 @@ func _on_player_defeat_requested() -> void:
 func _show_end_menu(title_text: String) -> void:
 	_end_menu_active = true
 	end_state_label.text = title_text
+	_apply_end_state_theme(title_text)
 	end_state_overlay.visible = true
 	pause_menu.visible = false
 	get_tree().paused = true
