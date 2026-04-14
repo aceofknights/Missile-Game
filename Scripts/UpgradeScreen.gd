@@ -289,21 +289,108 @@ func _show_upgrade_tutorial_if_needed() -> void:
 	if GameManager.has_seen_tutorial(TUTORIAL_UPGRADE_SCREEN):
 		return
 
-	var popup := AcceptDialog.new()
-	popup.title = "Tutorial"
-	popup.size = Vector2i(700, 230)
-	popup.dialog_text = "Enemy missiles give scrap when shot down, and scrap is used to upgrade your defenses.\n\nHit Continue when ready to try again."
-	add_child(popup)
-	popup.popup_centered()
-	popup.confirmed.connect(func() -> void:
-		if is_instance_valid(popup):
-			popup.queue_free()
+	var overlay := Control.new()
+	overlay.name = "UpgradeTutorialPopup"
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.z_index = 3000
+	add_child(overlay)
+
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.add_child(center)
+
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(620.0, 0.0)
+	panel.add_theme_stylebox_override("panel", _create_upgrade_card_style())
+	center.add_child(panel)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 26)
+	margin.add_theme_constant_override("margin_top", 22)
+	margin.add_theme_constant_override("margin_right", 26)
+	margin.add_theme_constant_override("margin_bottom", 22)
+	panel.add_child(margin)
+
+	var content := VBoxContainer.new()
+	content.add_theme_constant_override("separation", 10)
+	margin.add_child(content)
+
+	var eyebrow := Label.new()
+	eyebrow.text = "UPGRADE TUTORIAL"
+	eyebrow.add_theme_font_size_override("font_size", 14)
+	eyebrow.add_theme_color_override("font_color", Color(0.55, 0.83, 1.0, 0.95))
+	content.add_child(eyebrow)
+
+	var title := Label.new()
+	title.text = "Turn Scrap Into Better Defenses"
+	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_color_override("font_color", Color(1.0, 0.96, 0.84, 1.0))
+	content.add_child(title)
+
+	var body := Label.new()
+	body.text = "Shoot down enemy missiles to earn scrap. Spend that scrap here to unlock stronger cannons, faster fire rates, and support systems for the next run."
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.custom_minimum_size = Vector2(450.0, 0.0)
+	body.add_theme_font_size_override("font_size", 19)
+	body.add_theme_color_override("font_color", Color(0.86, 0.92, 1.0, 0.96))
+	content.add_child(body)
+
+	var hint := Label.new()
+	hint.text = "Pick an upgrade, then hit Continue when you're ready."
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.add_theme_font_size_override("font_size", 17)
+	hint.add_theme_color_override("font_color", Color(0.72, 0.84, 0.96, 0.9))
+	content.add_child(hint)
+
+	var continue_button := Button.new()
+	continue_button.text = "Continue"
+	continue_button.size_flags_horizontal = Control.SIZE_SHRINK_END
+	continue_button.focus_mode = Control.FOCUS_NONE
+	continue_button.add_theme_color_override("font_color", Color(0.07, 0.1, 0.16, 1.0))
+	continue_button.add_theme_color_override("font_hover_color", Color(0.07, 0.1, 0.16, 1.0))
+	continue_button.add_theme_color_override("font_pressed_color", Color(0.07, 0.1, 0.16, 1.0))
+	continue_button.add_theme_stylebox_override("normal", _create_upgrade_button_style(Color(0.96, 0.84, 0.48, 1.0)))
+	continue_button.add_theme_stylebox_override("hover", _create_upgrade_button_style(Color(1.0, 0.89, 0.56, 1.0)))
+	continue_button.add_theme_stylebox_override("pressed", _create_upgrade_button_style(Color(0.9, 0.76, 0.42, 1.0)))
+	continue_button.pressed.connect(func() -> void:
+		if is_instance_valid(overlay):
+			overlay.queue_free()
 	)
-	popup.close_requested.connect(func() -> void:
-		if is_instance_valid(popup):
-			popup.queue_free()
-	)
+	content.add_child(continue_button)
+
+	panel.modulate.a = 0.0
+	panel.scale = Vector2(0.95, 0.95)
+	var tween := create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_CUBIC)
+	tween.parallel().tween_property(panel, "modulate:a", 1.0, 0.18)
+	tween.parallel().tween_property(panel, "scale", Vector2.ONE, 0.2)
 	GameManager.mark_tutorial_seen(TUTORIAL_UPGRADE_SCREEN)
+
+
+func _create_upgrade_card_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.03, 0.06, 0.12, 0.94)
+	style.border_color = Color(0.38, 0.67, 1.0, 0.72)
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(20)
+	style.shadow_color = Color(0.0, 0.0, 0.0, 0.4)
+	style.shadow_size = 18
+	style.shadow_offset = Vector2(0, 8)
+	return style
+
+
+func _create_upgrade_button_style(color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.set_corner_radius_all(12)
+	style.set_content_margin(SIDE_LEFT, 18)
+	style.set_content_margin(SIDE_TOP, 10)
+	style.set_content_margin(SIDE_RIGHT, 18)
+	style.set_content_margin(SIDE_BOTTOM, 10)
+	return style
 
 
 func continue_game() -> void:
