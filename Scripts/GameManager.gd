@@ -32,6 +32,7 @@ var transitioning_world := false
 var player_resources := 0
 
 var highest_world_unlocked := 1
+var tutorial_flags: Dictionary = {}
 
 # world_upgrades[world] = {
 #   "extra_buildings": int,
@@ -92,7 +93,8 @@ func save_game() -> bool:
 		"current_wave": current_wave,
 		"player_resources": player_resources,
 		"highest_world_unlocked": highest_world_unlocked,
-		"world_upgrades": _int_to_string_dict(world_upgrades)
+		"world_upgrades": _int_to_string_dict(world_upgrades),
+		"tutorial_flags": tutorial_flags.duplicate(true)
 	}
 
 	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
@@ -139,6 +141,7 @@ func load_game() -> bool:
 	player_resources = int(save_data.get("player_resources", 0))
 	highest_world_unlocked = clamp(int(save_data.get("highest_world_unlocked", 1)), 1, WORLD_COUNT)
 	world_upgrades = _string_to_int_dict(save_data.get("world_upgrades", {}))
+	tutorial_flags = save_data.get("tutorial_flags", {}).duplicate(true)
 
 	for world in range(1, WORLD_COUNT + 1):
 		_ensure_world_upgrade_data(world)
@@ -1117,9 +1120,19 @@ func start_new_game():
 	player_resources = 0
 	highest_world_unlocked = 1
 	world_upgrades.clear()
+	tutorial_flags.clear()
 	_ensure_world_upgrade_data(1)
 	save_game()
 	get_tree().change_scene_to_file("res://Scene/WorldSelect.tscn")
+
+
+func has_seen_tutorial(flag: String) -> bool:
+	return bool(tutorial_flags.get(flag, false))
+
+
+func mark_tutorial_seen(flag: String) -> void:
+	tutorial_flags[flag] = true
+	save_game()
 
 
 func player_died():
