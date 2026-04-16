@@ -6,7 +6,7 @@ class_name Explosion
 @export var max_visual_scale: float = 2.0
 @export var size_multiplier: float = 0.2
 
-@export var grow_time: float = .7
+@export var grow_time: float = 0.7
 @export var hold_time: float = 0.1
 @export var shrink_time: float = 0.35
 
@@ -32,6 +32,7 @@ var _t: float = 0.0
 var _life_time: float = 0.0
 var _hit: Dictionary = {}
 var _base_sprite_half_size: Vector2 = Vector2.ONE
+var _base_collision_radius: float = 1.0
 
 
 func _ready() -> void:
@@ -45,6 +46,7 @@ func _ready() -> void:
 	area_entered.connect(_on_area_entered)
 
 	_cache_base_sprite_radius()
+	_cache_base_collision_radius()
 
 	_t = 0.0
 	_life_time = 0.0
@@ -94,29 +96,40 @@ func _cache_base_sprite_radius() -> void:
 		_base_sprite_half_size.y = 1.0
 
 
+func _cache_base_collision_radius() -> void:
+	var circle_shape: CircleShape2D = col.shape as CircleShape2D
+	if circle_shape:
+		_base_collision_radius = maxf(circle_shape.radius, 1.0)
+	else:
+		_base_collision_radius = 1.0
+
+
 func _play_sound(sound: AudioStream) -> void:
 	if sound == null:
 		return
 
-	var player := AudioStreamPlayer.new()
+	var player: AudioStreamPlayer = AudioStreamPlayer.new()
 	add_child(player)
 	player.stream = sound
 	player.bus = "SFX"
-	player.pitch_scale = randf_range(minf(sound_pitch_min, sound_pitch_max), maxf(sound_pitch_min, sound_pitch_max))
+	player.pitch_scale = randf_range(
+		minf(sound_pitch_min, sound_pitch_max),
+		maxf(sound_pitch_min, sound_pitch_max)
+	)
 	player.volume_db = randf_range(-absf(sound_volume_jitter_db), absf(sound_volume_jitter_db))
 	player.play()
 	player.finished.connect(player.queue_free)
 
 
 func _apply_t() -> void:
-	_t = clamp(_t, 0.0, 1.0)
+	_t = clampf(_t, 0.0, 1.0)
 
-	var bonus_radius: float = GameManager.get_explosion_radius_bonus() * _t
 	var base_half_extent: float = maxf(maxf(_base_sprite_half_size.x, _base_sprite_half_size.y), 1.0)
+	var bonus_radius: float = GameManager.get_explosion_radius_bonus() * _t
 	var bonus_visual_scale: float = bonus_radius / base_half_extent
+	var final_scale: float = (max_visual_scale * size_multiplier * _t) + bonus_visual_scale
 
 	if vis:
-		var final_scale: float = (max_visual_scale * size_multiplier * _t) + bonus_visual_scale
 		vis.scale = Vector2(final_scale, final_scale)
 		vis.visible = (_t >= min_visible_t)
 
@@ -126,14 +139,10 @@ func _apply_t() -> void:
 				c.a *= _t
 			vis.modulate = c
 
-	var circle_shape := col.shape as CircleShape2D
-	if circle_shape and vis:
-		circle_shape.radius = 1.0
-		var collision_half_size := Vector2(
-			_base_sprite_half_size.x * vis.scale.x,
-			_base_sprite_half_size.y * vis.scale.y
-		)
-		col.scale = collision_half_size
+	var circle_shape: CircleShape2D = col.shape as CircleShape2D
+	if circle_shape:
+		col.scale = Vector2.ONE
+		circle_shape.radius = base_half_extent * final_scale
 
 
 func _get_blended_flash_color() -> Color:
