@@ -111,8 +111,12 @@ func _play_sound(sound: AudioStream) -> void:
 func _apply_t() -> void:
 	_t = clamp(_t, 0.0, 1.0)
 
+	var bonus_radius: float = GameManager.get_explosion_radius_bonus() * _t
+	var base_half_extent: float = maxf(maxf(_base_sprite_half_size.x, _base_sprite_half_size.y), 1.0)
+	var bonus_visual_scale: float = bonus_radius / base_half_extent
+
 	if vis:
-		var final_scale: float = max_visual_scale * size_multiplier * _t
+		var final_scale: float = (max_visual_scale * size_multiplier * _t) + bonus_visual_scale
 		vis.scale = Vector2(final_scale, final_scale)
 		vis.visible = (_t >= min_visible_t)
 
@@ -125,10 +129,9 @@ func _apply_t() -> void:
 	var circle_shape := col.shape as CircleShape2D
 	if circle_shape and vis:
 		circle_shape.radius = 1.0
-		var bonus_radius: float = GameManager.get_explosion_radius_bonus() * _t
 		var collision_half_size := Vector2(
-			(_base_sprite_half_size.x * vis.scale.x) + bonus_radius,
-			(_base_sprite_half_size.y * vis.scale.y) + bonus_radius
+			_base_sprite_half_size.x * vis.scale.x,
+			_base_sprite_half_size.y * vis.scale.y
 		)
 		col.scale = collision_half_size
 
