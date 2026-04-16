@@ -15,7 +15,7 @@ const RECOIL_KICK_TIME := 0.05
 const RECOIL_RETURN_TIME := 0.12
 const TARGET_MARKER_TEXTURE := preload("res://assets/X_marker.png")
 const DEATH_SCATTER_PARTICLE_TEXTURE := preload("res://circle.png")
-const DEATH_SCATTER_PARTICLE_COUNT := 28
+const DEATH_SCATTER_PARTICLE_COUNT := 10
 const DEATH_SCATTER_LIFETIME := 0.7
 const DEATH_SCATTER_VELOCITY_MIN := 180.0
 const DEATH_SCATTER_VELOCITY_MAX := 460.0
@@ -547,8 +547,15 @@ func _spawn_target_marker(target_position: Vector2) -> Sprite2D:
 func _configure_death_particles() -> void:
 	if death_particles == null:
 		return
+
 	death_particles.emitting = false
 	death_particles.one_shot = true
+	death_particles.amount = DEATH_SCATTER_PARTICLE_COUNT
+
+	var mat := death_particles.process_material as ParticleProcessMaterial
+	if mat:
+		mat.color = Color.WHITE
+		mat.color_ramp = null
 
 
 func _play_death_particles(hit_from: Vector2) -> void:
@@ -561,9 +568,11 @@ func _play_death_particles(hit_from: Vector2) -> void:
 	if scatter_direction == Vector2.ZERO:
 		scatter_direction = Vector2.UP
 
+	var world_color := _get_world_cannon_color()
+
 	death_particles.global_position = global_position + scatter_direction * 8.0
 	death_particles.global_rotation = scatter_direction.angle()
-	death_particles.modulate = _get_world_cannon_color().lerp(Color.WHITE, 0.35)
+	death_particles.self_modulate = world_color
 	death_particles.restart()
 	death_particles.emitting = true
 

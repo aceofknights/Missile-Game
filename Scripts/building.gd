@@ -12,7 +12,7 @@ const WORLD_4_BUILDING_COLOR := Color(0.18, 0.28, 0.42, 1.0) # dark blue
 const WORLD_5_BUILDING_COLOR := Color(0.32, 0.45, 0.18, 1.0) # toxic green
 const DEFAULT_BUILDING_COLOR := Color(0.35, 0.35, 0.35, 1.0)
 const DEATH_SCATTER_PARTICLE_TEXTURE := preload("res://circle.png")
-const DEATH_SCATTER_PARTICLE_COUNT := 22
+const DEATH_SCATTER_PARTICLE_COUNT := 10
 const DEATH_SCATTER_LIFETIME := 0.65
 const DEATH_SCATTER_VELOCITY_MIN := 140.0
 const DEATH_SCATTER_VELOCITY_MAX := 340.0
@@ -303,8 +303,15 @@ func _spawn_wave_ammo_icon(icon_index: int, total_icons: int) -> void:
 func _configure_death_particles() -> void:
 	if death_particles == null:
 		return
+
 	death_particles.emitting = false
 	death_particles.one_shot = true
+	death_particles.amount = DEATH_SCATTER_PARTICLE_COUNT
+
+	var mat := death_particles.process_material as ParticleProcessMaterial
+	if mat:
+		mat.color = Color.WHITE
+		mat.color_ramp = null
 
 
 func _play_death_particles(hit_from: Vector2) -> void:
@@ -317,9 +324,14 @@ func _play_death_particles(hit_from: Vector2) -> void:
 	if scatter_direction == Vector2.ZERO:
 		scatter_direction = Vector2.UP
 
+	var world_color := _get_world_building_color()
+
 	death_particles.global_position = global_position + scatter_direction * 4.0
 	death_particles.global_rotation = scatter_direction.angle()
-	death_particles.modulate = _get_world_building_color().lerp(Color.WHITE, 0.45)
+
+	# Use self_modulate for a more reliable tint on the particle node
+	death_particles.self_modulate = world_color
+
 	death_particles.restart()
 	death_particles.emitting = true
 
