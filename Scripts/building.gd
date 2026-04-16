@@ -23,6 +23,7 @@ const WAVE_AMMO_ICON_TEXTURE := preload("res://assets/UpgradeIcons/yellow plus a
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var destroyed_sprite: Sprite2D = get_node_or_null("Destroyed") as Sprite2D
+@onready var death_particles: GPUParticles2D = get_node_or_null("DeathParticles") as GPUParticles2D
 @onready var repair_label: Label = get_node_or_null("RepairLabel") as Label
 @onready var shield_sprite: Sprite2D = Sprite2D.new()
 @onready var shield_hits_label: Label = Label.new()
@@ -44,6 +45,7 @@ func _ready() -> void:
 	_setup_shield_hits_label()
 	_reset_passive_shield_for_wave()
 	_cache_visual_rest_state()
+	_configure_death_particles()
 	_update_visual_state()
 
 
@@ -185,7 +187,7 @@ func die(hit_from: Vector2 = Vector2.ZERO) -> void:
 	monitoring = false
 	monitorable = false
 	await _play_hit_reaction(hit_from)
-	_spawn_death_scatter_particles(hit_from)
+	_play_death_particles(hit_from)
 
 	print("building destroyed")
 	destroyed = true
@@ -298,9 +300,15 @@ func _spawn_wave_ammo_icon(icon_index: int, total_icons: int) -> void:
 	)
 
 
-func _spawn_death_scatter_particles(hit_from: Vector2) -> void:
-	var parent := get_tree().current_scene
-	if parent == null:
+func _configure_death_particles() -> void:
+	if death_particles == null:
+		return
+	death_particles.emitting = false
+	death_particles.one_shot = true
+
+
+func _play_death_particles(hit_from: Vector2) -> void:
+	if death_particles == null:
 		return
 
 	var scatter_direction := Vector2.UP
@@ -309,47 +317,11 @@ func _spawn_death_scatter_particles(hit_from: Vector2) -> void:
 	if scatter_direction == Vector2.ZERO:
 		scatter_direction = Vector2.UP
 
-	var particles := GPUParticles2D.new()
-	particles.texture = DEATH_SCATTER_PARTICLE_TEXTURE
-	particles.one_shot = true
-	particles.emitting = false
-	particles.amount = DEATH_SCATTER_PARTICLE_COUNT
-	particles.explosiveness = 0.95
-	particles.local_coords = false
-	particles.lifetime = DEATH_SCATTER_LIFETIME
-	particles.fixed_fps = 60
-	particles.global_position = global_position + scatter_direction * 4.0
-	particles.global_rotation = scatter_direction.angle()
-	particles.modulate = _get_world_building_color().lerp(Color.WHITE, 0.45)
-
-	var process := ParticleProcessMaterial.new()
-	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
-	process.emission_sphere_radius = 10.0
-	process.direction = Vector3(1.0, 0.0, 0.0)
-	process.spread = 130.0
-	process.initial_velocity_min = DEATH_SCATTER_VELOCITY_MIN
-	process.initial_velocity_max = DEATH_SCATTER_VELOCITY_MAX
-	process.gravity = Vector3(0.0, DEATH_SCATTER_GRAVITY, 0.0)
-	process.angular_velocity_min = -500.0
-	process.angular_velocity_max = 500.0
-	process.scale_min = 1.5
-	process.scale_max = 3.4
-	process.damping_min = 20.0
-	process.damping_max = 56.0
-	process.hue_variation_min = -0.06
-	process.hue_variation_max = 0.06
-	process.color = Color(1.0, 0.8, 0.42, 1.0)
-	particles.process_material = process
-
-	parent.add_child(particles)
-	particles.emitting = true
-	_cleanup_death_particles_later(particles, DEATH_SCATTER_LIFETIME + 0.45)
-
-
-func _cleanup_death_particles_later(particles: GPUParticles2D, delay: float) -> void:
-	await get_tree().create_timer(maxf(0.1, delay)).timeout
-	if is_instance_valid(particles):
-		particles.queue_free()
+	death_particles.global_position = global_position + scatter_direction * 4.0
+	death_particles.global_rotation = scatter_direction.angle()
+	death_particles.modulate = _get_world_building_color().lerp(Color.WHITE, 0.45)
+	death_particles.restart()
+	death_particles.emitting = true
 
 
 func is_hovered(global_mouse_position: Vector2) -> bool:
