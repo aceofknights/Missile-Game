@@ -14,6 +14,12 @@ const RECOIL_DISTANCE := 8.0
 const RECOIL_KICK_TIME := 0.05
 const RECOIL_RETURN_TIME := 0.12
 const TARGET_MARKER_TEXTURE := preload("res://assets/X_marker.png")
+const DEATH_SCATTER_PARTICLE_TEXTURE := preload("res://circle.png")
+const DEATH_SCATTER_PARTICLE_COUNT := 28
+const DEATH_SCATTER_LIFETIME := 0.7
+const DEATH_SCATTER_VELOCITY_MIN := 180.0
+const DEATH_SCATTER_VELOCITY_MAX := 460.0
+const DEATH_SCATTER_GRAVITY := 760.0
 
 var cooldown := 0.0
 var shots_in_cycle := 0
@@ -360,6 +366,7 @@ func die(hit_from: Vector2 = Vector2.ZERO) -> void:
 	if cs:
 		cs.disabled = true
 	await _play_hit_reaction(hit_from)
+	_spawn_death_scatter_particles(hit_from)
 
 	GameManager.destroy_cannon(cannon_id)
 	_destruction_reaction_in_progress = false
@@ -533,6 +540,60 @@ func _spawn_target_marker(target_position: Vector2) -> Sprite2D:
 	get_tree().current_scene.add_child(marker)
 	marker.global_position = target_position
 	return marker
+
+
+func _spawn_death_scatter_particles(hit_from: Vector2) -> void:
+	var parent := get_tree().current_scene
+	if parent == null:
+		return
+
+	var scatter_direction := Vector2.UP
+	if hit_from != Vector2.ZERO:
+		scatter_direction = (global_position - hit_from).normalized()
+	if scatter_direction == Vector2.ZERO:
+		scatter_direction = Vector2.UP
+
+	var particles := GPUParticles2D.new()
+	particles.texture = DEATH_SCATTER_PARTICLE_TEXTURE
+	particles.one_shot = true
+	particles.emitting = false
+	particles.amount = DEATH_SCATTER_PARTICLE_COUNT
+	particles.explosiveness = 0.9
+	particles.local_coords = false
+	particles.lifetime = DEATH_SCATTER_LIFETIME
+	particles.fixed_fps = 60
+	particles.global_position = global_position + scatter_direction * 8.0
+	particles.global_rotation = scatter_direction.angle()
+	particles.modulate = _get_world_cannon_color().lerp(Color.WHITE, 0.35)
+
+	var process := ParticleProcessMaterial.new()
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	process.emission_sphere_radius = 14.0
+	process.direction = Vector3(1.0, 0.0, 0.0)
+	process.spread = 120.0
+	process.initial_velocity_min = DEATH_SCATTER_VELOCITY_MIN
+	process.initial_velocity_max = DEATH_SCATTER_VELOCITY_MAX
+	process.gravity = Vector3(0.0, DEATH_SCATTER_GRAVITY, 0.0)
+	process.angular_velocity_min = -600.0
+	process.angular_velocity_max = 600.0
+	process.scale_min = 2.0
+	process.scale_max = 4.2
+	process.damping_min = 30.0
+	process.damping_max = 80.0
+	process.hue_variation_min = -0.05
+	process.hue_variation_max = 0.05
+	process.color = Color(1.0, 0.85, 0.45, 1.0)
+	particles.process_material = process
+
+	parent.add_child(particles)
+	particles.emitting = true
+	_cleanup_death_particles_later(particles, DEATH_SCATTER_LIFETIME + 0.5)
+
+
+func _cleanup_death_particles_later(particles: GPUParticles2D, delay: float) -> void:
+	await get_tree().create_timer(maxf(0.1, delay)).timeout
+	if is_instance_valid(particles):
+		particles.queue_free()
 
 
 func _get_world_cannon_color() -> Color:
