@@ -6,9 +6,9 @@ class_name Explosion
 @export var max_visual_scale: float = 2.0
 @export var size_multiplier: float = 0.2
 
-@export var grow_time: float = 1
+@export var grow_time: float = 0.7
 @export var hold_time: float = 0.1
-@export var shrink_time: float = 0.15
+@export var shrink_time: float = 0.35
 
 @export var min_visible_t: float = 0.02
 
@@ -21,6 +21,9 @@ class_name Explosion
 
 @export var fade_out: bool = true
 @export var explosion_sound: AudioStream
+@export var sound_pitch_min: float = 0.94
+@export var sound_pitch_max: float = 1.06
+@export var sound_volume_jitter_db: float = 1.5
 
 @onready var col: CollisionShape2D = $CollisionShape2D
 @onready var vis: Sprite2D = $Sprite2D
@@ -28,7 +31,8 @@ class_name Explosion
 var _t: float = 0.0
 var _life_time: float = 0.0
 var _hit: Dictionary = {}
-var _base_sprite_radius: float = 1.0
+var _base_sprite_half_size: Vector2 = Vector2.ONE
+var _base_collision_radius: float = 1.0
 
 
 func _ready() -> void:
@@ -42,6 +46,7 @@ func _ready() -> void:
 	area_entered.connect(_on_area_entered)
 
 	_cache_base_sprite_radius()
+	_cache_base_collision_radius()
 
 	_t = 0.0
 	_life_time = 0.0
@@ -79,33 +84,52 @@ func _physics_process(_delta: float) -> void:
 
 func _cache_base_sprite_radius() -> void:
 	if vis == null or vis.texture == null:
-		_base_sprite_radius = 1.0
+		_base_sprite_half_size = Vector2.ONE
 		return
 
 	var tex_size: Vector2 = vis.texture.get_size()
-	_base_sprite_radius = max(tex_size.x, tex_size.y) * 0.5
+	_base_sprite_half_size = tex_size * 0.5
 
-	if _base_sprite_radius <= 0.0:
-		_base_sprite_radius = 1.0
+	if _base_sprite_half_size.x <= 0.0:
+		_base_sprite_half_size.x = 1.0
+	if _base_sprite_half_size.y <= 0.0:
+		_base_sprite_half_size.y = 1.0
+
+
+func _cache_base_collision_radius() -> void:
+	var circle_shape: CircleShape2D = col.shape as CircleShape2D
+	if circle_shape:
+		_base_collision_radius = maxf(circle_shape.radius, 1.0)
+	else:
+		_base_collision_radius = 1.0
 
 
 func _play_sound(sound: AudioStream) -> void:
 	if sound == null:
 		return
 
-	var player := AudioStreamPlayer.new()
+	var player: AudioStreamPlayer = AudioStreamPlayer.new()
 	add_child(player)
 	player.stream = sound
 	player.bus = "SFX"
+	player.pitch_scale = randf_range(
+		minf(sound_pitch_min, sound_pitch_max),
+		maxf(sound_pitch_min, sound_pitch_max)
+	)
+	player.volume_db = randf_range(-absf(sound_volume_jitter_db), absf(sound_volume_jitter_db))
 	player.play()
 	player.finished.connect(player.queue_free)
 
 
 func _apply_t() -> void:
-	_t = clamp(_t, 0.0, 1.0)
+	_t = clampf(_t, 0.0, 1.0)
+
+	var base_half_extent: float = maxf(maxf(_base_sprite_half_size.x, _base_sprite_half_size.y), 1.0)
+	var bonus_radius: float = GameManager.get_explosion_radius_bonus() * _t
+	var bonus_visual_scale: float = bonus_radius / base_half_extent
+	var final_scale: float = (max_visual_scale * size_multiplier * _t) + bonus_visual_scale
 
 	if vis:
-		var final_scale: float = max_visual_scale * size_multiplier * _t
 		vis.scale = Vector2(final_scale, final_scale)
 		vis.visible = (_t >= min_visible_t)
 
@@ -115,11 +139,10 @@ func _apply_t() -> void:
 				c.a *= _t
 			vis.modulate = c
 
-	var circle_shape := col.shape as CircleShape2D
-	if circle_shape and vis:
-		var radius_from_sprite: float = _base_sprite_radius * vis.scale.x
-		radius_from_sprite += GameManager.get_explosion_radius_bonus() * _t
-		circle_shape.radius = radius_from_sprite
+	var circle_shape: CircleShape2D = col.shape as CircleShape2D
+	if circle_shape:
+		col.scale = Vector2.ONE
+		circle_shape.radius = base_half_extent * final_scale
 
 
 func _get_blended_flash_color() -> Color:

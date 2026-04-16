@@ -10,6 +10,10 @@ const WORLD_3_CANNON_COLOR := Color(0.28, 0.18, 0.45, 1.0) # dark purple
 const WORLD_4_CANNON_COLOR := Color(0.18, 0.28, 0.42, 1.0) # dark blue
 const WORLD_5_CANNON_COLOR := Color(0.32, 0.45, 0.18, 1.0) # toxic green
 const DEFAULT_CANNON_COLOR := Color(0.35, 0.35, 0.35, 1.0)
+const RECOIL_DISTANCE := 8.0
+const RECOIL_KICK_TIME := 0.05
+const RECOIL_RETURN_TIME := 0.12
+const TARGET_MARKER_TEXTURE := preload("res://assets/X_marker.png")
 
 var cooldown := 0.0
 var shots_in_cycle := 0
@@ -19,6 +23,13 @@ var jam_misfire_radius: float = 0.0
 var permanently_destroyed: bool = false
 var shield_hits_remaining := 0
 var shield_emp_disabled_remaining := 0.0
+var _destruction_reaction_in_progress := false
+var _cannon_gun_rest_position: Vector2 = Vector2.ZERO
+var _cannon_base_rest_position: Vector2 = Vector2.ZERO
+var _cannon_base_rest_scale: Vector2 = Vector2.ONE
+var _cannon_gun_rest_scale: Vector2 = Vector2.ONE
+var _recoil_tween: Tween
+var _muzzle_flash_tween: Tween
 
 @onready var muzzle: Marker2D = get_node_or_null("CannonGun/Muzzle") as Marker2D
 @onready var ammo_label: Label = $AmmoLabel
@@ -29,6 +40,7 @@ var shield_emp_disabled_remaining := 0.0
 @onready var cannon_destroyed: Sprite2D = get_node_or_null("CannonDestroyed") as Sprite2D
 @onready var shield_sprite: Sprite2D = Sprite2D.new()
 @onready var shield_hits_label: Label = Label.new()
+@onready var muzzle_flash: Polygon2D = Polygon2D.new()
 
 
 func _ready() -> void:
@@ -44,9 +56,11 @@ func _ready() -> void:
 		repair_label.top_level = true
 
 	_setup_cannon_gun_pivot()
+	_setup_muzzle_flash()
 	_setup_temp_shield_sprite()
 	_setup_shield_hits_label()
 	_reset_passive_shield_for_wave()
+	_cache_visual_rest_state()
 	_refresh_visibility_state()
 	_update_overlay_positions()
 	_update_ui()
@@ -106,6 +120,8 @@ func _refresh_visibility_state() -> void:
 			repair_label.text = "EMP %.1fs" % emp_disabled_remaining
 
 	if cannon_base:
+		cannon_base.position = _cannon_base_rest_position
+		cannon_base.scale = _cannon_base_rest_scale
 		cannon_base.visible = active
 		if destroyed:
 			cannon_base.modulate = Color(0.35, 0.35, 0.35, 1.0)
@@ -117,6 +133,8 @@ func _refresh_visibility_state() -> void:
 			cannon_base.modulate = world_color
 
 	if cannon_gun:
+		cannon_gun.position = _cannon_gun_rest_position
+		cannon_gun.scale = _cannon_gun_rest_scale
 		cannon_gun.visible = active
 		if destroyed:
 			cannon_gun.modulate = Color(0.35, 0.35, 0.35, 1.0)
@@ -183,7 +201,11 @@ func fire(target_position: Vector2) -> bool:
 	var projectile = projectile_scene.instantiate()
 	projectile.global_position = muzzle.global_position if muzzle else global_position
 	projectile.target = final_target
+	var target_marker := _spawn_target_marker(final_target)
+	if "target_marker" in projectile:
+		projectile.target_marker = target_marker
 	get_tree().current_scene.add_child(projectile)
+	_play_fire_feedback()
 
 	_update_ui()
 	return true
@@ -226,8 +248,7 @@ func _on_area_entered(area: Area2D) -> void:
 	if area.is_in_group("enemy") and not area.is_in_group("emp_missile"):
 		if handle_enemy_impact(area):
 			return
-		GameManager.destroy_cannon(cannon_id)
-		_refresh_visibility_state()
+		die(area.global_position)
 
 
 func _setup_temp_shield_sprite() -> void:
@@ -247,6 +268,22 @@ func _setup_shield_hits_label() -> void:
 	shield_hits_label.visible = false
 	shield_hits_label.z_index = 25
 	add_child(shield_hits_label)
+
+
+func _setup_muzzle_flash() -> void:
+	if muzzle == null:
+		return
+
+	muzzle_flash.polygon = PackedVector2Array([
+		Vector2(0, -34),
+		Vector2(12, -4),
+		Vector2(0, 8),
+		Vector2(-12, -4)
+	])
+	muzzle_flash.color = Color(1.0, 0.92, 0.6, 0.85)
+	muzzle_flash.visible = false
+	muzzle_flash.z_index = 5
+	muzzle.add_child(muzzle_flash)
 
 
 func _update_shield_hits_label() -> void:
@@ -312,8 +349,20 @@ func disable_temporarily(duration: float) -> void:
 	_refresh_visibility_state()
 
 
-func die() -> void:
+func die(hit_from: Vector2 = Vector2.ZERO) -> void:
+	if is_destroyed() or _destruction_reaction_in_progress:
+		return
+
+	_destruction_reaction_in_progress = true
+	monitoring = false
+	monitorable = false
+	var cs = get_node_or_null("CollisionShape2D")
+	if cs:
+		cs.disabled = true
+	await _play_hit_reaction(hit_from)
+
 	GameManager.destroy_cannon(cannon_id)
+	_destruction_reaction_in_progress = false
 	_refresh_visibility_state()
 
 
@@ -379,11 +428,111 @@ func _setup_cannon_gun_pivot() -> void:
 	if cannon_gun == null or cannon_gun.texture == null:
 		return
 
+	_cannon_gun_rest_position = cannon_gun.position
 	cannon_gun.centered = false
 	var tex_size: Vector2 = cannon_gun.texture.get_size()
 
 	# Places the texture so the node origin is at the bottom-center of the gun.
 	cannon_gun.offset = Vector2(-tex_size.x * 0.5, -tex_size.y)
+
+
+func _cache_visual_rest_state() -> void:
+	if cannon_base:
+		_cannon_base_rest_position = cannon_base.position
+		_cannon_base_rest_scale = cannon_base.scale
+	if cannon_gun:
+		_cannon_gun_rest_scale = cannon_gun.scale
+
+
+func _play_fire_feedback() -> void:
+	_play_recoil_feedback()
+	_play_muzzle_flash_feedback()
+
+
+func _play_hit_reaction(hit_from: Vector2) -> void:
+	var impact_dir := Vector2.ZERO
+	if hit_from != Vector2.ZERO:
+		impact_dir = (global_position - hit_from).normalized()
+	if impact_dir == Vector2.ZERO:
+		impact_dir = Vector2(0.0, -1.0)
+
+	var nudge := impact_dir * 4.0
+	var world_color := _get_world_cannon_color()
+	var flash_color := world_color.lerp(Color.WHITE, 0.78)
+	var tween := create_tween()
+	tween.set_parallel(true)
+
+	if cannon_base:
+		cannon_base.position = _cannon_base_rest_position
+		cannon_base.scale = _cannon_base_rest_scale
+		cannon_base.modulate = world_color
+		tween.tween_property(cannon_base, "position", _cannon_base_rest_position + nudge, 0.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(cannon_base, "scale", Vector2(_cannon_base_rest_scale.x * 1.06, _cannon_base_rest_scale.y * 0.92), 0.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(cannon_base, "modulate", flash_color, 0.04).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	if cannon_gun:
+		cannon_gun.position = _cannon_gun_rest_position
+		cannon_gun.scale = _cannon_gun_rest_scale
+		cannon_gun.modulate = world_color
+		tween.tween_property(cannon_gun, "position", _cannon_gun_rest_position + nudge, 0.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(cannon_gun, "scale", Vector2(_cannon_gun_rest_scale.x * 1.08, _cannon_gun_rest_scale.y * 0.9), 0.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		tween.tween_property(cannon_gun, "modulate", flash_color, 0.04).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+	await tween.finished
+
+
+func _play_recoil_feedback() -> void:
+	if cannon_gun == null:
+		return
+
+	if _recoil_tween and _recoil_tween.is_valid():
+		_recoil_tween.kill()
+
+	var rest_global_position: Vector2 = cannon_gun.get_parent().to_global(_cannon_gun_rest_position)
+	var forward_direction: Vector2 = Vector2.UP.rotated(cannon_gun.global_rotation)
+	var recoil_target_global: Vector2 = rest_global_position - (forward_direction * RECOIL_DISTANCE)
+	cannon_gun.global_position = rest_global_position
+	_recoil_tween = create_tween()
+	_recoil_tween.set_ease(Tween.EASE_OUT)
+	_recoil_tween.set_trans(Tween.TRANS_CUBIC)
+	_recoil_tween.tween_property(cannon_gun, "global_position", recoil_target_global, RECOIL_KICK_TIME)
+	_recoil_tween.set_ease(Tween.EASE_IN_OUT)
+	_recoil_tween.set_trans(Tween.TRANS_SINE)
+	_recoil_tween.tween_property(cannon_gun, "global_position", rest_global_position, RECOIL_RETURN_TIME)
+
+
+func _play_muzzle_flash_feedback() -> void:
+	if muzzle_flash == null:
+		return
+
+	if _muzzle_flash_tween and _muzzle_flash_tween.is_valid():
+		_muzzle_flash_tween.kill()
+
+	muzzle_flash.visible = true
+	muzzle_flash.color = Color(1.0, 0.92, 0.6, 0.85)
+	muzzle_flash.scale = Vector2.ONE
+	_muzzle_flash_tween = create_tween()
+	_muzzle_flash_tween.set_parallel(true)
+	_muzzle_flash_tween.tween_property(muzzle_flash, "scale", Vector2(1.35, 1.6), 0.06)
+	_muzzle_flash_tween.tween_property(muzzle_flash, "color:a", 0.0, 0.08)
+	_muzzle_flash_tween.finished.connect(func() -> void:
+		if is_instance_valid(muzzle_flash):
+			muzzle_flash.visible = false
+			muzzle_flash.scale = Vector2.ONE
+	)
+
+
+func _spawn_target_marker(target_position: Vector2) -> Sprite2D:
+	var marker := Sprite2D.new()
+	marker.texture = TARGET_MARKER_TEXTURE
+	marker.centered = true
+	marker.top_level = true
+	marker.z_index = 40
+	marker.modulate = _get_world_cannon_color()
+	marker.scale = Vector2(0.34, 0.34)
+	get_tree().current_scene.add_child(marker)
+	marker.global_position = target_position
+	return marker
 
 
 func _get_world_cannon_color() -> Color:

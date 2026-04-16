@@ -1224,18 +1224,130 @@ func start_wave():
 		_spawn_world_special_attacks()
 
 func spawn_enemies_gradually(count):
-	var delay = max(0.3, 1.5 - (current_world * 0.2) - (current_wave * 0.05))
-	print("⏱ Spawning enemies with delay of %.2f" % delay)
+	var segments: Array = _build_wave_drama_segments(count)
+	print("⏱ Spawning wave with %d drama segments" % segments.size())
 
-	for _i in range(count):
+	for segment in segments:
 		if not wave_active or spawner == null or !is_instance_valid(spawner):
 			print("⛔️ Spawning cancelled: wave is no longer active or spawner is invalid")
 			return
 
-		enemies_alive += 1
-		spawner.spawn_enemy()
+		var segment_count: int = int(segment.get("count", 0))
+		var spawn_delay: float = float(segment.get("delay", 0.6))
+		var pause_after: float = float(segment.get("pause_after", 0.0))
+		var label: String = String(segment.get("label", "segment"))
+		print("🎭 %s: %d enemies at %.2fs spacing" % [label, segment_count, spawn_delay])
 
-		await get_tree().create_timer(delay).timeout
+		for _i in range(segment_count):
+			if not wave_active or spawner == null or !is_instance_valid(spawner):
+				print("⛔️ Spawning cancelled: wave is no longer active or spawner is invalid")
+				return
+
+			enemies_alive += 1
+			spawner.spawn_enemy()
+
+			if _i < segment_count - 1:
+				await get_tree().create_timer(spawn_delay).timeout
+
+		if pause_after > 0.0:
+			await get_tree().create_timer(pause_after).timeout
+
+
+func _build_wave_drama_segments(count: int) -> Array:
+	var total: int = max(1, count)
+	var base_delay: float = max(0.3, 1.5 - (current_world * 0.2) - (current_wave * 0.05))
+	var quiet_ratio: float = 0.24
+	var spike_ratio: float = 0.46
+	var relief_ratio: float = 0.18
+	var finale_ratio: float = 0.12
+
+	if total <= 4:
+		quiet_ratio = 0.35
+		spike_ratio = 0.40
+		relief_ratio = 0.25
+		finale_ratio = 0.0
+	elif total >= 18:
+		quiet_ratio = 0.2
+		spike_ratio = 0.5
+		relief_ratio = 0.16
+		finale_ratio = 0.14
+
+	var quiet_count: int = max(1, int(round(total * quiet_ratio)))
+	var spike_count: int = max(1, int(round(total * spike_ratio)))
+	var relief_count: int = max(1, int(round(total * relief_ratio)))
+	var used: int = quiet_count + spike_count + relief_count
+	var finale_count: int = max(0, total - used)
+
+	if finale_count == 0 and total >= 8:
+		finale_count = 1
+		if relief_count > 1:
+			relief_count -= 1
+		elif spike_count > 1:
+			spike_count -= 1
+
+	var segments: Array = []
+	segments.append({
+		"label": "Quiet Build",
+		"count": quiet_count,
+		"delay": base_delay * 1.25,
+		"pause_after": 0.2
+	})
+	segments.append({
+		"label": "Pressure Spike",
+		"count": spike_count,
+		"delay": max(0.14, base_delay * 0.58),
+		"pause_after": 0.42
+	})
+	segments.append({
+		"label": "Relief Window",
+		"count": relief_count,
+		"delay": max(0.22, base_delay * 1.1),
+		"pause_after": 0.18
+	})
+
+	if finale_count > 0:
+		segments.append({
+			"label": "Final Push",
+			"count": finale_count,
+			"delay": max(0.12, base_delay * 0.72),
+			"pause_after": 0.0
+		})
+
+	return _normalize_wave_drama_segments(segments, total)
+
+
+func _normalize_wave_drama_segments(segments: Array, total_count: int) -> Array:
+	var normalized: Array = []
+	var assigned: int = 0
+
+	for segment_index in range(segments.size()):
+		var segment: Dictionary = segments[segment_index]
+		var count: int = int(segment.get("count", 0))
+		if count <= 0:
+			continue
+
+		var remaining: int = total_count - assigned
+		if remaining <= 0:
+			break
+
+		if segment_index == segments.size() - 1:
+			count = remaining
+		else:
+			count = min(count, remaining)
+
+		if count <= 0:
+			continue
+
+		assigned += count
+		segment["count"] = count
+		normalized.append(segment)
+
+	if assigned < total_count and normalized.size() > 0:
+		var last_segment: Dictionary = normalized[normalized.size() - 1]
+		last_segment["count"] = int(last_segment.get("count", 0)) + (total_count - assigned)
+		normalized[normalized.size() - 1] = last_segment
+
+	return normalized
 
 
 func _special_state() -> Dictionary:
