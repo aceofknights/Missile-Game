@@ -17,6 +17,7 @@ const WAVE_AMMO_ICON_TEXTURE := preload("res://assets/UpgradeIcons/yellow plus a
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var destroyed_sprite: Sprite2D = get_node_or_null("Destroyed") as Sprite2D
+@onready var death_particles: GPUParticles2D = get_node_or_null("DeathParticles") as GPUParticles2D
 @onready var repair_label: Label = get_node_or_null("RepairLabel") as Label
 @onready var shield_sprite: Sprite2D = Sprite2D.new()
 @onready var shield_hits_label: Label = Label.new()
@@ -38,6 +39,7 @@ func _ready() -> void:
 	_setup_shield_hits_label()
 	_reset_passive_shield_for_wave()
 	_cache_visual_rest_state()
+	_configure_death_particles()
 	_update_visual_state()
 
 
@@ -179,6 +181,7 @@ func die(hit_from: Vector2 = Vector2.ZERO) -> void:
 	monitoring = false
 	monitorable = false
 	await _play_hit_reaction(hit_from)
+	_play_death_particles(hit_from)
 
 	print("building destroyed")
 	destroyed = true
@@ -289,6 +292,30 @@ func _spawn_wave_ammo_icon(icon_index: int, total_icons: int) -> void:
 		if is_instance_valid(icon):
 			icon.queue_free()
 	)
+
+
+func _configure_death_particles() -> void:
+	if death_particles == null:
+		return
+	death_particles.emitting = false
+	death_particles.one_shot = true
+
+
+func _play_death_particles(hit_from: Vector2) -> void:
+	if death_particles == null:
+		return
+
+	var scatter_direction := Vector2.UP
+	if hit_from != Vector2.ZERO:
+		scatter_direction = (global_position - hit_from).normalized()
+	if scatter_direction == Vector2.ZERO:
+		scatter_direction = Vector2.UP
+
+	death_particles.global_position = global_position + scatter_direction * 4.0
+	death_particles.global_rotation = scatter_direction.angle()
+	death_particles.modulate = _get_world_building_color().lerp(Color.WHITE, 0.45)
+	death_particles.restart()
+	death_particles.emitting = true
 
 
 func is_hovered(global_mouse_position: Vector2) -> bool:
