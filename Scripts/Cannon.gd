@@ -14,6 +14,12 @@ const RECOIL_DISTANCE := 8.0
 const RECOIL_KICK_TIME := 0.05
 const RECOIL_RETURN_TIME := 0.12
 const TARGET_MARKER_TEXTURE := preload("res://assets/X_marker.png")
+const DEATH_SCATTER_PARTICLE_TEXTURE := preload("res://circle.png")
+const DEATH_SCATTER_PARTICLE_COUNT := 28
+const DEATH_SCATTER_LIFETIME := 0.7
+const DEATH_SCATTER_VELOCITY_MIN := 180.0
+const DEATH_SCATTER_VELOCITY_MAX := 460.0
+const DEATH_SCATTER_GRAVITY := 760.0
 
 var cooldown := 0.0
 var shots_in_cycle := 0

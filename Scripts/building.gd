@@ -11,6 +11,12 @@ const WORLD_3_BUILDING_COLOR := Color(0.28, 0.18, 0.45, 1.0) # dark purple
 const WORLD_4_BUILDING_COLOR := Color(0.18, 0.28, 0.42, 1.0) # dark blue
 const WORLD_5_BUILDING_COLOR := Color(0.32, 0.45, 0.18, 1.0) # toxic green
 const DEFAULT_BUILDING_COLOR := Color(0.35, 0.35, 0.35, 1.0)
+const DEATH_SCATTER_PARTICLE_TEXTURE := preload("res://circle.png")
+const DEATH_SCATTER_PARTICLE_COUNT := 22
+const DEATH_SCATTER_LIFETIME := 0.65
+const DEATH_SCATTER_VELOCITY_MIN := 140.0
+const DEATH_SCATTER_VELOCITY_MAX := 340.0
+const DEATH_SCATTER_GRAVITY := 720.0
 
 const WAVE_AMMO_ICON_TEXTURE := preload("res://assets/UpgradeIcons/yellow plus ammo.png")
 @export var WAVE_AMMO_ICON_TEXTURE_COLOR := Color(1,1,1,1)
