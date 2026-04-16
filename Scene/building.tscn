@@ -1,12 +1,29 @@
-[gd_scene load_steps=6 format=3 uid="uid://vug46xq86s6a"]
+[gd_scene load_steps=8 format=3 uid="uid://vug46xq86s6a"]
 
 [ext_resource type="Script" path="res://Scripts/building.gd" id="1_158o7"]
 [ext_resource type="Texture2D" uid="uid://c1y6xverljf2d" path="res://assets/Player Base/building 10.png" id="2_7se5x"]
 [ext_resource type="Texture2D" uid="uid://csysf4fvu7y7a" path="res://assets/Player Base/Building Door.png" id="3_own4o"]
 [ext_resource type="Texture2D" uid="uid://dxx1rciyoc4ch" path="res://assets/Player Base/destroyed 4.png" id="4_4b5yx"]
+[ext_resource type="Texture2D" uid="uid://vwk3b28m27sv" path="res://assets/particle effect 2.png" id="5_v8hqn"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ot00v"]
 size = Vector2(48, 21)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_4jh1s"]
+particle_flag_disable_z = true
+angle_min = -720.0
+angle_max = 720.0
+direction = Vector3(0, 1, 0)
+spread = 180.0
+initial_velocity_min = 507.36
+initial_velocity_max = 1000.0
+angular_velocity_min = -400.0
+angular_velocity_max = 720.0
+radial_velocity_max = 100.0
+gravity = Vector3(0, 180, 0)
+scale_min = 0.2
+scale_max = 0.5
+color = Color(0.980392, 1, 1, 1)
 
 [node name="Building" type="Area2D" groups=["building"]]
 collision_layer = 4
@@ -30,3 +47,11 @@ texture = ExtResource("4_4b5yx")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_ot00v")
+
+[node name="DeathParticles" type="GPUParticles2D" parent="."]
+scale = Vector2(0.09, 0.09)
+amount = 10
+process_material = SubResource("ParticleProcessMaterial_4jh1s")
+texture = ExtResource("5_v8hqn")
+lifetime = 2.0
+explosiveness = 1.0

@@ -14,6 +14,12 @@ const RECOIL_DISTANCE := 8.0
 const RECOIL_KICK_TIME := 0.05
 const RECOIL_RETURN_TIME := 0.12
 const TARGET_MARKER_TEXTURE := preload("res://assets/X_marker.png")
+const DEATH_SCATTER_PARTICLE_TEXTURE := preload("res://circle.png")
+const DEATH_SCATTER_PARTICLE_COUNT := 10
+const DEATH_SCATTER_LIFETIME := 0.7
+const DEATH_SCATTER_VELOCITY_MIN := 180.0
+const DEATH_SCATTER_VELOCITY_MAX := 460.0
+const DEATH_SCATTER_GRAVITY := 760.0
 
 var cooldown := 0.0
 var shots_in_cycle := 0
@@ -38,6 +44,7 @@ var _muzzle_flash_tween: Tween
 @onready var cannon_gun: Sprite2D = get_node_or_null("CannonGun") as Sprite2D
 @onready var cannon_base: Sprite2D = get_node_or_null("CannonBase") as Sprite2D
 @onready var cannon_destroyed: Sprite2D = get_node_or_null("CannonDestroyed") as Sprite2D
+@onready var death_particles: GPUParticles2D = get_node_or_null("DeathParticles") as GPUParticles2D
 @onready var shield_sprite: Sprite2D = Sprite2D.new()
 @onready var shield_hits_label: Label = Label.new()
 @onready var muzzle_flash: Polygon2D = Polygon2D.new()
@@ -61,6 +68,7 @@ func _ready() -> void:
 	_setup_shield_hits_label()
 	_reset_passive_shield_for_wave()
 	_cache_visual_rest_state()
+	_configure_death_particles()
 	_refresh_visibility_state()
 	_update_overlay_positions()
 	_update_ui()
@@ -360,6 +368,7 @@ func die(hit_from: Vector2 = Vector2.ZERO) -> void:
 	if cs:
 		cs.disabled = true
 	await _play_hit_reaction(hit_from)
+	_play_death_particles(hit_from)
 
 	GameManager.destroy_cannon(cannon_id)
 	_destruction_reaction_in_progress = false
@@ -533,6 +542,39 @@ func _spawn_target_marker(target_position: Vector2) -> Sprite2D:
 	get_tree().current_scene.add_child(marker)
 	marker.global_position = target_position
 	return marker
+
+
+func _configure_death_particles() -> void:
+	if death_particles == null:
+		return
+
+	death_particles.emitting = false
+	death_particles.one_shot = true
+	death_particles.amount = DEATH_SCATTER_PARTICLE_COUNT
+
+	var mat := death_particles.process_material as ParticleProcessMaterial
+	if mat:
+		mat.color = Color.WHITE
+		mat.color_ramp = null
+
+
+func _play_death_particles(hit_from: Vector2) -> void:
+	if death_particles == null:
+		return
+
+	var scatter_direction := Vector2.UP
+	if hit_from != Vector2.ZERO:
+		scatter_direction = (global_position - hit_from).normalized()
+	if scatter_direction == Vector2.ZERO:
+		scatter_direction = Vector2.UP
+
+	var world_color := _get_world_cannon_color()
+
+	death_particles.global_position = global_position + scatter_direction * 8.0
+	death_particles.global_rotation = scatter_direction.angle()
+	death_particles.self_modulate = world_color
+	death_particles.restart()
+	death_particles.emitting = true
 
 
 func _get_world_cannon_color() -> Color:
