@@ -23,6 +23,7 @@ var target: Vector2
 var trail_outer_line: Line2D
 var trail_mid_line: Line2D
 var trail_core_line: Line2D
+var target_marker: Node2D
 
 var _last_neon_outer_alpha: float = -1.0
 var _last_neon_outer_width_multiplier: float = -1.0
@@ -68,6 +69,9 @@ func explode() -> void:
 		var explosion = explosion_scene.instantiate()
 		explosion.global_position = global_position
 		get_tree().current_scene.add_child(explosion)
+
+	if is_instance_valid(target_marker):
+		target_marker.queue_free()
 
 	_cleanup_trail()
 	queue_free()

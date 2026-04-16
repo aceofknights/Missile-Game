@@ -4,6 +4,7 @@ var destroyed := false
 var permanently_destroyed := false
 var shield_hits_remaining := 0
 var emp_shield_disabled_remaining := 0.0
+var _destruction_reaction_in_progress := false
 const WORLD_1_BUILDING_COLOR := Color(0.15, 0.45, 0.35, 1.0) # dark teal-green
 const WORLD_2_BUILDING_COLOR := Color(0.45, 0.22, 0.18, 1.0) # dark rust
 const WORLD_3_BUILDING_COLOR := Color(0.28, 0.18, 0.45, 1.0) # dark purple
@@ -19,6 +20,8 @@ const WAVE_AMMO_ICON_TEXTURE := preload("res://assets/UpgradeIcons/yellow plus a
 @onready var repair_label: Label = get_node_or_null("RepairLabel") as Label
 @onready var shield_sprite: Sprite2D = Sprite2D.new()
 @onready var shield_hits_label: Label = Label.new()
+var _sprite_rest_position: Vector2 = Vector2.ZERO
+var _sprite_rest_scale: Vector2 = Vector2.ONE
 
 
 func _ready() -> void:
@@ -34,6 +37,7 @@ func _ready() -> void:
 	_setup_temp_shield_sprite()
 	_setup_shield_hits_label()
 	_reset_passive_shield_for_wave()
+	_cache_visual_rest_state()
 	_update_visual_state()
 
 
@@ -60,7 +64,7 @@ func _on_area_entered(area: Area2D) -> void:
 
 		print("Building destroyed by Enemy")
 		area.call_deferred("die", false)
-		die()
+		die(area.global_position)
 
 
 func _setup_temp_shield_sprite() -> void:
@@ -167,14 +171,18 @@ func handle_enemy_impact(enemy: Area2D) -> bool:
 	return false
 
 
-func die() -> void:
-	if destroyed:
+func die(hit_from: Vector2 = Vector2.ZERO) -> void:
+	if destroyed or _destruction_reaction_in_progress:
 		return
+
+	_destruction_reaction_in_progress = true
+	monitoring = false
+	monitorable = false
+	await _play_hit_reaction(hit_from)
 
 	print("building destroyed")
 	destroyed = true
-	monitoring = false
-	monitorable = false
+	_destruction_reaction_in_progress = false
 	_update_visual_state()
 
 
@@ -182,6 +190,8 @@ func _update_visual_state() -> void:
 	var world_color := _get_world_building_color()
 
 	if sprite:
+		sprite.position = _sprite_rest_position
+		sprite.scale = _sprite_rest_scale
 		sprite.modulate = world_color
 		sprite.visible = not destroyed
 
@@ -209,6 +219,39 @@ func _get_world_building_color() -> Color:
 
 func is_destroyed() -> bool:
 	return destroyed
+
+
+func _cache_visual_rest_state() -> void:
+	if sprite:
+		_sprite_rest_position = sprite.position
+		_sprite_rest_scale = sprite.scale
+
+
+func _play_hit_reaction(hit_from: Vector2) -> void:
+	if sprite == null:
+		return
+
+	var world_color := _get_world_building_color()
+	var impact_dir := Vector2.ZERO
+	if hit_from != Vector2.ZERO:
+		impact_dir = (global_position - hit_from).normalized()
+	if impact_dir == Vector2.ZERO:
+		impact_dir = Vector2(0.0, -1.0)
+
+	var nudge := impact_dir * 5.0
+	var flash_color := world_color.lerp(Color.WHITE, 0.75)
+	var squash_scale := Vector2(_sprite_rest_scale.x * 1.08, _sprite_rest_scale.y * 0.9)
+
+	sprite.position = _sprite_rest_position
+	sprite.scale = _sprite_rest_scale
+	sprite.modulate = world_color
+
+	var tween := create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(sprite, "position", _sprite_rest_position + nudge, 0.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(sprite, "scale", squash_scale, 0.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(sprite, "modulate", flash_color, 0.04).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	await tween.finished
 
 
 func play_wave_ammo_bonus_animation(icon_count: int) -> void:

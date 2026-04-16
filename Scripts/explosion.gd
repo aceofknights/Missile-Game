@@ -6,9 +6,9 @@ class_name Explosion
 @export var max_visual_scale: float = 2.0
 @export var size_multiplier: float = 0.2
 
-@export var grow_time: float = 1
+@export var grow_time: float = .7
 @export var hold_time: float = 0.1
-@export var shrink_time: float = 0.15
+@export var shrink_time: float = 0.35
 
 @export var min_visible_t: float = 0.02
 
@@ -21,6 +21,9 @@ class_name Explosion
 
 @export var fade_out: bool = true
 @export var explosion_sound: AudioStream
+@export var sound_pitch_min: float = 0.94
+@export var sound_pitch_max: float = 1.06
+@export var sound_volume_jitter_db: float = 1.5
 
 @onready var col: CollisionShape2D = $CollisionShape2D
 @onready var vis: Sprite2D = $Sprite2D
@@ -97,6 +100,8 @@ func _play_sound(sound: AudioStream) -> void:
 	add_child(player)
 	player.stream = sound
 	player.bus = "SFX"
+	player.pitch_scale = randf_range(minf(sound_pitch_min, sound_pitch_max), maxf(sound_pitch_min, sound_pitch_max))
+	player.volume_db = randf_range(-absf(sound_volume_jitter_db), absf(sound_volume_jitter_db))
 	player.play()
 	player.finished.connect(player.queue_free)
 

@@ -75,11 +75,23 @@ corner_radius_bottom_left = 5
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_7l10b")
+boss_death_land_height = 72.0
+boss_death_final_explosion_height = 72.0
 lure_scene = ExtResource("2_bwnbf")
 
 [node name="BlackSquare" type="Sprite2D" parent="."]
 position = Vector2(575, 619)
 scale = Vector2(0.620833, 0.101852)
+texture = ExtResource("2_qwm4p")
+
+[node name="BlackSquare" type="Sprite2D" parent="BlackSquare"]
+position = Vector2(-1098.52, -3528.15)
+scale = Vector2(0.179544, 5.48455)
+texture = ExtResource("2_qwm4p")
+
+[node name="BlackSquare2" type="Sprite2D" parent="BlackSquare"]
+position = Vector2(1101.75, -3495.27)
+scale = Vector2(0.179544, 5.48455)
 texture = ExtResource("2_qwm4p")
 
 [node name="SpaceBackground" type="Sprite2D" parent="."]
