@@ -31,7 +31,7 @@ class_name Explosion
 var _t: float = 0.0
 var _life_time: float = 0.0
 var _hit: Dictionary = {}
-var _base_sprite_radius: float = 1.0
+var _base_sprite_half_size: Vector2 = Vector2.ONE
 
 
 func _ready() -> void:
@@ -82,14 +82,16 @@ func _physics_process(_delta: float) -> void:
 
 func _cache_base_sprite_radius() -> void:
 	if vis == null or vis.texture == null:
-		_base_sprite_radius = 1.0
+		_base_sprite_half_size = Vector2.ONE
 		return
 
 	var tex_size: Vector2 = vis.texture.get_size()
-	_base_sprite_radius = max(tex_size.x, tex_size.y) * 0.5
+	_base_sprite_half_size = tex_size * 0.5
 
-	if _base_sprite_radius <= 0.0:
-		_base_sprite_radius = 1.0
+	if _base_sprite_half_size.x <= 0.0:
+		_base_sprite_half_size.x = 1.0
+	if _base_sprite_half_size.y <= 0.0:
+		_base_sprite_half_size.y = 1.0
 
 
 func _play_sound(sound: AudioStream) -> void:
@@ -122,9 +124,13 @@ func _apply_t() -> void:
 
 	var circle_shape := col.shape as CircleShape2D
 	if circle_shape and vis:
-		var radius_from_sprite: float = _base_sprite_radius * vis.scale.x
-		radius_from_sprite += GameManager.get_explosion_radius_bonus() * _t
-		circle_shape.radius = radius_from_sprite
+		circle_shape.radius = 1.0
+		var bonus_radius: float = GameManager.get_explosion_radius_bonus() * _t
+		var collision_half_size := Vector2(
+			(_base_sprite_half_size.x * vis.scale.x) + bonus_radius,
+			(_base_sprite_half_size.y * vis.scale.y) + bonus_radius
+		)
+		col.scale = collision_half_size
 
 
 func _get_blended_flash_color() -> Color:
