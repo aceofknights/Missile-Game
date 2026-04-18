@@ -62,6 +62,9 @@ var lure_next_ready_time := 0.0
 var active_shield_emp_disabled_until := 0.0
 var passive_shield_emp_disabled_until := 0.0
 var world_special_state: Dictionary = {}
+var _hit_stop_token: int = 0
+var _hit_stop_active: bool = false
+var _hit_stop_restore_scale: float = 1.0
 
 signal announce_wave(message: String, duration: float)
 signal world_victory_requested
@@ -70,6 +73,39 @@ signal player_defeat_requested
 
 func _ready():
 	_ensure_world_upgrade_data(current_world)
+
+
+func trigger_hit_stop(scale: float = 0.2, duration: float = 0.04) -> void:
+	if duration <= 0.0:
+		return
+
+	var target_scale := clampf(scale, 0.01, 1.0)
+	var current_scale := Engine.time_scale
+
+	# Don't stomp a stronger slow-motion effect that's already active.
+	if not _hit_stop_active and current_scale <= target_scale:
+		return
+
+	if not _hit_stop_active:
+		_hit_stop_restore_scale = current_scale
+		_hit_stop_active = true
+
+	if Engine.time_scale > target_scale:
+		Engine.time_scale = target_scale
+
+	_hit_stop_token += 1
+	var token := _hit_stop_token
+	_restore_hit_stop_after_delay(token, duration)
+
+
+func _restore_hit_stop_after_delay(token: int, duration: float) -> void:
+	await get_tree().create_timer(duration, true, false, true).timeout
+	if token != _hit_stop_token:
+		return
+
+	Engine.time_scale = _hit_stop_restore_scale
+	_hit_stop_restore_scale = 1.0
+	_hit_stop_active = false
 
 
 func _int_to_string_dict(source: Dictionary) -> Dictionary:
@@ -251,7 +287,7 @@ func get_shield_generator_hit_capacity() -> int:
 	var level := get_upgrade_level("shield_generator")
 	if level <= 0:
 		return 0
-	return 1 + level
+	return min(level, 2)
 
 
 #func get_shield_generator_cooldown_seconds() -> float:
@@ -636,7 +672,7 @@ func get_upgrade_definitions_world_1() -> Dictionary:
 		},
 		"shield_generator": {
 			"display_name": "Shield Generator",
-			"description": "Gives each building a shield that blocks 1 hit, plus 1 more hit per level.",
+			"description": "Level 1 gives each building and cannon 1 shield hit. Level 2 raises that to 2 total shield hits.",
 			"max_level": 2,
 			"base_cost": 250,
 			"path_rate": PATH_EXPENSIVE,

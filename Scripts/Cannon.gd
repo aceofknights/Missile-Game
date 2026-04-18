@@ -3,6 +3,10 @@ extends Area2D
 @export var projectile_scene: PackedScene
 @export var cannon_id := GameManager.CANNON_MIDDLE
 @export var fire_rate := 0.5
+@export var fire_sound: AudioStream
+@export var fire_sound_volume_db: float = -7.0
+@export var fire_sound_pitch_min: float = 0.96
+@export var fire_sound_pitch_max: float = 1.05
 
 const WORLD_1_CANNON_COLOR := Color(0.15, 0.45, 0.35, 1.0) # dark teal-green
 const WORLD_2_CANNON_COLOR := Color(0.45, 0.22, 0.18, 1.0) # dark rust
@@ -10,9 +14,12 @@ const WORLD_3_CANNON_COLOR := Color(0.28, 0.18, 0.45, 1.0) # dark purple
 const WORLD_4_CANNON_COLOR := Color(0.18, 0.28, 0.42, 1.0) # dark blue
 const WORLD_5_CANNON_COLOR := Color(0.32, 0.45, 0.18, 1.0) # toxic green
 const DEFAULT_CANNON_COLOR := Color(0.35, 0.35, 0.35, 1.0)
-const RECOIL_DISTANCE := 8.0
-const RECOIL_KICK_TIME := 0.05
-const RECOIL_RETURN_TIME := 0.12
+const RECOIL_DISTANCE_MIN := 7.0
+const RECOIL_DISTANCE_MAX := 12.0
+const RECOIL_KICK_TIME_MIN := 0.04
+const RECOIL_KICK_TIME_MAX := 0.07
+const RECOIL_RETURN_TIME_MIN := 0.10
+const RECOIL_RETURN_TIME_MAX := 0.15
 const TARGET_MARKER_TEXTURE := preload("res://assets/X_marker.png")
 const DEATH_SCATTER_PARTICLE_TEXTURE := preload("res://circle.png")
 const DEATH_SCATTER_PARTICLE_COUNT := 10
@@ -20,6 +27,9 @@ const DEATH_SCATTER_LIFETIME := 0.7
 const DEATH_SCATTER_VELOCITY_MIN := 180.0
 const DEATH_SCATTER_VELOCITY_MAX := 460.0
 const DEATH_SCATTER_GRAVITY := 760.0
+const BAR_READY_COLOR := Color(0.78, 0.84, 0.92, 0.95)
+const BAR_BACKGROUND_COLOR := Color(0.015, 0.025, 0.04, 0.96)
+const BAR_OUTLINE_COLOR := Color(0.32, 0.42, 0.52, 0.42)
 
 var cooldown := 0.0
 var shots_in_cycle := 0
@@ -36,6 +46,9 @@ var _cannon_base_rest_scale: Vector2 = Vector2.ONE
 var _cannon_gun_rest_scale: Vector2 = Vector2.ONE
 var _recoil_tween: Tween
 var _muzzle_flash_tween: Tween
+var _bar_fill_style: StyleBoxFlat
+var _bar_background_style: StyleBoxFlat
+var _fire_audio_player: AudioStreamPlayer2D
 
 @onready var muzzle: Marker2D = get_node_or_null("CannonGun/Muzzle") as Marker2D
 @onready var ammo_label: Label = $AmmoLabel
@@ -58,7 +71,10 @@ func _ready() -> void:
 	connect("area_entered", Callable(self, "_on_area_entered"))
 
 	ammo_label.top_level = true
+	ammo_label.z_index = 30
+	ammo_label.add_theme_font_size_override("font_size", 13)
 	fire_rate_bar.top_level = true
+	fire_rate_bar.z_index = 14
 	if repair_label:
 		repair_label.top_level = true
 
@@ -66,6 +82,8 @@ func _ready() -> void:
 	_setup_muzzle_flash()
 	_setup_temp_shield_sprite()
 	_setup_shield_hits_label()
+	_setup_fire_audio_hook()
+	_setup_reload_bar_style()
 	_reset_passive_shield_for_wave()
 	_cache_visual_rest_state()
 	_configure_death_particles()
@@ -128,9 +146,10 @@ func _refresh_visibility_state() -> void:
 			repair_label.text = "EMP %.1fs" % emp_disabled_remaining
 
 	if cannon_base:
-		cannon_base.position = _cannon_base_rest_position
-		cannon_base.scale = _cannon_base_rest_scale
 		cannon_base.visible = active
+		if not active:
+			cannon_base.position = _cannon_base_rest_position
+			cannon_base.scale = _cannon_base_rest_scale
 		if destroyed:
 			cannon_base.modulate = Color(0.35, 0.35, 0.35, 1.0)
 		elif emp_disabled_remaining > 0.0:
@@ -141,9 +160,10 @@ func _refresh_visibility_state() -> void:
 			cannon_base.modulate = world_color
 
 	if cannon_gun:
-		cannon_gun.position = _cannon_gun_rest_position
-		cannon_gun.scale = _cannon_gun_rest_scale
 		cannon_gun.visible = active
+		if not active:
+			cannon_gun.position = _cannon_gun_rest_position
+			cannon_gun.scale = _cannon_gun_rest_scale
 		if destroyed:
 			cannon_gun.modulate = Color(0.35, 0.35, 0.35, 1.0)
 		elif emp_disabled_remaining > 0.0:
@@ -163,22 +183,24 @@ func _refresh_visibility_state() -> void:
 
 func _update_ui() -> void:
 	if ammo_label:
+		ammo_label.visible = _can_operate()
 		ammo_label.text = "%d/%d" % [
 			GameManager.get_cannon_current_ammo(cannon_id),
 			GameManager.get_cannon_max_ammo(cannon_id)
 		]
+		ammo_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
 
 	if fire_rate_bar:
-		var delay: float = maxf(0.001, GameManager.get_cannon_fire_rate(cannon_id, fire_rate))
-		fire_rate_bar.max_value = delay
-		fire_rate_bar.value = delay - minf(delay, cooldown)
+		fire_rate_bar.max_value = 1.0
+		fire_rate_bar.value = _get_fire_rate_bar_fill_ratio()
+		_update_reload_bar_style()
 
 
 func _update_overlay_positions() -> void:
-	ammo_label.global_position = global_position + Vector2(-45, 20)
-	fire_rate_bar.global_position = global_position + Vector2(-45, 40)
+	ammo_label.global_position = global_position + Vector2(-45, 34)
+	fire_rate_bar.global_position = global_position + Vector2(-52, 34)
 	if repair_label:
-		repair_label.global_position = global_position + Vector2(-70, -68)
+		repair_label.global_position = global_position + Vector2(-70, -84)
 
 
 func can_fire() -> bool:
@@ -270,12 +292,56 @@ func _setup_temp_shield_sprite() -> void:
 func _setup_shield_hits_label() -> void:
 	shield_hits_label.top_level = true
 	shield_hits_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shield_hits_label.add_theme_color_override("font_color", Color(0.9, 1.0, 1.0, 1.0))
+	shield_hits_label.add_theme_color_override("font_color", Color(0.38, 0.92, 1.0, 1.0))
 	shield_hits_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
 	shield_hits_label.add_theme_constant_override("outline_size", 2)
+	shield_hits_label.add_theme_font_size_override("font_size", 12)
 	shield_hits_label.visible = false
 	shield_hits_label.z_index = 25
 	add_child(shield_hits_label)
+
+
+func _setup_fire_audio_hook() -> void:
+	_fire_audio_player = AudioStreamPlayer2D.new()
+	_fire_audio_player.name = "FireAudio"
+	_fire_audio_player.max_polyphony = 2
+	_fire_audio_player.bus = "Master"
+	_fire_audio_player.volume_db = fire_sound_volume_db
+	add_child(_fire_audio_player)
+
+
+func _setup_reload_bar_style() -> void:
+	if fire_rate_bar == null:
+		return
+
+	fire_rate_bar.custom_minimum_size = Vector2(104.0, 12.0)
+	fire_rate_bar.step = 0.001
+	fire_rate_bar.self_modulate = Color.WHITE
+
+	_bar_background_style = StyleBoxFlat.new()
+	_bar_background_style.bg_color = BAR_BACKGROUND_COLOR
+	_bar_background_style.border_width_left = 1
+	_bar_background_style.border_width_top = 1
+	_bar_background_style.border_width_right = 1
+	_bar_background_style.border_width_bottom = 1
+	_bar_background_style.border_color = BAR_OUTLINE_COLOR
+	_bar_background_style.corner_radius_top_left = 5
+	_bar_background_style.corner_radius_top_right = 5
+	_bar_background_style.corner_radius_bottom_right = 5
+	_bar_background_style.corner_radius_bottom_left = 5
+	_bar_background_style.shadow_color = Color(0.0, 0.0, 0.0, 0.3)
+	_bar_background_style.shadow_size = 3
+
+	_bar_fill_style = StyleBoxFlat.new()
+	_bar_fill_style.corner_radius_top_left = 4
+	_bar_fill_style.corner_radius_top_right = 4
+	_bar_fill_style.corner_radius_bottom_right = 4
+	_bar_fill_style.corner_radius_bottom_left = 4
+	_bar_fill_style.shadow_color = Color(0.0, 0.0, 0.0, 0.18)
+	_bar_fill_style.shadow_size = 2
+
+	fire_rate_bar.add_theme_stylebox_override("background", _bar_background_style)
+	fire_rate_bar.add_theme_stylebox_override("fill", _bar_fill_style)
 
 
 func _setup_muzzle_flash() -> void:
@@ -298,18 +364,18 @@ func _update_shield_hits_label() -> void:
 	if shield_hits_label == null:
 		return
 
-	shield_hits_label.global_position = global_position + Vector2(-5, 0)
-
 	var max_hits := GameManager.get_shield_generator_hit_capacity()
-	var show := max_hits > 0 and _can_operate()
+	var show := max_hits > 0 and _can_operate() and shield_hits_remaining > 0
 	shield_hits_label.visible = show
 	if not show:
 		return
 
+	shield_hits_label.global_position = global_position + Vector2(-18, 14)
+	shield_hits_label.text = _get_shield_pips_text(shield_hits_remaining)
+	var pip_color := Color(0.38, 0.92, 1.0, 1.0)
 	if _is_passive_shield_blocked_by_emp():
-		shield_hits_label.text = "EMP"
-	else:
-		shield_hits_label.text = "%d" % max(0, shield_hits_remaining)
+		pip_color = Color(0.58, 0.86, 1.0, 0.55)
+	shield_hits_label.add_theme_color_override("font_color", pip_color)
 
 
 func _update_shield_state() -> void:
@@ -450,12 +516,15 @@ func _cache_visual_rest_state() -> void:
 		_cannon_base_rest_position = cannon_base.position
 		_cannon_base_rest_scale = cannon_base.scale
 	if cannon_gun:
+		_cannon_gun_rest_position = cannon_gun.position
 		_cannon_gun_rest_scale = cannon_gun.scale
 
 
 func _play_fire_feedback() -> void:
+	_play_fire_sound()
 	_play_recoil_feedback()
 	_play_muzzle_flash_feedback()
+	_play_base_kick_feedback()
 
 
 func _play_hit_reaction(hit_from: Vector2) -> void:
@@ -499,15 +568,19 @@ func _play_recoil_feedback() -> void:
 
 	var rest_global_position: Vector2 = cannon_gun.get_parent().to_global(_cannon_gun_rest_position)
 	var forward_direction: Vector2 = Vector2.UP.rotated(cannon_gun.global_rotation)
-	var recoil_target_global: Vector2 = rest_global_position - (forward_direction * RECOIL_DISTANCE)
+	var recoil_distance: float = 8.0
+	var kick_time: float = 0.05
+	var return_time: float = 0.12
+	var recoil_target_global: Vector2 = rest_global_position - (forward_direction * recoil_distance)
 	cannon_gun.global_position = rest_global_position
+	cannon_gun.scale = _cannon_gun_rest_scale
 	_recoil_tween = create_tween()
 	_recoil_tween.set_ease(Tween.EASE_OUT)
 	_recoil_tween.set_trans(Tween.TRANS_CUBIC)
-	_recoil_tween.tween_property(cannon_gun, "global_position", recoil_target_global, RECOIL_KICK_TIME)
+	_recoil_tween.tween_property(cannon_gun, "global_position", recoil_target_global, kick_time)
 	_recoil_tween.set_ease(Tween.EASE_IN_OUT)
 	_recoil_tween.set_trans(Tween.TRANS_SINE)
-	_recoil_tween.tween_property(cannon_gun, "global_position", rest_global_position, RECOIL_RETURN_TIME)
+	_recoil_tween.tween_property(cannon_gun, "global_position", rest_global_position, return_time)
 
 
 func _play_muzzle_flash_feedback() -> void:
@@ -518,17 +591,83 @@ func _play_muzzle_flash_feedback() -> void:
 		_muzzle_flash_tween.kill()
 
 	muzzle_flash.visible = true
-	muzzle_flash.color = Color(1.0, 0.92, 0.6, 0.85)
-	muzzle_flash.scale = Vector2.ONE
+	muzzle_flash.color = _get_world_cannon_color().lerp(Color(1.0, 0.95, 0.72, 1.0), 0.75)
+	muzzle_flash.color.a = randf_range(0.78, 0.92)
+	muzzle_flash.scale = Vector2(randf_range(0.92, 1.08), randf_range(0.92, 1.1))
 	_muzzle_flash_tween = create_tween()
 	_muzzle_flash_tween.set_parallel(true)
-	_muzzle_flash_tween.tween_property(muzzle_flash, "scale", Vector2(1.35, 1.6), 0.06)
+	_muzzle_flash_tween.tween_property(muzzle_flash, "scale", Vector2(randf_range(1.25, 1.45), randf_range(1.45, 1.8)), 0.06)
+	_muzzle_flash_tween.tween_property(muzzle_flash, "rotation", randf_range(-0.18, 0.18), 0.04)
 	_muzzle_flash_tween.tween_property(muzzle_flash, "color:a", 0.0, 0.08)
 	_muzzle_flash_tween.finished.connect(func() -> void:
 		if is_instance_valid(muzzle_flash):
 			muzzle_flash.visible = false
 			muzzle_flash.scale = Vector2.ONE
+			muzzle_flash.rotation = 0.0
 	)
+
+
+func _play_base_kick_feedback() -> void:
+	if cannon_base == null:
+		return
+
+	var kick_tween := create_tween()
+	var kick_offset := Vector2(randf_range(-1.6, 1.6), randf_range(1.2, 2.8))
+	kick_tween.set_parallel(true)
+	kick_tween.tween_property(cannon_base, "position", _cannon_base_rest_position + kick_offset, 0.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	kick_tween.tween_property(cannon_base, "scale", Vector2(_cannon_base_rest_scale.x * randf_range(1.01, 1.04), _cannon_base_rest_scale.y * randf_range(0.97, 1.0)), 0.05).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	kick_tween.chain().set_parallel(true)
+	kick_tween.tween_property(cannon_base, "position", _cannon_base_rest_position, 0.11).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	kick_tween.tween_property(cannon_base, "scale", _cannon_base_rest_scale, 0.12).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+func _play_fire_sound() -> void:
+	if _fire_audio_player == null:
+		return
+
+	_fire_audio_player.stream = fire_sound
+	_fire_audio_player.volume_db = fire_sound_volume_db + randf_range(-1.2, 0.9)
+	_fire_audio_player.pitch_scale = randf_range(fire_sound_pitch_min, fire_sound_pitch_max)
+	if fire_sound != null:
+		_fire_audio_player.play()
+
+
+func _get_fire_rate_bar_fill_ratio() -> float:
+	var shots_per_cycle := GameManager.get_cannon_shots_per_cycle(cannon_id)
+	if cooldown > 0.0:
+		var delay: float = maxf(0.001, GameManager.get_cannon_fire_rate(cannon_id, fire_rate))
+		return clampf(1.0 - (cooldown / delay), 0.0, 1.0)
+
+	if shots_per_cycle <= 1:
+		return 1.0
+
+	return clampf(float(shots_per_cycle - shots_in_cycle) / float(shots_per_cycle), 0.0, 1.0)
+
+
+func _update_reload_bar_style() -> void:
+	if _bar_fill_style == null:
+		return
+
+	var world_color := _get_world_cannon_color()
+	var charged_ratio := _get_fire_rate_bar_fill_ratio()
+	var shots_per_cycle := GameManager.get_cannon_shots_per_cycle(cannon_id)
+	var ready_color := world_color.lerp(Color(0.46, 0.56, 0.66, 1.0), 0.74)
+	var reload_color := world_color.lerp(Color(0.30, 0.36, 0.42, 1.0), 0.78)
+	var fill_color := ready_color if cooldown <= 0.0 else reload_color
+	fill_color = fill_color.lerp(Color.WHITE, charged_ratio * 0.06)
+	_bar_fill_style.bg_color = fill_color
+	_bar_background_style.border_color = world_color.lerp(BAR_OUTLINE_COLOR, 0.55)
+	_bar_background_style.bg_color = BAR_BACKGROUND_COLOR.lerp(world_color, 0.06)
+	fire_rate_bar.self_modulate = Color(1.0, 1.0, 1.0, 0.94 if _can_operate() else 0.45)
+	if shots_per_cycle > 1 and cooldown <= 0.0 and shots_in_cycle > 0:
+		_bar_fill_style.bg_color = world_color.lerp(Color(0.42, 0.48, 0.54, 1.0), 0.78)
+
+
+func _get_shield_pips_text(count: int) -> String:
+	var clamped_count : int = max(0, count)
+	if clamped_count <= 0:
+		return ""
+	return "■ ".repeat(clamped_count).strip_edges()
 
 
 func _spawn_target_marker(target_position: Vector2) -> Sprite2D:

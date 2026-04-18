@@ -1,5 +1,7 @@
 extends Area2D
 
+const BossEntranceUtils = preload("res://Scripts/BossEntranceUtils.gd")
+
 signal enemy_died
 signal boss_defeated
 signal start_death_animation(boss: Node)
@@ -73,6 +75,7 @@ var _bob_time: float = 0.0
 var _flash_sprite_base_position: Vector2 = Vector2.ZERO
 var _shield_sprite_base_position: Vector2 = Vector2.ZERO
 var _shield_sprite_base_scale: Vector2 = Vector2.ONE
+var _intro_active: bool = true
 
 const PHASE_MAX_UNITS := {
 	1: 3,
@@ -97,8 +100,8 @@ func _ready() -> void:
 	health = max_health
 	add_to_group("enemy")
 	add_to_group("boss")
-	monitoring = true
-	monitorable = true
+	monitoring = false
+	monitorable = false
 	area_entered.connect(_on_area_entered)
 
 	if flash_sprite:
@@ -117,17 +120,23 @@ func _ready() -> void:
 	immunity_timer.timeout.connect(_on_immunity_timeout)
 	shield_timer.timeout.connect(_on_shield_timer_timeout)
 
+	_set_shield_active(true, true)
+	await BossEntranceUtils.play_intro(self, flash_sprite as Node2D)
+	_intro_active = false
+	monitoring = true
+	monitorable = true
+
 	shield_timer.wait_time = shield_up_duration
 	shield_timer.start()
 
 	_update_phase_state()
 	_update_label()
-	_set_shield_active(true, true)
-	_pick_new_move_target(true)
+	_move_target = global_position
+	_move_pause_timer = randf_range(target_pause_min, target_pause_max)
 
 
 func _process(delta: float) -> void:
-	if is_dead:
+	if is_dead or _intro_active:
 		return
 
 	_update_movement(delta)
@@ -197,7 +206,7 @@ func _on_area_entered(area: Area2D) -> void:
 
 
 func die(no_reward: bool = false) -> void:
-	if is_dead:
+	if is_dead or _intro_active:
 		return
 	if shield_active:
 		print("🛡️ Carrier shield blocked the hit")
@@ -211,6 +220,7 @@ func die(no_reward: bool = false) -> void:
 
 	hit_used_this_down_window = true
 	health -= 1
+	GameManager.trigger_hit_stop(0.14, 0.04)
 	_play_hit_flash()
 
 	# Bring shield back immediately after a successful hit

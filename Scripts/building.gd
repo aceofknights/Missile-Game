@@ -17,6 +17,9 @@ const DEATH_SCATTER_LIFETIME := 0.65
 const DEATH_SCATTER_VELOCITY_MIN := 140.0
 const DEATH_SCATTER_VELOCITY_MAX := 340.0
 const DEATH_SCATTER_GRAVITY := 720.0
+const BAR_READY_COLOR := Color(0.93, 0.98, 1.0, 0.95)
+const BAR_BACKGROUND_COLOR := Color(0.04, 0.08, 0.12, 0.92)
+const BAR_OUTLINE_COLOR := Color(0.72, 0.9, 1.0, 0.28)
 
 const WAVE_AMMO_ICON_TEXTURE := preload("res://assets/UpgradeIcons/yellow plus ammo.png")
 @export var WAVE_AMMO_ICON_TEXTURE_COLOR := Color(1,1,1,1)
@@ -58,7 +61,7 @@ func _process(_delta: float) -> void:
 	if not repair_label:
 		return
 
-	repair_label.global_position = global_position + Vector2(-70, -64)
+	repair_label.global_position = global_position + Vector2(-70, -88)
 	repair_label.visible = false
 
 
@@ -84,11 +87,13 @@ func _setup_temp_shield_sprite() -> void:
 
 
 func _setup_shield_hits_label() -> void:
-	shield_hits_label.top_level = false
+	shield_hits_label.top_level = true
 	shield_hits_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	shield_hits_label.add_theme_color_override("font_color", Color(0.9, 1.0, 1.0, 1.0))
+	shield_hits_label.add_theme_color_override("font_color", Color(0.38, 0.92, 1.0, 1.0))
 	shield_hits_label.add_theme_color_override("font_outline_color", Color(0, 0, 0, 1))
 	shield_hits_label.add_theme_constant_override("outline_size", 2)
+	shield_hits_label.add_theme_font_size_override("font_size", 12)
+	shield_hits_label.custom_minimum_size = Vector2(56.0, 0.0)
 	shield_hits_label.visible = false
 	shield_hits_label.z_index = 25
 	add_child(shield_hits_label)
@@ -98,18 +103,18 @@ func _update_shield_hits_label() -> void:
 	if shield_hits_label == null:
 		return
 
-	shield_hits_label.position = Vector2(-5, 10)
-
 	var max_hits := GameManager.get_shield_generator_hit_capacity()
-	var show := max_hits > 0 and not destroyed
+	var show := max_hits > 0 and not destroyed and shield_hits_remaining > 0
 	shield_hits_label.visible = show
 	if not show:
 		return
 
+	shield_hits_label.global_position = global_position + Vector2(-26, 10)
+	shield_hits_label.text = _get_shield_pips_text(shield_hits_remaining)
+	var pip_color := Color(0.38, 0.92, 1.0, 1.0)
 	if _is_passive_shield_blocked_by_emp():
-		shield_hits_label.text = "EMP"
-	else:
-		shield_hits_label.text = "%d" % max(0, shield_hits_remaining)
+		pip_color = Color(0.58, 0.86, 1.0, 0.55)
+	shield_hits_label.add_theme_color_override("font_color", pip_color)
 
 
 func _update_shield_state() -> void:
@@ -283,7 +288,7 @@ func _spawn_wave_ammo_icon(icon_index: int, total_icons: int) -> void:
 	if total_icons == 2:
 		x_offset = -10.0 if icon_index == 0 else 10.0
 
-	icon.global_position = global_position + Vector2(x_offset, -18.0)
+	icon.global_position = global_position + Vector2(x_offset, 18.0)
 	icon.modulate = Color(1.0, 1.0, 1.0, 0.0)
 	get_tree().current_scene.add_child(icon)
 
@@ -378,3 +383,10 @@ func destroy_permanently() -> void:
 		remove_from_group("building")
 
 	queue_free()
+
+
+func _get_shield_pips_text(count: int) -> String:
+	var clamped_count : int = max(0, count)
+	if clamped_count <= 0:
+		return ""
+	return "■ ".repeat(clamped_count).strip_edges()

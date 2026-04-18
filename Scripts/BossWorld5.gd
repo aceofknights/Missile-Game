@@ -1,5 +1,7 @@
 extends Area2D
 
+const BossEntranceUtils = preload("res://Scripts/BossEntranceUtils.gd")
+
 signal enemy_died
 signal boss_defeated
 signal start_death_animation(boss: Node)
@@ -15,6 +17,18 @@ signal laser_fired(target_name: String)
 @export var fighter_projectile_scene: PackedScene
 @export var laser_weak_point_scene: PackedScene
 @export var laser_indicator_projectile_scene: PackedScene
+@export var emp_attack_sound: AudioStream
+@export var emp_attack_sound_volume_db: float = -8.0
+@export var emp_attack_sound_pitch_min: float = 0.96
+@export var emp_attack_sound_pitch_max: float = 1.05
+@export var ion_attack_sound: AudioStream
+@export var ion_attack_sound_volume_db: float = -8.0
+@export var ion_attack_sound_pitch_min: float = 0.96
+@export var ion_attack_sound_pitch_max: float = 1.05
+@export var laser_charge_sound: AudioStream
+@export var laser_charge_sound_volume_db: float = -8.0
+@export var laser_charge_sound_pitch_min: float = 0.97
+@export var laser_charge_sound_pitch_max: float = 1.04
 
 @export var boss_name: String = "MOTHERSHIP"
 
@@ -141,14 +155,18 @@ var _shield_tween: Tween
 var _move_target: Vector2 = Vector2.ZERO
 var _move_pause_timer: float = 0.0
 var _bob_time: float = 0.0
+var _intro_active: bool = true
+var _emp_audio_player: AudioStreamPlayer2D
+var _ion_audio_player: AudioStreamPlayer2D
+var _laser_audio_player: AudioStreamPlayer2D
 
 
 func _ready() -> void:
 	health = max_health
 	add_to_group("enemy")
 	add_to_group("boss")
-	monitoring = true
-	monitorable = true
+	monitoring = false
+	monitorable = false
 	area_entered.connect(_on_area_entered)
 
 	if flash_sprite:
@@ -173,13 +191,21 @@ func _ready() -> void:
 	laser_timer.timeout.connect(_on_laser_timer_timeout)
 	laser_charge_timer.timeout.connect(_on_laser_charge_timer_timeout)
 
-	_pick_new_move_target(true)
+	_setup_boss_audio_hooks()
+	_set_shield_active(true, true)
+	await BossEntranceUtils.play_intro(self, flash_sprite as Node2D)
+	_intro_active = false
+	monitoring = true
+	monitorable = true
+
+	_move_target = global_position
+	_move_pause_timer = randf_range(target_pause_min, target_pause_max)
 	_apply_phase_tuning(true)
 	_update_label()
 
 
 func _process(delta: float) -> void:
-	if is_dead:
+	if is_dead or _intro_active:
 		return
 
 	_update_movement(delta)
@@ -192,6 +218,8 @@ func _process(delta: float) -> void:
 
 
 func _on_area_entered(area: Area2D) -> void:
+	if _intro_active:
+		return
 	if area.name != "Projectile":
 		return
 	area.queue_free()
@@ -199,7 +227,7 @@ func _on_area_entered(area: Area2D) -> void:
 
 
 func die(no_reward: bool = false) -> void:
-	if is_dead:
+	if is_dead or _intro_active:
 		return
 
 	if _is_laser_phase_active():
@@ -219,6 +247,7 @@ func die(no_reward: bool = false) -> void:
 
 	hit_used_this_down_window = true
 	health -= 1
+	GameManager.trigger_hit_stop(0.14, 0.04)
 	_play_hit_flash()
 
 	# Bring shield back immediately after a successful hit
@@ -525,6 +554,7 @@ func _on_emp_timer_timeout() -> void:
 	if active_cannons.is_empty():
 		_restart_attack_timer(emp_timer, debug_enable_emp, false)
 		return
+	_play_variation_sound(_emp_audio_player, emp_attack_sound, emp_attack_sound_volume_db, emp_attack_sound_pitch_min, emp_attack_sound_pitch_max)
 	EmpAttackUtils.spawn_emp_volley(
 		self,
 		emp_missile_scene,
@@ -544,6 +574,7 @@ func _on_ion_timer_timeout() -> void:
 		_restart_attack_timer(ion_timer, debug_enable_ion, false)
 		return
 
+	_play_variation_sound(_ion_audio_player, ion_attack_sound, ion_attack_sound_volume_db, ion_attack_sound_pitch_min, ion_attack_sound_pitch_max)
 	var missile: Area2D = ion_missile_scene.instantiate()
 	GameManager.enemies_alive += 1
 	missile.connect("enemy_died", Callable(GameManager, "_on_enemy_died"))
@@ -628,6 +659,7 @@ func _on_laser_timer_timeout() -> void:
 
 	var p: int = _phase_index()
 	var charge_duration: float = _phase_value_float(laser_charge_duration_by_phase, p)
+	_play_variation_sound(_laser_audio_player, laser_charge_sound, laser_charge_sound_volume_db, laser_charge_sound_pitch_min, laser_charge_sound_pitch_max)
 	emit_signal("laser_charge_started", charge_duration, laser_target.name)
 	laser_charge_timer.start(charge_duration)
 
@@ -650,6 +682,7 @@ func _on_laser_weak_point_destroyed() -> void:
 
 	laser_interrupted = true
 	health -= 1
+	GameManager.trigger_hit_stop(0.1, 0.06)
 	print("🔴 Laser weak point destroyed! Mothership takes 1 damage. Remaining HP: %d" % health)
 
 	if health <= 0:
@@ -928,6 +961,33 @@ func get_boss_body_size() -> Vector2:
 		return Vector2(diameter, diameter) * collision_shape.scale
 
 	return Vector2(240.0, 160.0)
+
+
+func _setup_boss_audio_hooks() -> void:
+	_emp_audio_player = AudioStreamPlayer2D.new()
+	_emp_audio_player.name = "EmpAbilityAudio"
+	_emp_audio_player.bus = "Master"
+	add_child(_emp_audio_player)
+
+	_ion_audio_player = AudioStreamPlayer2D.new()
+	_ion_audio_player.name = "IonAbilityAudio"
+	_ion_audio_player.bus = "Master"
+	add_child(_ion_audio_player)
+
+	_laser_audio_player = AudioStreamPlayer2D.new()
+	_laser_audio_player.name = "LaserChargeAudio"
+	_laser_audio_player.bus = "Master"
+	add_child(_laser_audio_player)
+
+
+func _play_variation_sound(player: AudioStreamPlayer2D, stream: AudioStream, volume_db: float, pitch_min: float, pitch_max: float) -> void:
+	if player == null or stream == null:
+		return
+
+	player.stream = stream
+	player.volume_db = volume_db + randf_range(-1.0, 0.8)
+	player.pitch_scale = randf_range(pitch_min, pitch_max)
+	player.play()
 
 
 func get_boss_health() -> int:

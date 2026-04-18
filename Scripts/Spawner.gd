@@ -72,7 +72,10 @@ func spawn_boss():
 
 	# If you still track boss as "alive", keep this
 
-	boss.position = Vector2(screen_size.x / 2.0, 120.0)
+	boss.position = Vector2(
+		screen_size.x * randf_range(0.44, 0.56),
+		randf_range(102.0, 132.0)
+	)
 	_add_to_scene(boss)
 
 

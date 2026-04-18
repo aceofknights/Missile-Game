@@ -1,5 +1,7 @@
 extends Area2D
 
+const BossEntranceUtils = preload("res://Scripts/BossEntranceUtils.gd")
+
 signal enemy_died
 signal boss_defeated
 signal start_death_animation(boss: Node)
@@ -20,6 +22,10 @@ signal start_death_animation(boss: Node)
 
 @export var normal_fire_interval := 2.15
 @export var ion_fire_interval := 3.0
+@export var ion_attack_sound: AudioStream
+@export var ion_attack_sound_volume_db: float = -8.0
+@export var ion_attack_sound_pitch_min: float = 0.96
+@export var ion_attack_sound_pitch_max: float = 1.05
 
 @export var clone_count_healthy := 3
 @export var clone_count_mid := 5
@@ -113,6 +119,8 @@ var clone_pattern_timer: float = 0.0
 var clone_pattern_hold_timer: float = 0.0
 var real_phase_target: Vector2 = Vector2.ZERO
 var _clone_pattern_fired_this_hold: bool = false
+var _intro_active: bool = true
+var _ion_audio_player: AudioStreamPlayer2D
 
 
 enum BossState {
@@ -130,8 +138,8 @@ func _ready() -> void:
 	health = max_health
 	add_to_group("enemy")
 	add_to_group("boss")
-	monitoring = true
-	monitorable = true
+	monitoring = false
+	monitorable = false
 	area_entered.connect(_on_area_entered)
 
 	if flash_sprite:
@@ -164,11 +172,15 @@ func _ready() -> void:
 	invisible_timer.one_shot = true
 	invisible_timer.timeout.connect(_on_invisible_timer_timeout)
 
+	_setup_boss_audio_hooks()
+	_set_shield_active(true, true)
+	await BossEntranceUtils.play_intro(self, flash_sprite as Node2D)
 	_enter_shielded_phase()
+	_intro_active = false
 
 
 func _process(delta: float) -> void:
-	if is_dead:
+	if is_dead or _intro_active:
 		return
 
 	if boss_health_label:
@@ -292,7 +304,7 @@ func _on_area_entered(area: Area2D) -> void:
 
 
 func die(no_reward := false) -> void:
-	if is_dead:
+	if is_dead or _intro_active:
 		return
 	if state != BossState.CLONE_MOVEMENT and state != BossState.CLONE_ATTACK:
 		return
@@ -303,6 +315,7 @@ func die(no_reward := false) -> void:
 
 	hit_used_this_down_window = true
 	health -= 1
+	GameManager.trigger_hit_stop(0.14, 0.04)
 	_play_hit_flash()
 
 	_set_shield_active(true)
@@ -380,7 +393,11 @@ func _enter_shielded_phase() -> void:
 	monitorable = true
 
 	_clear_clones()
-	_pick_new_move_target(true)
+	if _intro_active:
+		_move_target = global_position
+		_move_pause_timer = randf_range(target_pause_min, target_pause_max)
+	else:
+		_pick_new_move_target(true)
 	_start_real_firing(true)
 	shield_phase_timer.start(shielded_phase_duration)
 
@@ -631,6 +648,7 @@ func _on_ion_fire_timer_timeout() -> void:
 	if not IonHazardController.can_launch_ion_missile():
 		ion_fire_timer.start(ion_fire_interval)
 		return
+	_play_variation_sound(_ion_audio_player, ion_attack_sound, ion_attack_sound_volume_db, ion_attack_sound_pitch_min, ion_attack_sound_pitch_max)
 	_spawn_missile(ion_missile_scene)
 	ion_fire_timer.start(ion_fire_interval)
 
@@ -781,6 +799,23 @@ func get_boss_visual_node() -> CanvasItem:
 
 func get_boss_death_particles() -> GPUParticles2D:
 	return get_node_or_null("DeathParticles") as GPUParticles2D
+
+
+func _setup_boss_audio_hooks() -> void:
+	_ion_audio_player = AudioStreamPlayer2D.new()
+	_ion_audio_player.name = "IonAbilityAudio"
+	_ion_audio_player.bus = "Master"
+	add_child(_ion_audio_player)
+
+
+func _play_variation_sound(player: AudioStreamPlayer2D, stream: AudioStream, volume_db: float, pitch_min: float, pitch_max: float) -> void:
+	if player == null or stream == null:
+		return
+
+	player.stream = stream
+	player.volume_db = volume_db + randf_range(-1.0, 0.8)
+	player.pitch_scale = randf_range(pitch_min, pitch_max)
+	player.play()
 
 
 func get_boss_body_size() -> Vector2:
