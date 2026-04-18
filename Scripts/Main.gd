@@ -46,6 +46,8 @@ const TUTORIAL_MOUSE_ICON := preload("res://icon.svg")
 @export var boss_death_slow_motion_duration: float = 2.0
 @export var boss_death_camera_shake_duration: float = 2.0
 @export var boss_death_camera_shake_strength: float = 11.0
+@export var boss_arrival_camera_shake_duration: float = 3.5
+@export var boss_arrival_camera_shake_strength: float = 6.5
 @export var player_defeat_explosion_height: float = 72.0
 @export var boss_death_land_height: float = 92.0
 @export var boss_death_final_explosion_height: float = 110.0
@@ -64,6 +66,14 @@ const TUTORIAL_MOUSE_ICON := preload("res://icon.svg")
 @export var victory_screen_delay_after_explosions: float = 2.0
 @export var defeat_screen_delay_after_explosions: float = 2.0
 @export var lure_scene: PackedScene
+@export var ion_wave_activate_sound: AudioStream
+@export var ion_wave_activate_sound_volume_db: float = -8.0
+@export var ion_wave_activate_sound_pitch_min: float = 0.96
+@export var ion_wave_activate_sound_pitch_max: float = 1.05
+@export var lure_activate_sound: AudioStream
+@export var lure_activate_sound_volume_db: float = -8.0
+@export var lure_activate_sound_pitch_min: float = 0.96
+@export var lure_activate_sound_pitch_max: float = 1.05
 
 var _boss_death_animation_in_progress: bool = false
 var _active_boss: Node = null
@@ -79,6 +89,7 @@ var _boss_health_bar_linger_remaining: float = 0.0
 var _boss_last_display_name: String = "BOSS"
 var _screen_shake_end_time_ms: int = 0
 var _screen_shake_strength: float = 0.0
+var _screen_shake_duration_ms: int = 1
 var _boss_death_time_fx_token: int = 0
 var _last_ground_world: int = -1
 var base_buildings = 4
@@ -117,6 +128,8 @@ var _tutorial_waiting_for_first_shot := false
 var _tutorial_waiting_for_first_explosion := false
 var _pending_wave_start_after_tutorial := false
 var _end_state_subtitle: Label
+var _ion_wave_audio_player: AudioStreamPlayer
+var _lure_audio_player: AudioStreamPlayer
 var _ability_ready_state := {
 	"auto_cannon": false,
 	"ion_wave": false,
@@ -210,6 +223,7 @@ func _ready() -> void:
 		_auto_cannon_wave_grace_timer = auto_cannon_wave_start_grace
 	_apply_building_unlocks()
 	_create_active_shield_sprite()
+	_setup_ability_audio_hooks()
 	_bind_ability_status_ui()
 
 	# Connect to any boss already present in the scene.
@@ -999,7 +1013,7 @@ func _update_screen_shake() -> void:
 			position = Vector2.ZERO
 		return
 
-	var duration_ms: float = maxf(1.0, boss_death_camera_shake_duration * 1000.0)
+	var duration_ms: float = maxf(1.0, float(_screen_shake_duration_ms))
 	var remaining_ratio: float = float(_screen_shake_end_time_ms - now_ms) / duration_ms
 	var strength: float = _screen_shake_strength * clampf(remaining_ratio, 0.0, 1.0)
 	position = Vector2(
@@ -1008,11 +1022,28 @@ func _update_screen_shake() -> void:
 	)
 
 
+func start_screen_shake(duration: float, strength: float) -> void:
+	var duration_ms: int = int(maxf(0.0, duration) * 1000.0)
+	if duration_ms <= 0 or strength <= 0.0:
+		return
+
+	_screen_shake_duration_ms = max(1, duration_ms)
+	_screen_shake_strength = strength
+	_screen_shake_end_time_ms = Time.get_ticks_msec() + duration_ms
+
+
+func get_boss_arrival_shake_duration() -> float:
+	return boss_arrival_camera_shake_duration
+
+
+func get_boss_arrival_shake_strength() -> float:
+	return boss_arrival_camera_shake_strength
+
+
 func _trigger_boss_death_time_fx() -> void:
 	_boss_death_time_fx_token += 1
 	var token: int = _boss_death_time_fx_token
-	_screen_shake_strength = boss_death_camera_shake_strength
-	_screen_shake_end_time_ms = Time.get_ticks_msec() + int(maxf(0.0, boss_death_camera_shake_duration) * 1000.0)
+	start_screen_shake(boss_death_camera_shake_duration, boss_death_camera_shake_strength)
 	Engine.time_scale = boss_death_slow_motion_scale
 	_restore_boss_death_time_fx_after_delay(token)
 
@@ -1110,6 +1141,7 @@ func _handle_upgrade_hotkeys() -> void:
 		_w_was_down = true
 		if GameManager.can_trigger_ion_wave(now_seconds):
 			GameManager.trigger_ion_wave(now_seconds)
+			_play_variation_sound(_ion_wave_audio_player, ion_wave_activate_sound, ion_wave_activate_sound_volume_db, ion_wave_activate_sound_pitch_min, ion_wave_activate_sound_pitch_max)
 			_spawn_ion_wave_animation()
 			_pulse_ability_feedback(_ion_card, _ion_bar, Color(0.38, 0.86, 1.0, 1.0), 1.24)
 			announce("⚡ Ion Wave Activated!", 1.2)
@@ -1122,6 +1154,7 @@ func _handle_upgrade_hotkeys() -> void:
 		if GameManager.can_trigger_lure(now_seconds):
 			var lure_pos := get_global_mouse_position()
 			GameManager.trigger_lure(lure_pos, now_seconds)
+			_play_variation_sound(_lure_audio_player, lure_activate_sound, lure_activate_sound_volume_db, lure_activate_sound_pitch_min, lure_activate_sound_pitch_max)
 			_spawn_lure_at(lure_pos)
 			_pulse_ability_feedback(_lure_card, _lure_bar, Color(1.0, 0.66, 0.35, 1.0), 1.24)
 			announce("🎯 Lure Deployed!", 1.0)
@@ -1394,6 +1427,28 @@ func _spawn_ion_wave_animation() -> void:
 	tween.tween_property(wave, "position", Vector2(576, 280), 0.8)
 	tween.tween_property(wave, "modulate:a", 0.0, 1.2)
 	tween.finished.connect(func(): wave.queue_free())
+
+
+func _setup_ability_audio_hooks() -> void:
+	_ion_wave_audio_player = AudioStreamPlayer.new()
+	_ion_wave_audio_player.name = "IonWaveAudio"
+	_ion_wave_audio_player.bus = "Master"
+	add_child(_ion_wave_audio_player)
+
+	_lure_audio_player = AudioStreamPlayer.new()
+	_lure_audio_player.name = "LureAudio"
+	_lure_audio_player.bus = "Master"
+	add_child(_lure_audio_player)
+
+
+func _play_variation_sound(player: AudioStreamPlayer, stream: AudioStream, volume_db: float, pitch_min: float, pitch_max: float) -> void:
+	if player == null or stream == null:
+		return
+
+	player.stream = stream
+	player.volume_db = volume_db + randf_range(-1.0, 0.8)
+	player.pitch_scale = randf_range(pitch_min, pitch_max)
+	player.play()
 
 
 func _update_repair_hint(delta: float) -> void:

@@ -1,5 +1,7 @@
 extends Area2D
 
+const BossEntranceUtils = preload("res://Scripts/BossEntranceUtils.gd")
+
 signal enemy_died
 signal boss_defeated
 signal start_death_animation(boss: Node)
@@ -26,6 +28,10 @@ signal jam_pulse_started(duration: float, misfire_radius: float)
 @export var boss_name: String = "CYBER DRONE"
 @export var emp_initial_delay: float = 2.0
 @export var jam_initial_delay: float = 4.5
+@export var emp_attack_sound: AudioStream
+@export var emp_attack_sound_volume_db: float = -8.0
+@export var emp_attack_sound_pitch_min: float = 0.96
+@export var emp_attack_sound_pitch_max: float = 1.05
 
 # Drag your actual visible sprite here in the inspector
 @export_node_path("CanvasItem") var flash_sprite_path: NodePath
@@ -85,6 +91,8 @@ var _bob_time: float = 0.0
 var _flash_sprite_base_position: Vector2 = Vector2.ZERO
 var _shield_sprite_base_position: Vector2 = Vector2.ZERO
 var _shield_sprite_base_scale: Vector2 = Vector2.ONE
+var _intro_active: bool = true
+var _emp_audio_player: AudioStreamPlayer2D
 
 
 func _add_to_scene(node: Node) -> void:
@@ -113,11 +121,9 @@ func _ready() -> void:
 
 	shield_timer.wait_time = shield_up_duration
 	shield_timer.timeout.connect(_on_shield_timer_timeout)
-	shield_timer.start()
 
 	missile_timer.wait_time = missile_drop_interval
 	missile_timer.timeout.connect(_on_missile_timer_timeout)
-	missile_timer.start()
 
 	emp_timer.wait_time = emp_interval
 	emp_timer.timeout.connect(_on_emp_timer_timeout)
@@ -133,13 +139,17 @@ func _ready() -> void:
 	jam_charge_timer.wait_time = jam_charge_duration
 	jam_charge_timer.timeout.connect(_on_jam_charge_timer_timeout)
 
+	_prepare_jam_ring()
+	_setup_boss_audio_hooks()
+	_set_shield_active(true, true)
+	await BossEntranceUtils.play_intro(self, flash_sprite as Node2D)
+	_intro_active = false
+	shield_timer.start()
+	missile_timer.start()
 	get_tree().create_timer(emp_initial_delay).timeout.connect(_start_emp_timer_after_delay)
 	get_tree().create_timer(jam_initial_delay).timeout.connect(_start_jam_timer_after_delay)
-	
-	
-	_prepare_jam_ring()
-	_set_shield_active(true, true)
-	_pick_new_move_target(true)
+	_move_target = global_position
+	_move_pause_timer = randf_range(target_pause_min, target_pause_max)
 
 func _start_emp_timer_after_delay() -> void:
 	if not is_dead:
@@ -152,7 +162,7 @@ func _start_jam_timer_after_delay() -> void:
 		
 
 func _process(delta: float) -> void:
-	if is_dead:
+	if is_dead or _intro_active:
 		return
 
 	if boss_health:
@@ -231,7 +241,7 @@ func _update_missile_rate_by_health() -> void:
 
 
 func die(no_reward: bool = false) -> void:
-	if is_dead:
+	if is_dead or _intro_active:
 		return
 	if shield_active:
 		print("🛡️ Boss shield blocked the hit")
@@ -242,6 +252,7 @@ func die(no_reward: bool = false) -> void:
 
 	hit_used_this_down_window = true
 	health -= 1
+	GameManager.trigger_hit_stop(0.14, 0.04)
 	_play_hit_flash()
 
 	# Bring shield back immediately after a successful hit
@@ -417,6 +428,7 @@ func _queue_emp_attack() -> void:
 		return
 
 	emp_charge_active = true
+	_play_variation_sound(_emp_audio_player, emp_attack_sound, emp_attack_sound_volume_db, emp_attack_sound_pitch_min, emp_attack_sound_pitch_max)
 	emp_charge_timer.start()
 
 
@@ -467,6 +479,23 @@ func _animate_jam_ring(delta: float) -> void:
 	var growth: float = 2.2 * delta / maxf(0.01, float(jam_charge_duration))
 	jam_ring.scale += Vector2(growth, growth)
 	jam_ring.modulate.a = minf(1.0, jam_ring.modulate.a + (1.8 * delta / maxf(0.01, float(jam_charge_duration))))
+
+
+func _setup_boss_audio_hooks() -> void:
+	_emp_audio_player = AudioStreamPlayer2D.new()
+	_emp_audio_player.name = "EmpAbilityAudio"
+	_emp_audio_player.bus = "Master"
+	add_child(_emp_audio_player)
+
+
+func _play_variation_sound(player: AudioStreamPlayer2D, stream: AudioStream, volume_db: float, pitch_min: float, pitch_max: float) -> void:
+	if player == null or stream == null:
+		return
+
+	player.stream = stream
+	player.volume_db = volume_db + randf_range(-1.0, 0.8)
+	player.pitch_scale = randf_range(pitch_min, pitch_max)
+	player.play()
 
 
 func _set_shield_active(value: bool, instant: bool = false) -> void:

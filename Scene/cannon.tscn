@@ -82,6 +82,7 @@ show_percentage = false
 
 [node name="DeathParticles" type="GPUParticles2D" parent="."]
 scale = Vector2(0.09, 0.09)
+emitting = false
 amount = 10
 process_material = SubResource("ParticleProcessMaterial_2dpov")
 texture = ExtResource("6_6m8at")
